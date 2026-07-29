@@ -1,7 +1,7 @@
 -- ============================================
 -- EXECUTOR MENU - Fix NoClip Không Lỗi Thảm & Xuyên Tường Mượt 100%
 -- (Banana Cat Hub Style + Caro Pattern + Chỉnh kích thước 4 góc + Chỉnh Rộng/Dày/Dài Thảm Kính)
--- + THÊM TAB "BAY ĐẾN NGƯỜI CHƠI" (Nằm giữa Di Chuyển và Người Chơi)
+-- + Sửa lỗi không hiển thị Tab "Bay Đến Player"
 -- StarterGui -> LocalScript hoặc Executor
 -- ============================================
 
@@ -361,13 +361,13 @@ local function AddTab(name, icon, order)
     return sf
 end
 
--- 6 TABS (Đã chèn Tab Bay Đến Người Chơi ở vị trí số 4)
+-- 6 TABS (Đã fix thứ tự order để không bị đè lên nhau)
 local codeTab      = AddTab("Code", "💻", 1)
 local savedCodeTab = AddTab("Code Đã Lưu", "💾", 2)
 local moveTab      = AddTab("Di Chuyển", "🏃", 3)
-local tpPlayerTab  = AddTab("Bay Đến Player", "🎯", 4) -- TAB MỚI
-local playerTab    = AddTab("Người Chơi", "👤", 5)
-local envTab       = AddTab("Môi Trường", "⚙️", 6)
+local tpPlayerTab  = AddTab("Bay Đến Player", "🎯", 4) -- Đã gán order 4
+local playerTab    = AddTab("Người Chơi", "👤", 5)    -- Đã gán order 5
+local envTab       = AddTab("Môi Trường", "⚙️", 6)    -- Đã gán order 6
 
 SwitchTab(1)
 
@@ -380,7 +380,7 @@ local S = {
     carpetY=nil,
     infJump=false, clickTp=false, esp=false, antiAfk=true, fullBright=false,
     blockServer=false, freezeOthers=false,
-    flyToTarget=nil, flyToSpeed=150, -- State cho tính năng Bay Đến Player
+    flyToTarget=nil, flyToSpeed=150, 
 }
 
 local scripts = {}
@@ -752,7 +752,7 @@ movDBtn.Activated:Connect(function()
     end
 end)
 
--- ==================== FLY TO PLAYER SYSTEM (MỚI) ====================
+-- ==================== FLY TO PLAYER SYSTEM ====================
 local flyToConn = nil
 
 local function StopFlyTo()
@@ -766,7 +766,6 @@ local function StopFlyTo()
 end
 
 local function StartFlyTo(targetPlayer)
-    -- Tắt các kiểu bay khác nếu đang bật
     if S.flying then S.flying = false; TogFly() end
     if S.flyRun then S.flyRun = false; StopFlyRun() end
     StopFlyTo()
@@ -793,13 +792,11 @@ local function StartFlyTo(targetPlayer)
 
         local dist = (r.Position - targetR.Position).Magnitude
         if dist < 5 then
-            -- Đã đến nơi
             r.AssemblyLinearVelocity = Vector3.new(0,0,0)
             StopFlyTo()
             return
         end
 
-        -- Bay mượt mà tới người chơi
         local dir = (targetR.Position - r.Position)
         local moveAmount = math.min(dir.Magnitude, S.flyToSpeed * dt)
         local newPos = r.Position + dir.Unit * moveAmount
@@ -1461,7 +1458,7 @@ wsIn.FocusLost:Connect(function(e) if not e then return end; local n=tonumber(ws
 jpIn.FocusLost:Connect(function(e) if not e then return end; local n=tonumber(jpIn.Text); if n and n>0 then S.jumpPower=n; UpdChar() else jpIn.Text=tostring(S.jumpPower) end; jpLbl.Text="Hiện tại: "..S.jumpPower end)
 
 flyBtn.Activated:Connect(function()
-    StopFlyTo() -- Tắt bay tới player nếu bật bay thường
+    StopFlyTo()
     S.flying = not S.flying
     TogFly()
     flyBtn.Text=S.flying and "🕊️ Bay: BẬT" or "🕊️ Bay: TẮT"
@@ -1498,7 +1495,7 @@ end)
 
 moveTab.CanvasSize=UDim2.new(0,0,0,my+40)
 
--- ==================== TAB 4: BAY ĐẾN NGƯỜI CHƠI (MỚI) ====================
+-- ==================== TAB 4: BAY ĐẾN NGƯỜI CHƠI ====================
 local ty = 8
 
 Label(tpPlayerTab, "⚡ Tốc độ bay tới người chơi", ty)
@@ -1767,7 +1764,6 @@ UserInputService.InputBegan:Connect(function(i, gp)
     end
 end)
 
--- MẶC ĐỊNH MỞ MENU KHI CHẠY
 main.Visible = true
 togBtn.Text = "✕"
 
@@ -1779,11 +1775,11 @@ player.CharacterAdded:Connect(function(c)
     if S.flying then StopFly(); TogFly() end
     if S.carpet then StopCarpet(); TogCarpet() end
     if S.flyRun then TogFlyRun() end
-    StopFlyTo() -- Reset bay tới player khi respawn
+    StopFlyTo() 
     if S.esp then UpdateESP() end
 end)
 
 UpdChar()
 if S.noClip then EnNC() end
 
-print("✅ Đã thêm Tab Bay Đến Người Chơi ở giữa Di Chuyển & Người Chơi!")
+print("✅ Đã sửa lỗi hiển thị Tab Bay Đến Người Chơi!")
