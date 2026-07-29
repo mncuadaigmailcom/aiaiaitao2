@@ -1,7 +1,7 @@
 -- ============================================
 -- EXECUTOR MENU - Fix NoClip Không Lỗi Thảm & Xuyên Tường Mượt 100%
 -- (Banana Cat Hub Style + Caro Pattern + Chỉnh kích thước 4 góc + Chỉnh Rộng/Dày/Dài Thảm Kính)
--- + Bay Đến Player: Tự động NoClip khi bay & Tự động tắt NoClip khi dừng
+-- + Bay Đến Player: Tự động NoClip, Thêm ô tìm kiếm & Sửa lỗi rời server khi đang bay
 -- StarterGui -> LocalScript hoặc Executor
 -- ============================================
 
@@ -383,8 +383,9 @@ local S = {
     flyToTarget=nil, flyToSpeed=150, 
 }
 
--- Forward declare nút NoClip để hệ thống Bay Đến Player có thể điều khiển
+-- Forward declare nút NoClip và RebuildTPList để các hàm bên dưới có thể điều khiển
 local noclipBtn 
+local RebuildTPList
 
 local scripts = {}
 local totalRuns, cancelled = 0, false
@@ -807,7 +808,12 @@ local function StartFlyTo(targetPlayer)
     flyToConn = RunService.RenderStepped:Connect(function(dt)
         local r = Root()
         local h = Hum()
-        if not r or not h or not S.flyToTarget then StopFlyTo(); return end
+        -- Nếu target rời server hoặc bản thân chết thì dừng bay
+        if not r or not h or not S.flyToTarget or not S.flyToTarget.Parent then 
+            StopFlyTo()
+            if RebuildTPList then RebuildTPList() end
+            return 
+        end
 
         local targetChar = S.flyToTarget.Character
         local targetHum = targetChar and targetChar:FindFirstChildOfClass("Humanoid")
@@ -815,7 +821,7 @@ local function StartFlyTo(targetPlayer)
 
         if not targetR or not targetHum or targetHum.Health <= 0 then
             r.AssemblyLinearVelocity = Vector3.new(0,0,0)
-            return -- Chờ họ hồi sinh, hệ thống tự bám lại khi họ sống lại
+            return 
         end
 
         local dir = (targetR.Position - r.Position)
@@ -874,7 +880,7 @@ local function CreatePlayerESP(p)
     local hl = Instance.new("Highlight")
     hl.Name = p.Name .. "_HL"
     hl.Adornee = pChar
-    hl.FillColor = Color3.fromRGB(0, 255, 100) -- Màu xanh mặc định
+    hl.FillColor = Color3.fromRGB(0, 255, 100) 
     hl.FillTransparency = 0.5
     hl.OutlineColor = Color3.fromRGB(255, 255, 255)
     hl.OutlineTransparency = 0
@@ -905,11 +911,11 @@ local function CreatePlayerESP(p)
             local isDowned = hum.Health <= 0 or hum.PlatformStand or state == Enum.HumanoidStateType.Dead
             
             if isDowned then
-                hl.FillColor = Color3.fromRGB(200, 0, 0) -- Đỏ sậm
+                hl.FillColor = Color3.fromRGB(200, 0, 0) 
                 hl.OutlineColor = Color3.fromRGB(255, 100, 100)
                 lbl.TextColor3 = Color3.fromRGB(255, 100, 100)
             else
-                hl.FillColor = Color3.fromRGB(0, 255, 100) -- Xanh
+                hl.FillColor = Color3.fromRGB(0, 255, 100) 
                 hl.OutlineColor = Color3.fromRGB(255, 255, 255)
                 lbl.TextColor3 = Color3.fromRGB(0, 255, 100)
             end
@@ -1552,7 +1558,7 @@ end)
 
 moveTab.CanvasSize=UDim2.new(0,0,0,my+40)
 
--- ==================== TAB 4: BAY ĐẾN NGƯỜI CHƠI (ĐÃ THÊM ESP) ====================
+-- ==================== TAB 4: BAY ĐẾN NGƯỜI CHƠI (THÊM Ô TÌM KIẾM) ====================
 local ty = 8
 
 Label(tpPlayerTab, "⚡ Tốc độ bay tới người chơi", ty)
@@ -1579,6 +1585,22 @@ espBtn.Activated:Connect(function()
 end)
 ty = ty + 30
 
+-- THANH TÌM KIẾM NGƯỜI CHƠI
+Label(tpPlayerTab, "🔍 Tìm tên người chơi", ty)
+ty = ty + 14
+
+local searchTPIn = New("TextBox", {
+    Size=UDim2.new(1,-16,0,26), Position=UDim2.new(0,8,0,ty), Text="",
+    PlaceholderText="Nhập tên để lọc danh sách...", PlaceholderColor3=Color3.fromRGB(160,160,160),
+    BackgroundColor3=Color3.fromRGB(255,255,255), BackgroundTransparency=0, TextColor3=Color3.fromRGB(20,20,20),
+    Font=Enum.Font.GothamMedium, TextSize=12, BorderSizePixel=0, ClearTextOnFocus=false,
+    Active=true, Selectable=true, ZIndex=10, TextXAlignment=Enum.TextXAlignment.Left,
+}, tpPlayerTab)
+Corner(searchTPIn, UDim.new(0,5))
+Stroke(searchTPIn, Color3.fromRGB(180,180,200), 1.2)
+New("UIPadding", {PaddingLeft=UDim.new(0,6)}, searchTPIn)
+ty = ty + 32
+
 Label(tpPlayerTab, "👤 Danh sách người chơi trong Server", ty)
 ty = ty + 14
 
@@ -1589,14 +1611,15 @@ local tpList = New("ScrollingFrame", {
 }, tpPlayerTab)
 New("UIListLayout", {SortOrder=Enum.SortOrder.LayoutOrder, Padding=UDim.new(0,6)}, tpList)
 
-local function RebuildTPList()
+RebuildTPList = function()
     for _,c in ipairs(tpList:GetChildren()) do
         if not c:IsA("UIListLayout") then c:Destroy() end
     end
 
+    local term = searchTPIn.Text:lower()
     local totalHeight = 0
     for _, p in ipairs(Players:GetPlayers()) do
-        if p ~= player then
+        if p ~= player and (term == "" or p.Name:lower():find(term, 1, true)) then
             local row = New("Frame", {
                 Size=UDim2.new(1,0,0,34), BackgroundColor3=Color3.fromRGB(255,255,255),
                 BackgroundTransparency=0.1, BorderSizePixel=0, ZIndex=6,
@@ -1612,11 +1635,16 @@ local function RebuildTPList()
             local flyToBtn = Button(row, "🚀 Bay Đến", -90, 5, 80, 24, C.BLUE)
             flyToBtn.Position = UDim2.new(1, -90, 0, 5)
 
+            -- Cập nhật trạng thái nút nếu đang bay tới người này
+            if S.flyToTarget == p then
+                flyToBtn.Text = "✅ Đang Bay"
+                flyToBtn.BackgroundColor3 = C.GREEN
+            end
+
             flyToBtn.Activated:Connect(function()
                 S.flyToSpeed = tonumber(flyToSpdIn.Text) or 150
                 StartFlyTo(p)
-                flyToBtn.Text = "✅ Đang Bay"
-                flyToBtn.BackgroundColor3 = C.GREEN
+                RebuildTPList() -- Cập nhật danh sách để hiện nút màu xanh
             end)
 
             totalHeight = totalHeight + 40
@@ -1631,8 +1659,15 @@ stopFlyToBtn.Activated:Connect(function()
 end)
 flyToSpdIn.FocusLost:Connect(function(e) if not e then return end; local n=tonumber(flyToSpdIn.Text); if n and n>0 then S.flyToSpeed=n else flyToSpdIn.Text=tostring(S.flyToSpeed) end end)
 
+searchTPIn:GetPropertyChangedSignal("Text"):Connect(RebuildTPList)
+
 Players.PlayerAdded:Connect(function(p) task.wait(0.5); RebuildTPList() end)
-Players.PlayerRemoving:Connect(function(p) RebuildTPList() end)
+Players.PlayerRemoving:Connect(function(p) 
+    if S.flyToTarget == p then
+        StopFlyTo()
+    end
+    RebuildTPList() 
+end)
 RebuildTPList()
 
 -- ==================== TAB 5: NGƯỜI CHƠI (ĐÃ XÓA ESP) ====================
@@ -1834,4 +1869,4 @@ end)
 UpdChar()
 if S.noClip then EnNC() end
 
-print("✅ Đã thêm tính năng tự động NoClip khi Bay Đến Player và tự tắt khi dừng bay!")
+print("✅ Đã thêm ô tìm kiếm người chơi & sửa lỗi target rời server!")
