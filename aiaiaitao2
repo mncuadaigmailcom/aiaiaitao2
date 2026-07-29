@@ -1,7 +1,7 @@
 -- ============================================
 -- EXECUTOR MENU - Fix NoClip Không Lỗi Thảm & Xuyên Tường Mượt 100%
 -- (Banana Cat Hub Style + Caro Pattern + Chỉnh kích thước 4 góc + Chỉnh Rộng/Dày/Dài Thảm Kính)
--- + Bay Đến Player: Tự động NoClip, Thêm ô tìm kiếm & Sửa lỗi rời server khi đang bay
+-- + ESP: Phân biệt Bạn Bè (Hồng/Tím) & Hạ ngục/Chết
 -- StarterGui -> LocalScript hoặc Executor
 -- ============================================
 
@@ -383,13 +383,16 @@ local S = {
     flyToTarget=nil, flyToSpeed=150, 
 }
 
--- Forward declare nút NoClip và RebuildTPList để các hàm bên dưới có thể điều khiển
+-- Forward declare nút NoClip và RebuildTPList
 local noclipBtn 
 local RebuildTPList
 
 local scripts = {}
 local totalRuns, cancelled = 0, false
 local curThread, curIndicator = nil, nil
+
+-- Cache friend status để tránh gọi API liên tục gây lag
+local friendCache = {}
 
 -- ==================== HELPERS ====================
 local function GetChar() return player.Character end
@@ -769,7 +772,6 @@ local function StopFlyTo()
     if h then h.PlatformStand = false end
     S.flyToTarget = nil
     
-    -- Tự động tắt NoClip nếu nó được bật tự động bởi tính năng Bay Đến Player
     if autoNoClipActive and S.noClip then
         S.noClip = false
         if noclipBtn then
@@ -792,7 +794,6 @@ local function StartFlyTo(targetPlayer)
     local h = Hum()
     if h then h.PlatformStand = true end
 
-    -- Tự động bật NoClip nếu chưa được bật
     if not S.noClip then
         S.noClip = true
         if noclipBtn then
@@ -808,7 +809,6 @@ local function StartFlyTo(targetPlayer)
     flyToConn = RunService.RenderStepped:Connect(function(dt)
         local r = Root()
         local h = Hum()
-        -- Nếu target rời server hoặc bản thân chết thì dừng bay
         if not r or not h or not S.flyToTarget or not S.flyToTarget.Parent then 
             StopFlyTo()
             if RebuildTPList then RebuildTPList() end
@@ -839,7 +839,7 @@ local function StartFlyTo(targetPlayer)
     end)
 end
 
--- ==================== ESP SYSTEM ====================
+-- ==================== ESP SYSTEM (CẬP NHẬT MÀU BẠN BÈ & TRẠNG THÁI) ====================
 local espGui = New("ScreenGui", {
     Name = "ExMenu_ESP",
     ResetOnSpawn = false,
@@ -875,12 +875,20 @@ local function CreatePlayerESP(p)
     local rPart = pChar:WaitForChild("HumanoidRootPart", 3)
     local hum = pChar:WaitForChild("Humanoid", 3)
 
-    if not rPart or not hum or hum.Health <= 0 then return end
+    if not rPart or not hum then return end
+
+    -- Kiểm tra và cache trạng thái bạn bè
+    if friendCache[p.UserId] == nil then
+        task.spawn(function()
+            local ok, res = pcall(function() return player:IsFriendsWith(p.UserId) end)
+            if ok then friendCache[p.UserId] = res else friendCache[p.UserId] = false end
+        end)
+    end
 
     local hl = Instance.new("Highlight")
     hl.Name = p.Name .. "_HL"
     hl.Adornee = pChar
-    hl.FillColor = Color3.fromRGB(0, 255, 100) 
+    hl.FillColor = Color3.fromRGB(0, 255, 100)
     hl.FillTransparency = 0.5
     hl.OutlineColor = Color3.fromRGB(255, 255, 255)
     hl.OutlineTransparency = 0
@@ -904,28 +912,50 @@ local function CreatePlayerESP(p)
     lbl.Parent = bb
 
     local thread = task.spawn(function()
-        while S.esp and pChar and pChar.Parent and hum do
+        while S.esp and pChar and pChar.Parent and hum and hum.Parent do
             local r = Root()
-            
             local state = hum:GetState()
-            local isDowned = hum.Health <= 0 or hum.PlatformStand or state == Enum.HumanoidStateType.Dead
             
-            if isDowned then
-                hl.FillColor = Color3.fromRGB(200, 0, 0) 
-                hl.OutlineColor = Color3.fromRGB(255, 100, 100)
-                lbl.TextColor3 = Color3.fromRGB(255, 100, 100)
-            else
-                hl.FillColor = Color3.fromRGB(0, 255, 100) 
-                hl.OutlineColor = Color3.fromRGB(255, 255, 255)
-                lbl.TextColor3 = Color3.fromRGB(0, 255, 100)
+            -- Nếu chết thật sự (trạng thái Dead), xóa ESP và dừng vòng lặp
+            if state == Enum.HumanoidStateType.Dead then
+                RemovePlayerESP(p)
+                return
             end
 
-            local stateText = isDowned and " [☠️ Hạ gục]" or ""
+            -- Kiểm tra hạ ngục (PlatformStand hoặc Health <= 0 nhưng chưa Dead)
+            local isDowned = hum.PlatformStand or hum.Health <= 0
+            local isFriend = friendCache[p.UserId] or false
+
+            local stateText = ""
+            if isDowned then
+                stateText = " [☠️ Hạ ngục]"
+                if isFriend then
+                    hl.FillColor = Color3.fromRGB(138, 43, 226) -- Tím cho bạn bè hạ ngục
+                    hl.OutlineColor = Color3.fromRGB(200, 150, 255)
+                    lbl.TextColor3 = Color3.fromRGB(200, 150, 255)
+                else
+                    hl.FillColor = Color3.fromRGB(200, 0, 0) -- Đỏ cho người khác hạ ngục
+                    hl.OutlineColor = Color3.fromRGB(255, 100, 100)
+                    lbl.TextColor3 = Color3.fromRGB(255, 100, 100)
+                end
+            else
+                if isFriend then
+                    hl.FillColor = Color3.fromRGB(255, 105, 180) -- Hồng cho bạn bè bình thường
+                    hl.OutlineColor = Color3.fromRGB(255, 182, 193)
+                    lbl.TextColor3 = Color3.fromRGB(255, 182, 193)
+                else
+                    hl.FillColor = Color3.fromRGB(0, 255, 100) -- Xanh cho người khác bình thường
+                    hl.OutlineColor = Color3.fromRGB(255, 255, 255)
+                    lbl.TextColor3 = Color3.fromRGB(0, 255, 100)
+                end
+            end
+
+            local friendText = isFriend and " [💗 Bạn Bè]" or ""
             if r then
                 local dist = math.round((r.Position - rPart.Position).Magnitude)
-                lbl.Text = string.format("%s%s\n❤️ %d/%d | 📏 %dm", p.Name, stateText, math.round(hum.Health), math.round(hum.MaxHealth), dist)
+                lbl.Text = string.format("%s%s%s\n❤️ %d/%d | 📏 %dm", p.Name, friendText, stateText, math.round(hum.Health), math.round(hum.MaxHealth), dist)
             else
-                lbl.Text = string.format("%s%s\n❤️ %d/%d | 📏 --m", p.Name, stateText, math.round(hum.Health), math.round(hum.MaxHealth))
+                lbl.Text = string.format("%s%s%s\n❤️ %d/%d | 📏 --m", p.Name, friendText, stateText, math.round(hum.Health), math.round(hum.MaxHealth))
             end
             task.wait(0.2)
         end
@@ -979,7 +1009,10 @@ Players.PlayerAdded:Connect(function(p)
     end
 end)
 
-Players.PlayerRemoving:Connect(function(p) RemovePlayerESP(p) end)
+Players.PlayerRemoving:Connect(function(p) 
+    RemovePlayerESP(p)
+    friendCache[p.UserId] = nil -- Dọn dẹp cache khi người chơi rời đi
+end)
 
 -- ==================== CODE EXECUTION ====================
 local function ExecOnce(code, name)
@@ -1558,7 +1591,7 @@ end)
 
 moveTab.CanvasSize=UDim2.new(0,0,0,my+40)
 
--- ==================== TAB 4: BAY ĐẾN NGƯỜI CHƠI (THÊM Ô TÌM KIẾM) ====================
+-- ==================== TAB 4: BAY ĐẾN NGƯỜI CHƠI ====================
 local ty = 8
 
 Label(tpPlayerTab, "⚡ Tốc độ bay tới người chơi", ty)
@@ -1635,7 +1668,6 @@ RebuildTPList = function()
             local flyToBtn = Button(row, "🚀 Bay Đến", -90, 5, 80, 24, C.BLUE)
             flyToBtn.Position = UDim2.new(1, -90, 0, 5)
 
-            -- Cập nhật trạng thái nút nếu đang bay tới người này
             if S.flyToTarget == p then
                 flyToBtn.Text = "✅ Đang Bay"
                 flyToBtn.BackgroundColor3 = C.GREEN
@@ -1644,7 +1676,7 @@ RebuildTPList = function()
             flyToBtn.Activated:Connect(function()
                 S.flyToSpeed = tonumber(flyToSpdIn.Text) or 150
                 StartFlyTo(p)
-                RebuildTPList() -- Cập nhật danh sách để hiện nút màu xanh
+                RebuildTPList()
             end)
 
             totalHeight = totalHeight + 40
@@ -1670,7 +1702,7 @@ Players.PlayerRemoving:Connect(function(p)
 end)
 RebuildTPList()
 
--- ==================== TAB 5: NGƯỜI CHƠI (ĐÃ XÓA ESP) ====================
+-- ==================== TAB 5: NGƯỜI CHƠI ====================
 local py = 8
 
 Label(playerTab, "🧊 Đóng Băng & Tác Động Người Khác", py)
@@ -1869,4 +1901,4 @@ end)
 UpdChar()
 if S.noClip then EnNC() end
 
-print("✅ Đã thêm ô tìm kiếm người chơi & sửa lỗi target rời server!")
+print("✅ Đã cập nhật ESP: Phân biệt Bạn Bè, Hạ ngục và Chết!")
