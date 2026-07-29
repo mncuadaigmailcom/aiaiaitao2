@@ -1,7 +1,7 @@
 -- ============================================
 -- EXECUTOR MENU - Fix NoClip Không Lỗi Thảm & Xuyên Tường Mượt 100%
 -- (Banana Cat Hub Style + Caro Pattern + Chỉnh kích thước 4 góc + Chỉnh Rộng/Dày/Dài Thảm Kính)
--- + Sửa lỗi không hiển thị Tab "Bay Đến Player"
+-- + Bay Đến Player Liên Tục (Dừng khi bấm nút)
 -- StarterGui -> LocalScript hoặc Executor
 -- ============================================
 
@@ -361,13 +361,13 @@ local function AddTab(name, icon, order)
     return sf
 end
 
--- 6 TABS (Đã fix thứ tự order để không bị đè lên nhau)
+-- 6 TABS
 local codeTab      = AddTab("Code", "💻", 1)
 local savedCodeTab = AddTab("Code Đã Lưu", "💾", 2)
 local moveTab      = AddTab("Di Chuyển", "🏃", 3)
-local tpPlayerTab  = AddTab("Bay Đến Player", "🎯", 4) -- Đã gán order 4
-local playerTab    = AddTab("Người Chơi", "👤", 5)    -- Đã gán order 5
-local envTab       = AddTab("Môi Trường", "⚙️", 6)    -- Đã gán order 6
+local tpPlayerTab  = AddTab("Bay Đến Player", "🎯", 4)
+local playerTab    = AddTab("Người Chơi", "👤", 5)
+local envTab       = AddTab("Môi Trường", "⚙️", 6)
 
 SwitchTab(1)
 
@@ -752,7 +752,7 @@ movDBtn.Activated:Connect(function()
     end
 end)
 
--- ==================== FLY TO PLAYER SYSTEM ====================
+-- ==================== FLY TO PLAYER SYSTEM (BAY LIÊN TỤC) ====================
 local flyToConn = nil
 
 local function StopFlyTo()
@@ -787,20 +787,23 @@ local function StartFlyTo(targetPlayer)
 
         if not targetR or not targetHum or targetHum.Health <= 0 then
             r.AssemblyLinearVelocity = Vector3.new(0,0,0)
-            return
-        end
-
-        local dist = (r.Position - targetR.Position).Magnitude
-        if dist < 5 then
-            r.AssemblyLinearVelocity = Vector3.new(0,0,0)
-            StopFlyTo()
-            return
+            return -- Chờ họ hồi sinh, hệ thống tự bám lại khi họ sống lại
         end
 
         local dir = (targetR.Position - r.Position)
-        local moveAmount = math.min(dir.Magnitude, S.flyToSpeed * dt)
-        local newPos = r.Position + dir.Unit * moveAmount
-        r.CFrame = CFrame.lookAt(newPos, targetR.Position)
+        local dist = dir.Magnitude
+        local stopDist = 4 -- Khoảng cách dừng lại (không bị chèn ép vào người họ)
+
+        if dist > stopDist then
+            -- Bay tới nếu chưa đủ gần
+            local moveAmount = math.min(dist - stopDist, S.flyToSpeed * dt)
+            local newPos = r.Position + dir.Unit * moveAmount
+            r.CFrame = CFrame.lookAt(newPos, targetR.Position)
+        else
+            -- Đã đủ gần, chỉ nhìn về phía họ, nếu họ chạy đi thì tự động bay theo tiếp
+            r.CFrame = CFrame.new(r.Position, targetR.Position)
+            r.AssemblyLinearVelocity = Vector3.new(0,0,0)
+        end
     end)
 end
 
@@ -1550,12 +1553,6 @@ local function RebuildTPList()
                 StartFlyTo(p)
                 flyToBtn.Text = "✅ Đang Bay"
                 flyToBtn.BackgroundColor3 = C.GREEN
-                task.delay(1, function()
-                    if flyToBtn and flyToBtn.Parent then
-                        flyToBtn.Text = "🚀 Bay Đến"
-                        flyToBtn.BackgroundColor3 = C.BLUE
-                    end
-                end)
             end)
 
             totalHeight = totalHeight + 40
@@ -1564,7 +1561,10 @@ local function RebuildTPList()
     tpList.CanvasSize = UDim2.new(0,0,0,totalHeight)
 end
 
-stopFlyToBtn.Activated:Connect(function() StopFlyTo() end)
+stopFlyToBtn.Activated:Connect(function() 
+    StopFlyTo() 
+    RebuildTPList() -- Reset nút về "Bay Đến"
+end)
 flyToSpdIn.FocusLost:Connect(function(e) if not e then return end; local n=tonumber(flyToSpdIn.Text); if n and n>0 then S.flyToSpeed=n else flyToSpdIn.Text=tostring(S.flyToSpeed) end end)
 
 Players.PlayerAdded:Connect(function(p) task.wait(0.5); RebuildTPList() end)
@@ -1782,4 +1782,4 @@ end)
 UpdChar()
 if S.noClip then EnNC() end
 
-print("✅ Đã sửa lỗi hiển thị Tab Bay Đến Người Chơi!")
+print("✅ Đã cập nhật: Bay đến Player liên tục cho đến khi bấm Dừng!")
