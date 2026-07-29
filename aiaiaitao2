@@ -1,7 +1,7 @@
 -- ============================================
 -- EXECUTOR MENU - Fix NoClip Không Lỗi Thảm & Xuyên Tường Mượt 100%
 -- (Banana Cat Hub Style + Caro Pattern + Chỉnh kích thước 4 góc + Chỉnh Rộng/Dày/Dài Thảm Kính)
--- + Bay Đến Player Liên Tục (Dừng khi bấm nút)
+-- + Di chuyển ESP sang Tab Bay Đến Player + Fix lỗi người mới vào & Đổi màu khi bị hạ gục
 -- StarterGui -> LocalScript hoặc Executor
 -- ============================================
 
@@ -792,22 +792,20 @@ local function StartFlyTo(targetPlayer)
 
         local dir = (targetR.Position - r.Position)
         local dist = dir.Magnitude
-        local stopDist = 4 -- Khoảng cách dừng lại (không bị chèn ép vào người họ)
+        local stopDist = 4 
 
         if dist > stopDist then
-            -- Bay tới nếu chưa đủ gần
             local moveAmount = math.min(dist - stopDist, S.flyToSpeed * dt)
             local newPos = r.Position + dir.Unit * moveAmount
             r.CFrame = CFrame.lookAt(newPos, targetR.Position)
         else
-            -- Đã đủ gần, chỉ nhìn về phía họ, nếu họ chạy đi thì tự động bay theo tiếp
             r.CFrame = CFrame.new(r.Position, targetR.Position)
             r.AssemblyLinearVelocity = Vector3.new(0,0,0)
         end
     end)
 end
 
--- ==================== ESP SYSTEM ====================
+-- ==================== ESP SYSTEM (CẬP NHẬT MÀU & FIX NGƯỜI MỚI VÀO) ====================
 local espGui = New("ScreenGui", {
     Name = "ExMenu_ESP",
     ResetOnSpawn = false,
@@ -848,7 +846,7 @@ local function CreatePlayerESP(p)
     local hl = Instance.new("Highlight")
     hl.Name = p.Name .. "_HL"
     hl.Adornee = pChar
-    hl.FillColor = Color3.fromRGB(255, 50, 50)
+    hl.FillColor = Color3.fromRGB(0, 255, 100) -- Màu xanh mặc định
     hl.FillTransparency = 0.5
     hl.OutlineColor = Color3.fromRGB(255, 255, 255)
     hl.OutlineTransparency = 0
@@ -865,20 +863,37 @@ local function CreatePlayerESP(p)
     local lbl = Instance.new("TextLabel")
     lbl.Size = UDim2.new(1, 0, 1, 0)
     lbl.BackgroundTransparency = 1
-    lbl.TextColor3 = Color3.fromRGB(255, 255, 255)
+    lbl.TextColor3 = Color3.fromRGB(0, 255, 100)
     lbl.Font = Enum.Font.GothamBold
     lbl.TextSize = 11
     lbl.TextStrokeTransparency = 0.2
     lbl.Parent = bb
 
     local thread = task.spawn(function()
-        while S.esp and pChar and pChar.Parent and hum and hum.Health > 0 do
+        -- Đổi điều kiện lặp để ESP vẫn chạy khi health về 0 (chờ cứu)
+        while S.esp and pChar and pChar.Parent and hum do
             local r = Root()
+            
+            -- Kiểm tra trạng thái bị hạ gục/chờ cứu
+            local state = hum:GetState()
+            local isDowned = hum.Health <= 0 or hum.PlatformStand or state == Enum.HumanoidStateType.Dead
+            
+            if isDowned then
+                hl.FillColor = Color3.fromRGB(200, 0, 0) -- Đỏ sậm
+                hl.OutlineColor = Color3.fromRGB(255, 100, 100)
+                lbl.TextColor3 = Color3.fromRGB(255, 100, 100)
+            else
+                hl.FillColor = Color3.fromRGB(0, 255, 100) -- Xanh
+                hl.OutlineColor = Color3.fromRGB(255, 255, 255)
+                lbl.TextColor3 = Color3.fromRGB(0, 255, 100)
+            end
+
+            local stateText = isDowned and " [☠️ Hạ gục]" or ""
             if r then
                 local dist = math.round((r.Position - rPart.Position).Magnitude)
-                lbl.Text = string.format("%s\n❤️ %d/%d | 📏 %dm", p.Name, math.round(hum.Health), math.round(hum.MaxHealth), dist)
+                lbl.Text = string.format("%s%s\n❤️ %d/%d | 📏 %dm", p.Name, stateText, math.round(hum.Health), math.round(hum.MaxHealth), dist)
             else
-                lbl.Text = string.format("%s\n❤️ %d/%d | 📏 --m", p.Name, math.round(hum.Health), math.round(hum.MaxHealth))
+                lbl.Text = string.format("%s%s\n❤️ %d/%d | 📏 --m", p.Name, stateText, math.round(hum.Health), math.round(hum.MaxHealth))
             end
             task.wait(0.2)
         end
@@ -917,8 +932,23 @@ local function UpdateESP()
     end
 end
 
+-- Hook người chơi hiện tại
 for _, p in ipairs(Players:GetPlayers()) do HookPlayer(p) end
-Players.PlayerAdded:Connect(function(p) HookPlayer(p) end)
+
+-- Sửa lỗi người mới vào: Chủ động chờ character và tạo ESP
+Players.PlayerAdded:Connect(function(p) 
+    HookPlayer(p)
+    if S.esp then
+        task.spawn(function()
+            local char = p.Character or p.CharacterAdded:Wait()
+            task.wait(0.5)
+            if S.esp and char and char.Parent then
+                CreatePlayerESP(p)
+            end
+        end)
+    end
+end)
+
 Players.PlayerRemoving:Connect(function(p) RemovePlayerESP(p) end)
 
 -- ==================== CODE EXECUTION ====================
@@ -1498,7 +1528,7 @@ end)
 
 moveTab.CanvasSize=UDim2.new(0,0,0,my+40)
 
--- ==================== TAB 4: BAY ĐẾN NGƯỜI CHƠI ====================
+-- ==================== TAB 4: BAY ĐẾN NGƯỜI CHƠI (ĐÃ THÊM ESP) ====================
 local ty = 8
 
 Label(tpPlayerTab, "⚡ Tốc độ bay tới người chơi", ty)
@@ -1513,6 +1543,16 @@ local flyToSpdIn = New("TextBox", {
 Corner(flyToSpdIn,UDim.new(0,5)); Stroke(flyToSpdIn)
 
 local stopFlyToBtn = Button(tpPlayerTab, "⏹ Dừng Bay", 72, ty, 100, 24, C.RED)
+ty = ty + 30
+
+-- THÊM NÚT ESP NGƯỜI CHƠI TẠI ĐÂY
+local espBtn = Button(tpPlayerTab, "👁️ ESP Người Chơi: TẮT", 8, ty, 200, 24, C.GRAY)
+espBtn.Activated:Connect(function()
+    S.esp = not S.esp
+    espBtn.Text = S.esp and "👁️ ESP Người Chơi: BẬT" or "👁️ ESP Người Chơi: TẮT"
+    espBtn.BackgroundColor3 = S.esp and C.GREEN or C.GRAY
+    UpdateESP()
+end)
 ty = ty + 30
 
 Label(tpPlayerTab, "👤 Danh sách người chơi trong Server", ty)
@@ -1563,7 +1603,7 @@ end
 
 stopFlyToBtn.Activated:Connect(function() 
     StopFlyTo() 
-    RebuildTPList() -- Reset nút về "Bay Đến"
+    RebuildTPList() 
 end)
 flyToSpdIn.FocusLost:Connect(function(e) if not e then return end; local n=tonumber(flyToSpdIn.Text); if n and n>0 then S.flyToSpeed=n else flyToSpdIn.Text=tostring(S.flyToSpeed) end end)
 
@@ -1571,20 +1611,8 @@ Players.PlayerAdded:Connect(function(p) task.wait(0.5); RebuildTPList() end)
 Players.PlayerRemoving:Connect(function(p) RebuildTPList() end)
 RebuildTPList()
 
--- ==================== TAB 5: NGƯỜI CHƠI ====================
+-- ==================== TAB 5: NGƯỜI CHƠI (ĐÃ XÓA ESP) ====================
 local py = 8
-
-Label(playerTab, "👁️ Quan sát & Nhìn xuyên tường", py)
-py = py + 14
-
-local espBtn = Button(playerTab, "👁️ ESP Người Chơi: TẮT", 8, py, 200, 24, C.GRAY)
-espBtn.Activated:Connect(function()
-    S.esp = not S.esp
-    espBtn.Text = S.esp and "👁️ ESP Người Chơi: BẬT" or "👁️ ESP Người Chơi: TẮT"
-    espBtn.BackgroundColor3 = S.esp and C.GREEN or C.GRAY
-    UpdateESP()
-end)
-py = py + 30
 
 Label(playerTab, "🧊 Đóng Băng & Tác Động Người Khác", py)
 py = py + 14
@@ -1782,4 +1810,4 @@ end)
 UpdChar()
 if S.noClip then EnNC() end
 
-print("✅ Đã cập nhật: Bay đến Player liên tục cho đến khi bấm Dừng!")
+print("✅ Đã di chuyển ESP, fix lỗi người mới vào server & thêm màu đỏ khi bị hạ gục!")
