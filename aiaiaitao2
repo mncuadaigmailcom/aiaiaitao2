@@ -1,7 +1,7 @@
 -- ============================================
 -- EXECUTOR MENU - Fix NoClip Không Lỗi Thảm & Xuyên Tường Mượt 100%
 -- (Banana Cat Hub Style + Caro Pattern + Chỉnh kích thước 4 góc + Chỉnh Rộng/Dày/Dài Thảm Kính)
--- (Đã xóa Tab Đồ Họa và Camera + Sửa lỗi không hiện menu)
+-- + THÊM TAB "BAY ĐẾN NGƯỜI CHƠI" (Nằm giữa Di Chuyển và Người Chơi)
 -- StarterGui -> LocalScript hoặc Executor
 -- ============================================
 
@@ -17,7 +17,7 @@ local VirtualUser = game:GetService("VirtualUser")
 local player = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
 
--- Xác định Parent an toàn cho UI (Đã thêm pcall chống crash)
+-- Xác định Parent an toàn cho UI
 local targetGui = playerGui
 pcall(function()
     if gethui then
@@ -361,12 +361,13 @@ local function AddTab(name, icon, order)
     return sf
 end
 
--- 5 TABS
+-- 6 TABS (Đã chèn Tab Bay Đến Người Chơi ở vị trí số 4)
 local codeTab      = AddTab("Code", "💻", 1)
 local savedCodeTab = AddTab("Code Đã Lưu", "💾", 2)
 local moveTab      = AddTab("Di Chuyển", "🏃", 3)
-local playerTab    = AddTab("Người Chơi", "👤", 4)
-local envTab       = AddTab("Môi Trường", "⚙️", 5)
+local tpPlayerTab  = AddTab("Bay Đến Player", "🎯", 4) -- TAB MỚI
+local playerTab    = AddTab("Người Chơi", "👤", 5)
+local envTab       = AddTab("Môi Trường", "⚙️", 6)
 
 SwitchTab(1)
 
@@ -379,6 +380,7 @@ local S = {
     carpetY=nil,
     infJump=false, clickTp=false, esp=false, antiAfk=true, fullBright=false,
     blockServer=false, freezeOthers=false,
+    flyToTarget=nil, flyToSpeed=150, -- State cho tính năng Bay Đến Player
 }
 
 local scripts = {}
@@ -750,8 +752,62 @@ movDBtn.Activated:Connect(function()
     end
 end)
 
--- ==================== ESP SYSTEM (SỬA LỖI FOLDER CRASH) ====================
--- Đổi từ Folder sang ScreenGui vì ScreenGui không chấp nhận Folder làm con
+-- ==================== FLY TO PLAYER SYSTEM (MỚI) ====================
+local flyToConn = nil
+
+local function StopFlyTo()
+    if flyToConn then 
+        flyToConn:Disconnect() 
+        flyToConn = nil 
+    end
+    local h = Hum()
+    if h then h.PlatformStand = false end
+    S.flyToTarget = nil
+end
+
+local function StartFlyTo(targetPlayer)
+    -- Tắt các kiểu bay khác nếu đang bật
+    if S.flying then S.flying = false; TogFly() end
+    if S.flyRun then S.flyRun = false; StopFlyRun() end
+    StopFlyTo()
+
+    if not targetPlayer then return end
+
+    S.flyToTarget = targetPlayer
+    local h = Hum()
+    if h then h.PlatformStand = true end
+
+    flyToConn = RunService.RenderStepped:Connect(function(dt)
+        local r = Root()
+        local h = Hum()
+        if not r or not h or not S.flyToTarget then StopFlyTo(); return end
+
+        local targetChar = S.flyToTarget.Character
+        local targetHum = targetChar and targetChar:FindFirstChildOfClass("Humanoid")
+        local targetR = targetChar and targetChar:FindFirstChild("HumanoidRootPart")
+
+        if not targetR or not targetHum or targetHum.Health <= 0 then
+            r.AssemblyLinearVelocity = Vector3.new(0,0,0)
+            return
+        end
+
+        local dist = (r.Position - targetR.Position).Magnitude
+        if dist < 5 then
+            -- Đã đến nơi
+            r.AssemblyLinearVelocity = Vector3.new(0,0,0)
+            StopFlyTo()
+            return
+        end
+
+        -- Bay mượt mà tới người chơi
+        local dir = (targetR.Position - r.Position)
+        local moveAmount = math.min(dir.Magnitude, S.flyToSpeed * dt)
+        local newPos = r.Position + dir.Unit * moveAmount
+        r.CFrame = CFrame.lookAt(newPos, targetR.Position)
+    end)
+end
+
+-- ==================== ESP SYSTEM ====================
 local espGui = New("ScreenGui", {
     Name = "ExMenu_ESP",
     ResetOnSpawn = false,
@@ -996,7 +1052,6 @@ New("UIPadding", {PaddingLeft=UDim.new(0,6), PaddingTop=UDim.new(0,4)}, codeIn)
 
 y = y + 86
 
--- Loop settings
 Label(codeTab, "🔁 Cài đặt lặp", y)
 y = y + 14
 Label(codeTab, "Số lần lặp:", y)
@@ -1120,7 +1175,7 @@ saveBtn.Activated:Connect(function()
     statusLbl.Text="✅ Đã lưu vào Tab 'Code Đã Lưu'!"
 end)
 
--- ==================== TAB 2: CODE ĐÃ LƯU (SỬA LỖI XÓA NHẦM) ====================
+-- ==================== TAB 2: CODE ĐÃ LƯU ====================
 local sy = 8
 Label(savedCodeTab, "💾 Danh Sách Script Đã Lưu", sy)
 sy = sy + 18
@@ -1261,7 +1316,6 @@ RebuildScripts = function()
             statusLbl.Text="⏳ Đang chạy: "..d.name
         end)
 
-        -- Sửa lỗi xóa nhầm: Tìm đúng idx trong mảng scripts gốc
         delScriptBtn.Activated:Connect(function()
             local origIdx = nil
             for idx, s in ipairs(scripts) do
@@ -1407,6 +1461,7 @@ wsIn.FocusLost:Connect(function(e) if not e then return end; local n=tonumber(ws
 jpIn.FocusLost:Connect(function(e) if not e then return end; local n=tonumber(jpIn.Text); if n and n>0 then S.jumpPower=n; UpdChar() else jpIn.Text=tostring(S.jumpPower) end; jpLbl.Text="Hiện tại: "..S.jumpPower end)
 
 flyBtn.Activated:Connect(function()
+    StopFlyTo() -- Tắt bay tới player nếu bật bay thường
     S.flying = not S.flying
     TogFly()
     flyBtn.Text=S.flying and "🕊️ Bay: BẬT" or "🕊️ Bay: TẮT"
@@ -1443,7 +1498,83 @@ end)
 
 moveTab.CanvasSize=UDim2.new(0,0,0,my+40)
 
--- ==================== TAB 4: NGƯỜI CHƠI ====================
+-- ==================== TAB 4: BAY ĐẾN NGƯỜI CHƠI (MỚI) ====================
+local ty = 8
+
+Label(tpPlayerTab, "⚡ Tốc độ bay tới người chơi", ty)
+ty = ty + 14
+
+local flyToSpdIn = New("TextBox", {
+    Size=UDim2.new(0,55,0,24), Position=UDim2.new(0,8,0,ty), Text="150",
+    BackgroundColor3=Color3.fromRGB(255,255,255), BackgroundTransparency=0, TextColor3=Color3.fromRGB(20,20,20),
+    Font=Enum.Font.GothamMedium, TextSize=12, BorderSizePixel=0, ClearTextOnFocus=false,
+    Active=true, Selectable=true, ZIndex=8,
+}, tpPlayerTab)
+Corner(flyToSpdIn,UDim.new(0,5)); Stroke(flyToSpdIn)
+
+local stopFlyToBtn = Button(tpPlayerTab, "⏹ Dừng Bay", 72, ty, 100, 24, C.RED)
+ty = ty + 30
+
+Label(tpPlayerTab, "👤 Danh sách người chơi trong Server", ty)
+ty = ty + 14
+
+local tpList = New("ScrollingFrame", {
+    Size=UDim2.new(1,-16,1,-ty-10), Position=UDim2.new(0,8,0,ty),
+    BackgroundTransparency=1, BorderSizePixel=0, ScrollBarThickness=5,
+    CanvasSize=UDim2.new(0,0,0,0), ZIndex=6,
+}, tpPlayerTab)
+New("UIListLayout", {SortOrder=Enum.SortOrder.LayoutOrder, Padding=UDim.new(0,6)}, tpList)
+
+local function RebuildTPList()
+    for _,c in ipairs(tpList:GetChildren()) do
+        if not c:IsA("UIListLayout") then c:Destroy() end
+    end
+
+    local totalHeight = 0
+    for _, p in ipairs(Players:GetPlayers()) do
+        if p ~= player then
+            local row = New("Frame", {
+                Size=UDim2.new(1,0,0,34), BackgroundColor3=Color3.fromRGB(255,255,255),
+                BackgroundTransparency=0.1, BorderSizePixel=0, ZIndex=6,
+            }, tpList)
+            Corner(row,UDim.new(0,5)); Stroke(row)
+
+            New("TextLabel", {
+                Size=UDim2.new(1,-100,1,0), Position=UDim2.new(0,8,0,0),
+                Text=p.Name, BackgroundTransparency=1, TextColor3=C.DARK,
+                Font=Enum.Font.GothamBold, TextSize=11, TextXAlignment=Enum.TextXAlignment.Left, ZIndex=7,
+            }, row)
+
+            local flyToBtn = Button(row, "🚀 Bay Đến", -90, 5, 80, 24, C.BLUE)
+            flyToBtn.Position = UDim2.new(1, -90, 0, 5)
+
+            flyToBtn.Activated:Connect(function()
+                S.flyToSpeed = tonumber(flyToSpdIn.Text) or 150
+                StartFlyTo(p)
+                flyToBtn.Text = "✅ Đang Bay"
+                flyToBtn.BackgroundColor3 = C.GREEN
+                task.delay(1, function()
+                    if flyToBtn and flyToBtn.Parent then
+                        flyToBtn.Text = "🚀 Bay Đến"
+                        flyToBtn.BackgroundColor3 = C.BLUE
+                    end
+                end)
+            end)
+
+            totalHeight = totalHeight + 40
+        end
+    end
+    tpList.CanvasSize = UDim2.new(0,0,0,totalHeight)
+end
+
+stopFlyToBtn.Activated:Connect(function() StopFlyTo() end)
+flyToSpdIn.FocusLost:Connect(function(e) if not e then return end; local n=tonumber(flyToSpdIn.Text); if n and n>0 then S.flyToSpeed=n else flyToSpdIn.Text=tostring(S.flyToSpeed) end end)
+
+Players.PlayerAdded:Connect(function(p) task.wait(0.5); RebuildTPList() end)
+Players.PlayerRemoving:Connect(function(p) RebuildTPList() end)
+RebuildTPList()
+
+-- ==================== TAB 5: NGƯỜI CHƠI ====================
 local py = 8
 
 Label(playerTab, "👁️ Quan sát & Nhìn xuyên tường", py)
@@ -1527,7 +1658,7 @@ end)
 
 playerTab.CanvasSize = UDim2.new(0, 0, 0, py + 50)
 
--- ==================== TAB 5: MÔI TRƯỜNG ====================
+-- ==================== TAB 6: MÔI TRƯỜNG ====================
 local ey = 8
 
 Label(envTab, "🌤 Điều khiển thời tiết", ey)
@@ -1648,10 +1779,11 @@ player.CharacterAdded:Connect(function(c)
     if S.flying then StopFly(); TogFly() end
     if S.carpet then StopCarpet(); TogCarpet() end
     if S.flyRun then TogFlyRun() end
+    StopFlyTo() -- Reset bay tới player khi respawn
     if S.esp then UpdateESP() end
 end)
 
 UpdChar()
 if S.noClip then EnNC() end
 
-print("✅ Script đã sửa lỗi thành công và hiển thị Menu!")
+print("✅ Đã thêm Tab Bay Đến Người Chơi ở giữa Di Chuyển & Người Chơi!")
