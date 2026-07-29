@@ -1,7 +1,7 @@
 -- ============================================
 -- EXECUTOR MENU - Fix NoClip Không Lỗi Thảm & Xuyên Tường Mượt 100%
 -- (Banana Cat Hub Style + Caro Pattern + Chỉnh kích thước 4 góc + Chỉnh Rộng/Dày/Dài Thảm Kính)
--- + Di chuyển ESP sang Tab Bay Đến Player + Fix lỗi người mới vào & Đổi màu khi bị hạ gục
+-- + Bay Đến Player: Tự động NoClip khi bay & Tự động tắt NoClip khi dừng
 -- StarterGui -> LocalScript hoặc Executor
 -- ============================================
 
@@ -383,6 +383,9 @@ local S = {
     flyToTarget=nil, flyToSpeed=150, 
 }
 
+-- Forward declare nút NoClip để hệ thống Bay Đến Player có thể điều khiển
+local noclipBtn 
+
 local scripts = {}
 local totalRuns, cancelled = 0, false
 local curThread, curIndicator = nil, nil
@@ -752,8 +755,9 @@ movDBtn.Activated:Connect(function()
     end
 end)
 
--- ==================== FLY TO PLAYER SYSTEM (BAY LIÊN TỤC) ====================
+-- ==================== FLY TO PLAYER SYSTEM (TỰ ĐỘNG NOCLIP) ====================
 local flyToConn = nil
+local autoNoClipActive = false
 
 local function StopFlyTo()
     if flyToConn then 
@@ -763,6 +767,17 @@ local function StopFlyTo()
     local h = Hum()
     if h then h.PlatformStand = false end
     S.flyToTarget = nil
+    
+    -- Tự động tắt NoClip nếu nó được bật tự động bởi tính năng Bay Đến Player
+    if autoNoClipActive and S.noClip then
+        S.noClip = false
+        if noclipBtn then
+            noclipBtn.Text = "🚶 NoClip: TẮT"
+            noclipBtn.BackgroundColor3 = C.GRAY
+        end
+        DisNC()
+        autoNoClipActive = false
+    end
 end
 
 local function StartFlyTo(targetPlayer)
@@ -775,6 +790,19 @@ local function StartFlyTo(targetPlayer)
     S.flyToTarget = targetPlayer
     local h = Hum()
     if h then h.PlatformStand = true end
+
+    -- Tự động bật NoClip nếu chưa được bật
+    if not S.noClip then
+        S.noClip = true
+        if noclipBtn then
+            noclipBtn.Text = "🚶 NoClip: BẬT"
+            noclipBtn.BackgroundColor3 = Color3.fromRGB(0, 180, 100)
+        end
+        EnNC()
+        autoNoClipActive = true
+    else
+        autoNoClipActive = false
+    end
 
     flyToConn = RunService.RenderStepped:Connect(function(dt)
         local r = Root()
@@ -805,7 +833,7 @@ local function StartFlyTo(targetPlayer)
     end)
 end
 
--- ==================== ESP SYSTEM (CẬP NHẬT MÀU & FIX NGƯỜI MỚI VÀO) ====================
+-- ==================== ESP SYSTEM ====================
 local espGui = New("ScreenGui", {
     Name = "ExMenu_ESP",
     ResetOnSpawn = false,
@@ -870,11 +898,9 @@ local function CreatePlayerESP(p)
     lbl.Parent = bb
 
     local thread = task.spawn(function()
-        -- Đổi điều kiện lặp để ESP vẫn chạy khi health về 0 (chờ cứu)
         while S.esp and pChar and pChar.Parent and hum do
             local r = Root()
             
-            -- Kiểm tra trạng thái bị hạ gục/chờ cứu
             local state = hum:GetState()
             local isDowned = hum.Health <= 0 or hum.PlatformStand or state == Enum.HumanoidStateType.Dead
             
@@ -932,10 +958,8 @@ local function UpdateESP()
     end
 end
 
--- Hook người chơi hiện tại
 for _, p in ipairs(Players:GetPlayers()) do HookPlayer(p) end
 
--- Sửa lỗi người mới vào: Chủ động chờ character và tạo ESP
 Players.PlayerAdded:Connect(function(p) 
     HookPlayer(p)
     if S.esp then
@@ -1440,7 +1464,7 @@ my = my + 32
 
 Label(moveTab, "🚪 Bổ trợ di chuyển đặc biệt", my)
 my = my + 14
-local noclipBtn = Button(moveTab, "🚶 NoClip: TẮT", 8, my, 130, 24, C.GRAY)
+noclipBtn = Button(moveTab, "🚶 NoClip: TẮT", 8, my, 130, 24, C.GRAY)
 local infJumpBtn = Button(moveTab, "🦘 Nhảy Vô Hạn: TẮT", 148, my, 130, 24, C.GRAY)
 my = my + 30
 
@@ -1545,7 +1569,7 @@ Corner(flyToSpdIn,UDim.new(0,5)); Stroke(flyToSpdIn)
 local stopFlyToBtn = Button(tpPlayerTab, "⏹ Dừng Bay", 72, ty, 100, 24, C.RED)
 ty = ty + 30
 
--- THÊM NÚT ESP NGƯỜI CHƠI TẠI ĐÂY
+-- NÚT ESP NGƯỜI CHƠI
 local espBtn = Button(tpPlayerTab, "👁️ ESP Người Chơi: TẮT", 8, ty, 200, 24, C.GRAY)
 espBtn.Activated:Connect(function()
     S.esp = not S.esp
@@ -1810,4 +1834,4 @@ end)
 UpdChar()
 if S.noClip then EnNC() end
 
-print("✅ Đã di chuyển ESP, fix lỗi người mới vào server & thêm màu đỏ khi bị hạ gục!")
+print("✅ Đã thêm tính năng tự động NoClip khi Bay Đến Player và tự tắt khi dừng bay!")
