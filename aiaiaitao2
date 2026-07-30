@@ -1,8 +1,8 @@
 -- ============================================
 -- EXECUTOR MENU - Fix NoClip Không Lỗi Thảm & Xuyên Tường Mượt 100%
 -- (Banana Cat Hub Style + Caro Pattern + Chỉnh kích thước 4 góc + Chỉnh Rộng/Dày/Dài Thảm Kính)
--- + ESP: Phân biệt Bạn Bè (Hồng/Tím) & Hạ ngục/Chết
--- + Nút Khóa/Mở Khóa Di Chuyển Menu nằm trên Thanh Tiêu Đề
+-- + ESP: Phân biệt Bạn Bè (Hồng/Tím) & Hạ ngục/Chết + Đếm giờ Hạ Ngục
+-- + Định Vị Lẻ: Nhấn tên người chơi để chỉ ESP người đó
 -- StarterGui -> LocalScript hoặc Executor
 -- ============================================
 
@@ -148,7 +148,7 @@ local titleBar = New("Frame", {
 Corner(titleBar, UDim.new(0,10))
 
 New("TextLabel", {
-    Size=UDim2.new(1,-90,1,0), -- Giảm kích thước để nhường chỗ cho nút Khóa và Đóng
+    Size=UDim2.new(1,-90,1,0),
     Position=UDim2.new(0,12,0,0),
     Text="🍌 Banana Cat Executor Hub (Caro Style)",
     BackgroundTransparency=1,
@@ -159,7 +159,7 @@ New("TextLabel", {
     ZIndex=4,
 }, titleBar)
 
--- NÚT MỞ KHÓA DI CHUYỂN MENU (NẰM BÊN PHẢI TÊN MENU)
+-- NÚT MỞ KHÓA DI CHUYỂN MENU
 local dragLockBtn = New("TextButton", {
     Size=UDim2.new(0,30,0,30),
     Position=UDim2.new(1,-64,0,0),
@@ -352,7 +352,7 @@ local function AddTab(name, icon, order)
     return sf
 end
 
--- 6 TABS (Đã xóa Tab Cài Đặt Menu)
+-- 6 TABS
 local codeTab      = AddTab("Code", "💻", 1)
 local savedCodeTab = AddTab("Code Đã Lưu", "💾", 2)
 local moveTab      = AddTab("Di Chuyển", "🏃", 3)
@@ -372,7 +372,8 @@ local S = {
     infJump=false, clickTp=false, esp=false, antiAfk=true, fullBright=false,
     blockServer=false, freezeOthers=false,
     flyToTarget=nil, flyToSpeed=150, 
-    dragMenu=false, -- Trạng thái bật/tắt di chuyển menu
+    dragMenu=false, 
+    soloTrack=false, soloTarget=nil, -- Định vị lẻ
 }
 
 local noclipBtn 
@@ -858,6 +859,7 @@ local function CreatePlayerESP(p)
     RemovePlayerESP(p)
 
     if not S.esp or p == player then return end
+    if S.soloTrack and S.soloTarget and p ~= S.soloTarget then return end
 
     local pChar = p.Character
     if not pChar then return end
@@ -901,21 +903,42 @@ local function CreatePlayerESP(p)
     lbl.Parent = bb
 
     local thread = task.spawn(function()
+        local wasDown = false
+        local downStart = 0
+        
         while S.esp and pChar and pChar.Parent and hum and hum.Parent do
+            -- Nếu bật định vị lẻ nhưng không phải người được chọn -> dừng ESP này
+            if S.soloTrack and S.soloTarget and p ~= S.soloTarget then
+                break
+            end
+
             local r = Root()
             local state = hum:GetState()
             
             if state == Enum.HumanoidStateType.Dead then
-                RemovePlayerESP(p)
-                return
+                break
             end
 
             local isDowned = hum.PlatformStand or hum.Health <= 0
             local isFriend = friendCache[p.UserId] or false
 
+            -- Xử lý đếm thời gian hạ ngục
+            if isDowned and not wasDown then
+                wasDown = true
+                downStart = tick()
+            elseif not isDowned and wasDown then
+                wasDown = false
+                downStart = 0
+            end
+
             local stateText = ""
             if isDowned then
-                stateText = " [☠️ Hạ ngục]"
+                local elapsed = tick() - downStart
+                local mins = math.floor(elapsed / 60)
+                local secs = math.floor(elapsed % 60)
+                local timeStr = string.format("%02d:%02d", mins, secs)
+                stateText = " [☠️ Hạ ngục: " .. timeStr .. "]"
+                
                 if isFriend then
                     hl.FillColor = Color3.fromRGB(138, 43, 226)
                     hl.OutlineColor = Color3.fromRGB(200, 150, 255)
@@ -974,9 +997,14 @@ end
 local function UpdateESP()
     ClearAllESP()
     if not S.esp then return end
-    for _, p in ipairs(Players:GetPlayers()) do
-        if p ~= player then
-            CreatePlayerESP(p)
+    
+    if S.soloTrack and S.soloTarget then
+        CreatePlayerESP(S.soloTarget)
+    else
+        for _, p in ipairs(Players:GetPlayers()) do
+            if p ~= player then
+                CreatePlayerESP(p)
+            end
         end
     end
 end
@@ -997,6 +1025,10 @@ Players.PlayerAdded:Connect(function(p)
 end)
 
 Players.PlayerRemoving:Connect(function(p) 
+    if S.soloTarget == p then 
+        S.soloTarget = nil 
+        if S.soloTrack then UpdateESP() end
+    end
     RemovePlayerESP(p)
     friendCache[p.UserId] = nil
 end)
@@ -1592,12 +1624,23 @@ Corner(flyToSpdIn,UDim.new(0,5)); Stroke(flyToSpdIn)
 local stopFlyToBtn = Button(tpPlayerTab, "⏹ Dừng Bay", 72, ty, 100, 24, C.RED)
 ty = ty + 30
 
-local espBtn = Button(tpPlayerTab, "👁️ ESP Người Chơi: TẮT", 8, ty, 200, 24, C.GRAY)
+-- NÚT ESP VÀ NÚT ĐỊNH VỊ LẺ NẰM CẠNH NHAU
+local espBtn = Button(tpPlayerTab, "👁️ ESP: TẮT", 8, ty, 140, 24, C.GRAY)
 espBtn.Activated:Connect(function()
     S.esp = not S.esp
-    espBtn.Text = S.esp and "👁️ ESP Người Chơi: BẬT" or "👁️ ESP Người Chơi: TẮT"
+    espBtn.Text = S.esp and "👁️ ESP: BẬT" or "👁️ ESP: TẮT"
     espBtn.BackgroundColor3 = S.esp and C.GREEN or C.GRAY
     UpdateESP()
+end)
+
+local soloTrackBtn = Button(tpPlayerTab, "🎯 Định Vị Lẻ: TẮT", 152, ty, 170, 24, C.GRAY)
+soloTrackBtn.Activated:Connect(function()
+    S.soloTrack = not S.soloTrack
+    soloTrackBtn.Text = S.soloTrack and "🎯 Định Vị Lẻ: BẬT" or "🎯 Định Vị Lẻ: TẮT"
+    soloTrackBtn.BackgroundColor3 = S.soloTrack and C.PURPLE or C.GRAY
+    if not S.soloTrack then S.soloTarget = nil end
+    UpdateESP()
+    RebuildTPList()
 end)
 ty = ty + 30
 
@@ -1616,7 +1659,7 @@ Stroke(searchTPIn, Color3.fromRGB(180,180,200), 1.2)
 New("UIPadding", {PaddingLeft=UDim.new(0,6)}, searchTPIn)
 ty = ty + 32
 
-Label(tpPlayerTab, "👤 Danh sách người chơi trong Server", ty)
+Label(tpPlayerTab, "👤 Danh sách người chơi (Nhấn tên để định vị lẻ)", ty)
 ty = ty + 14
 
 local tpList = New("ScrollingFrame", {
@@ -1641,11 +1684,27 @@ RebuildTPList = function()
             }, tpList)
             Corner(row,UDim.new(0,5)); Stroke(row)
 
-            New("TextLabel", {
+            -- Biến Tên thành TextButton để có thể nhấn định vị lẻ
+            local nameBtn = New("TextButton", {
                 Size=UDim2.new(1,-100,1,0), Position=UDim2.new(0,8,0,0),
                 Text=p.Name, BackgroundTransparency=1, TextColor3=C.DARK,
                 Font=Enum.Font.GothamBold, TextSize=11, TextXAlignment=Enum.TextXAlignment.Left, ZIndex=7,
+                AutoButtonColor=false, TextTruncate=Enum.TextTruncate.AtEnd
             }, row)
+
+            -- Đổi màu tên nếu đang là mục tiêu định vị lẻ
+            if S.soloTrack and S.soloTarget == p then
+                nameBtn.TextColor3 = C.PURPLE
+                nameBtn.Text = "🎯 " .. p.Name
+            end
+
+            nameBtn.Activated:Connect(function()
+                if S.soloTrack then
+                    S.soloTarget = p
+                    UpdateESP()
+                    RebuildTPList()
+                end
+            end)
 
             local flyToBtn = Button(row, "🚀 Bay Đến", -90, 5, 80, 24, C.BLUE)
             flyToBtn.Position = UDim2.new(1, -90, 0, 5)
@@ -1858,7 +1917,7 @@ closeBtn.Activated:Connect(function()
     togBtn.Text = "🍌"
 end)
 
--- LOGIC NÚT MỞ KHÓA DI CHUYỂN
+-- LOGIC NÚT MỞ KHÓA DI CHUYỂN MENU
 dragLockBtn.Activated:Connect(function()
     S.dragMenu = not S.dragMenu
     if S.dragMenu then
@@ -1965,4 +2024,4 @@ end)
 UpdChar()
 if S.noClip then EnNC() end
 
-print("✅ Đã cập nhật: Nút Khóa/Mở Khóa Menu nằm trên thanh tiêu đề (Cạnh nút X)")
+print("✅ Đã cập nhật: ESP Đếm giờ hạ ngục + Tính năng Định Vị Lẻ (Nhấn tên người chơi)")
