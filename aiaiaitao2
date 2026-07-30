@@ -4,7 +4,7 @@
 -- + ESP: Phân biệt Bạn Bè (Hồng/Tím) & Hạ ngục/Chết + Đếm giờ Hạ Ngục
 -- + Định Vị Lẻ: Bật tính năng -> Nhấn tên người chơi -> Chỉ định vị 1 người đó
 -- + Tab Tọa Độ: Lưu, Đặt tên, ESP All/Lẻ, Xóa, Bay tới Tọa Độ
--- + Tab Niệm Tâm: Vòng tròn trên màn hình + Tự động ngắm người trong vòng (Aimbot)
+-- + Tab Niệm Tâm: Vòng tròn + Định vị người trong vòng + Tự ngắm khi bắn (Aimbot)
 -- StarterGui -> LocalScript hoặc Executor
 -- ============================================
 
@@ -379,8 +379,8 @@ local S = {
     dragMenu=false, 
     soloTrack=false, soloTarget=nil, 
     locEspAll=false, locEspSingle=false, locTarget=nil, flyToLocTarget=nil, 
-    xrayCircle=false, xrayCircleSize=150, -- Niệm Tâm Vòng Tròn
-    aimLock=false, -- Tự ngắm người trong vòng
+    xrayCircle=false, xrayCircleSize=150, 
+    aimLock=false, 
 }
 
 local noclipBtn 
@@ -2212,7 +2212,7 @@ end)
 -- ==================== TAB 8: NIỆM TÂM (VÒNG TRÒN TÂM NGẮM & AIM) ====================
 local xy = 8
 
-Label(xrayTab, "🎯 Niệm Tâm - Vòng tròn & Tự Động Ngắm", xy)
+Label(xrayTab, "🎯 Niệm Tâm & Tự Động Ngắm (Aimbot)", xy)
 xy = xy + 14
 
 local xrayToggleBtn = Button(xrayTab, "👁️ Bật Vòng Tròn: TẮT", 8, xy, 220, 24, C.GRAY)
@@ -2224,11 +2224,11 @@ xrayToggleBtn.Activated:Connect(function()
 end)
 xy = xy + 30
 
--- Nút Bật Tự Động Ngắm (Aim Lock)
-local aimLockBtn = Button(xrayTab, "🔒 Tự Ngắm Người Trong Vòng: TẮT", 8, xy, 250, 24, C.GRAY)
+-- Nút Bật Tự Động Ngắm & Định Vị
+local aimLockBtn = Button(xrayTab, "🎯 Ngắm & Định Vị Khi Bắn: TẮT", 8, xy, 260, 24, C.GRAY)
 aimLockBtn.Activated:Connect(function()
     S.aimLock = not S.aimLock
-    aimLockBtn.Text = S.aimLock and "🔓 Tự Ngắm Người Trong Vòng: BẬT" or "🔒 Tự Ngắm Người Trong Vòng: TẮT"
+    aimLockBtn.Text = S.aimLock and "🎯 Ngắm & Định Vị Khi Bắn: BẬT" or "🎯 Ngắm & Định Vị Khi Bắn: TẮT"
     aimLockBtn.BackgroundColor3 = S.aimLock and C.RED or C.GRAY
 end)
 xy = xy + 30
@@ -2300,7 +2300,65 @@ end)
 xrayTab.CanvasSize = UDim2.new(0,0,0,xy+40)
 
 
--- VÒNG LẶP XỬ LÝ TỰ ĐỘNG NGẮM (AIMBOT CIRCLE)
+-- ==================== AIMBOT LOCK ESP & LOGIC ====================
+local aimLockHL = Instance.new("Highlight")
+aimLockHL.Name = "AimLockHighlight"
+aimLockHL.FillColor = Color3.fromRGB(255, 255, 0)
+aimLockHL.FillTransparency = 0.5
+aimLockHL.OutlineColor = Color3.fromRGB(255, 255, 0)
+aimLockHL.OutlineTransparency = 0
+aimLockHL.Enabled = false
+aimLockHL.Parent = espGui
+
+local aimLockBB = Instance.new("BillboardGui")
+aimLockBB.Name = "AimLockBillboard"
+aimLockBB.Size = UDim2.new(0, 200, 0, 50)
+aimLockBB.StudsOffset = Vector3.new(0, 3.5, 0)
+aimLockBB.AlwaysOnTop = true
+aimLockBB.Enabled = false
+aimLockBB.Parent = espGui
+
+local aimLockLbl = Instance.new("TextLabel")
+aimLockLbl.Size = UDim2.new(1, 0, 1, 0)
+aimLockLbl.BackgroundTransparency = 1
+aimLockLbl.TextColor3 = Color3.fromRGB(255, 255, 0)
+aimLockLbl.Font = Enum.Font.GothamBold
+aimLockLbl.TextSize = 13
+aimLockLbl.TextStrokeTransparency = 0.2
+aimLockLbl.Parent = aimLockBB
+
+local function HideAimLockESP()
+    aimLockHL.Enabled = false
+    aimLockBB.Enabled = false
+end
+
+local function UpdateAimLockESP(targetPart)
+    if not targetPart or not targetPart.Parent then HideAimLockESP() return end
+    local char = targetPart.Parent
+    local hum = char:FindFirstChildOfClass("Humanoid")
+
+    aimLockHL.Adornee = char
+    aimLockHL.Enabled = true
+    aimLockBB.Adornee = targetPart
+    aimLockBB.Enabled = true
+
+    local isDowned = hum and (hum.PlatformStand or hum.Health <= 0)
+    if isDowned then
+        aimLockHL.FillColor = Color3.fromRGB(200, 0, 0)
+        aimLockHL.OutlineColor = Color3.fromRGB(255, 100, 100)
+        aimLockLbl.TextColor3 = Color3.fromRGB(255, 100, 100)
+    else
+        aimLockHL.FillColor = Color3.fromRGB(255, 255, 0)
+        aimLockHL.OutlineColor = Color3.fromRGB(255, 255, 0)
+        aimLockLbl.TextColor3 = Color3.fromRGB(255, 255, 0)
+    end
+
+    local hp = hum and math.floor(hum.Health) or 0
+    local maxHp = hum and math.floor(hum.MaxHealth) or 100
+    local status = isDowned and " [BỊ HẠ]" or ""
+    aimLockLbl.Text = string.format("🎯 %s%s\n❤️ %d/%d", char.Name, status, hp, maxHp)
+end
+
 local function GetClosestPlayerInCircle()
     local camera = workspace.CurrentCamera
     if not camera then return nil end
@@ -2334,12 +2392,26 @@ end
 
 RunService.RenderStepped:Connect(function()
     if S.aimLock and S.xrayCircle then
+        -- Chỉ ngắm khi nhấn chuột trái (bắn)
+        local isFiring = UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1)
         local target = GetClosestPlayerInCircle()
         local camera = workspace.CurrentCamera
+
         if target and camera then
-            -- Xoay camera để ngắm vào người chơi
-            camera.CFrame = CFrame.lookAt(camera.CFrame.Position, target.Position)
+            -- Luôn hiện định vị người bị khóa
+            UpdateAimLockESP(target)
+
+            -- CHỈ khi bắn mới tự động ngắm vào người chơi
+            if isFiring then
+                camera.CFrame = CFrame.lookAt(camera.CFrame.Position, target.Position)
+            end
+        else
+            -- Không có ai trong vòng thì ẩn ESP đi
+            HideAimLockESP()
         end
+    else
+        -- Tắt tính năng thì ẩn ESP
+        HideAimLockESP()
     end
 end)
 
@@ -2464,4 +2536,4 @@ end)
 UpdChar()
 if S.noClip then EnNC() end
 
-print("✅ Đã thêm Tính Năng Tự Ngắm Người Trong Vòng Tròn Niệm Tâm!")
+print("✅ Đã cập nhật Aimbot: Ngắm khi bắn + Định vị Tên/Màu Đỏ khi Hạ Ngục!")
