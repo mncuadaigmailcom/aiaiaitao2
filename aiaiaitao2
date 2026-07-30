@@ -4,6 +4,7 @@
 -- + ESP: Phân biệt Bạn Bè (Hồng/Tím) & Hạ ngục/Chết + Đếm giờ Hạ Ngục
 -- + Định Vị Lẻ: Bật tính năng -> Nhấn tên người chơi -> Chỉ định vị 1 người đó
 -- + Tab Tọa Độ: Lưu, Đặt tên, ESP All/Lẻ, Xóa, Bay tới Tọa Độ
+-- + Tab Niệm Tâm: Tạo vòng tròn trên màn hình, bật/tắt, chỉnh kích thước/dày/màu
 -- StarterGui -> LocalScript hoặc Executor
 -- ============================================
 
@@ -353,7 +354,7 @@ local function AddTab(name, icon, order)
     return sf
 end
 
--- 7 TABS (Đã xóa Tab Niệm Tâm)
+-- 8 TABS
 local codeTab      = AddTab("Code", "💻", 1)
 local savedCodeTab = AddTab("Code Đã Lưu", "💾", 2)
 local moveTab      = AddTab("Di Chuyển", "🏃", 3)
@@ -361,6 +362,7 @@ local tpPlayerTab  = AddTab("Bay Đến Player", "🎯", 4)
 local playerTab    = AddTab("Người Chơi", "👤", 5)
 local envTab       = AddTab("Môi Trường", "⚙️", 6)
 local locTab       = AddTab("Tọa Độ", "📍", 7)
+local xrayTab      = AddTab("Niệm Tâm", "👁️", 8)
 
 SwitchTab(1)
 
@@ -377,6 +379,7 @@ local S = {
     dragMenu=false, 
     soloTrack=false, soloTarget=nil, -- Định vị lẻ player
     locEspAll=false, locEspSingle=false, locTarget=nil, flyToLocTarget=nil, -- Tọa độ
+    xrayCircle=false, xrayCircleSize=150, -- Niệm Tâm Vòng Tròn
 }
 
 local noclipBtn 
@@ -408,6 +411,24 @@ local function UpdChar()
         h.JumpPower=S.jumpPower
     end
 end
+
+-- ==================== VÒNG TRÒN NIỆM TÂM ====================
+local xrayCircleFrame = New("Frame", {
+    Name = "XrayCircle",
+    AnchorPoint = Vector2.new(0.5, 0.5),
+    Size = UDim2.new(0, S.xrayCircleSize, 0, S.xrayCircleSize),
+    Position = UDim2.new(0.5, 0, 0.5, 0),
+    BackgroundTransparency = 1,
+    Visible = false,
+    ZIndex = 999,
+}, gui)
+New("UICorner", {CornerRadius = UDim.new(1, 0)}, xrayCircleFrame)
+local xrayStroke = New("UIStroke", {
+    Color = Color3.fromRGB(0, 255, 0),
+    Thickness = 2,
+    Transparency = 0.2,
+    ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+}, xrayCircleFrame)
 
 -- ==================== CHẶN SERVER TÁC ĐỘNG BẢO VỆ BẢN THÂN ====================
 local oldNamecall
@@ -2187,6 +2208,88 @@ RunService.RenderStepped:Connect(function()
 end)
 
 
+-- ==================== TAB 8: NIỆM TÂM (VÒNG TRÒN TÂM NGẮM) ====================
+local xy = 8
+
+Label(xrayTab, "🎯 Niệm Tâm - Vòng tròn trên màn hình", xy)
+xy = xy + 14
+
+local xrayToggleBtn = Button(xrayTab, "👁️ Bật Vòng Tròn: TẮT", 8, xy, 220, 24, C.GRAY)
+xrayToggleBtn.Activated:Connect(function()
+    S.xrayCircle = not S.xrayCircle
+    xrayToggleBtn.Text = S.xrayCircle and "👁️ Bật Vòng Tròn: BẬT" or "👁️ Bật Vòng Tròn: TẮT"
+    xrayToggleBtn.BackgroundColor3 = S.xrayCircle and C.GREEN or C.GRAY
+    xrayCircleFrame.Visible = S.xrayCircle
+end)
+xy = xy + 30
+
+Label(xrayTab, "⭕ Kích thước vòng tròn (50 - 1000)", xy)
+xy = xy + 14
+
+local sizeIn = New("TextBox", {
+    Size=UDim2.new(0,60,0,24), Position=UDim2.new(0,8,0,xy), Text=tostring(S.xrayCircleSize),
+    BackgroundColor3=Color3.fromRGB(255,255,255), BackgroundTransparency=0, TextColor3=Color3.fromRGB(20,20,20),
+    Font=Enum.Font.GothamMedium, TextSize=12, BorderSizePixel=0, ClearTextOnFocus=false,
+    Active=true, Selectable=true, ZIndex=8,
+}, xrayTab)
+Corner(sizeIn,UDim.new(0,5)); Stroke(sizeIn)
+
+local applySizeBtn = Button(xrayTab, "✔ Áp dụng", 78, xy, 80, 24, C.BLUE)
+applySizeBtn.Activated:Connect(function()
+    local n = tonumber(sizeIn.Text)
+    if n and n >= 50 and n <= 1000 then
+        S.xrayCircleSize = n
+        xrayCircleFrame.Size = UDim2.new(0, n, 0, n)
+    else
+        sizeIn.Text = tostring(S.xrayCircleSize)
+    end
+end)
+xy = xy + 30
+
+Label(xrayTab, "📏 Độ dày vòng tròn (1 - 10)", xy)
+xy = xy + 14
+
+local thickIn = New("TextBox", {
+    Size=UDim2.new(0,60,0,24), Position=UDim2.new(0,8,0,xy), Text="2",
+    BackgroundColor3=Color3.fromRGB(255,255,255), BackgroundTransparency=0, TextColor3=Color3.fromRGB(20,20,20),
+    Font=Enum.Font.GothamMedium, TextSize=12, BorderSizePixel=0, ClearTextOnFocus=false,
+    Active=true, Selectable=true, ZIndex=8,
+}, xrayTab)
+Corner(thickIn,UDim.new(0,5)); Stroke(thickIn)
+
+local applyThickBtn = Button(xrayTab, "✔ Áp dụng", 78, xy, 80, 24, C.BLUE)
+applyThickBtn.Activated:Connect(function()
+    local n = tonumber(thickIn.Text)
+    if n and n >= 1 and n <= 10 then
+        xrayStroke.Thickness = n
+    else
+        thickIn.Text = tostring(xrayStroke.Thickness)
+    end
+end)
+xy = xy + 30
+
+Label(xrayTab, "🎨 Màu sắc vòng tròn (R G B)", xy)
+xy = xy + 14
+
+local cR = New("TextBox", {Size=UDim2.new(0,40,0,24), Position=UDim2.new(0,8,0,xy), Text="0", BackgroundColor3=Color3.fromRGB(255,255,255), BackgroundTransparency=0, TextColor3=Color3.fromRGB(20,20,20), Font=Enum.Font.GothamMedium, TextSize=12, BorderSizePixel=0, ClearTextOnFocus=false, Active=true, Selectable=true, ZIndex=8}, xrayTab)
+Corner(cR,UDim.new(0,5)); Stroke(cR)
+local cG = New("TextBox", {Size=UDim2.new(0,40,0,24), Position=UDim2.new(0,54,0,xy), Text="255", BackgroundColor3=Color3.fromRGB(255,255,255), BackgroundTransparency=0, TextColor3=Color3.fromRGB(20,20,20), Font=Enum.Font.GothamMedium, TextSize=12, BorderSizePixel=0, ClearTextOnFocus=false, Active=true, Selectable=true, ZIndex=8}, xrayTab)
+Corner(cG,UDim.new(0,5)); Stroke(cG)
+local cB = New("TextBox", {Size=UDim2.new(0,40,0,24), Position=UDim2.new(0,100,0,xy), Text="0", BackgroundColor3=Color3.fromRGB(255,255,255), BackgroundTransparency=0, TextColor3=Color3.fromRGB(20,20,20), Font=Enum.Font.GothamMedium, TextSize=12, BorderSizePixel=0, ClearTextOnFocus=false, Active=true, Selectable=true, ZIndex=8}, xrayTab)
+Corner(cB,UDim.new(0,5)); Stroke(cB)
+
+local applyColorBtn = Button(xrayTab, "✔ Áp dụng", 150, xy, 80, 24, C.BLUE)
+applyColorBtn.Activated:Connect(function()
+    local r = math.clamp(tonumber(cR.Text) or 0, 0, 255)
+    local g = math.clamp(tonumber(cG.Text) or 255, 0, 255)
+    local b = math.clamp(tonumber(cB.Text) or 0, 0, 255)
+    cR.Text = r; cG.Text = g; cB.Text = b
+    xrayStroke.Color = Color3.fromRGB(r, g, b)
+end)
+
+xrayTab.CanvasSize = UDim2.new(0,0,0,xy+40)
+
+
 -- ==================== TOGGLE MENU LOGIC & DRAG SYSTEM ====================
 local function ToggleMainFrame()
     if S.flyRun then
@@ -2307,4 +2410,4 @@ end)
 UpdChar()
 if S.noClip then EnNC() end
 
-print("✅ Đã xóa Tab Niệm Tâm, menu giờ chỉ còn 7 Tab gọn gàng!")
+print("✅ Đã thêm Tab Niệm Tâm (Vòng tròn trên màn hình) thành công!")
