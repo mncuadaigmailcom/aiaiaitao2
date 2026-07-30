@@ -450,6 +450,13 @@ local xrayStroke = New("UIStroke", {
     ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
 }, xrayCircleFrame)
 
+-- ESP GUI
+local espGui = New("ScreenGui", {
+    Name = "ExMenu_ESP",
+    ResetOnSpawn = false,
+    ZIndexBehavior = Enum.ZIndexBehavior.Sibling,
+}, targetGui)
+
 -- NÚT BẮT NGẮM MỤC TIÊU (Chỉ hiện khi có người trong vòng)
 local aimActionBtn = New("TextButton", {
     Name = "AimActionButton",
@@ -462,9 +469,8 @@ local aimActionBtn = New("TextButton", {
     Font = Enum.Font.GothamBold,
     TextSize = 14,
     Visible = false,
-    ZIndex = 9998,
-    Parent = gui
-})
+    ZIndex = 9998
+}, gui)
 Corner(aimActionBtn, UDim.new(0, 6))
 Stroke(aimActionBtn, C.WHITE, 2)
 
@@ -484,12 +490,6 @@ aimActionBtn.Activated:Connect(function()
 end)
 
 -- ESP ĐỊNH VỊ MỤC TIÊU TRONG VÒNG
-local espGui = New("ScreenGui", {
-    Name = "ExMenu_ESP",
-    ResetOnSpawn = false,
-    ZIndexBehavior = Enum.ZIndexBehavior.Sibling,
-}, targetGui)
-
 local aimHighlight = Instance.new("Highlight")
 aimHighlight.Name = "AimLock_HL"
 aimHighlight.FillColor = Color3.fromRGB(255, 165, 0) -- Cam
@@ -519,19 +519,21 @@ local aimLbl = New("TextLabel", {
 
 
 -- ==================== CHẶN SERVER TÁC ĐỘNG BẢO VỆ BẢN THÂN ====================
-local oldNamecall
-if hookmetamethod then
-    oldNamecall = hookmetamethod(game, "__namecall", function(self, ...)
-        local method = getnamecallmethod()
-        if S.blockServer and self == player then
-            if method == "Kick" or method == "kick" then
-                warn("[Banana Cat Hub] Đã chặn thành công lệnh Kick từ Máy chủ!")
-                return nil
+pcall(function()
+    if hookmetamethod and not _G.BananaHub_Hooked then
+        local oldNamecall = hookmetamethod(game, "__namecall", function(self, ...)
+            local method = getnamecallmethod()
+            if S.blockServer and self == player then
+                if method == "Kick" or method == "kick" then
+                    warn("[Banana Cat Hub] Đã chặn thành công lệnh Kick từ Máy chủ!")
+                    return nil
+                end
             end
-        end
-        return oldNamecall(self, ...)
-    end)
-end
+            return oldNamecall(self, ...)
+        end)
+        _G.BananaHub_Hooked = true
+    end
+end)
 
 -- ==================== VÒNG LẶP STEPPED: FREEZE OTHERS & ANTI-SERVER ====================
 trackConn(RunService.Stepped:Connect(function()
