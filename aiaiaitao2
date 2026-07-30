@@ -2,7 +2,7 @@
 -- EXECUTOR MENU - Fix NoClip Không Lỗi Thảm & Xuyên Tường Mượt 100%
 -- (Banana Cat Hub Style + Caro Pattern + Chỉnh kích thước 4 góc + Chỉnh Rộng/Dày/Dài Thảm Kính)
 -- + ESP: Phân biệt Bạn Bè (Hồng/Tím) & Hạ ngục/Chết
--- + Tab Cài Đặt Menu: Di chuyển menu (Nhấn giữ để kéo)
+-- + Nút Khóa/Mở Khóa Di Chuyển Menu nằm trên Thanh Tiêu Đề
 -- StarterGui -> LocalScript hoặc Executor
 -- ============================================
 
@@ -148,7 +148,7 @@ local titleBar = New("Frame", {
 Corner(titleBar, UDim.new(0,10))
 
 New("TextLabel", {
-    Size=UDim2.new(1,-40,1,0),
+    Size=UDim2.new(1,-90,1,0), -- Giảm kích thước để nhường chỗ cho nút Khóa và Đóng
     Position=UDim2.new(0,12,0,0),
     Text="🍌 Banana Cat Executor Hub (Caro Style)",
     BackgroundTransparency=1,
@@ -156,6 +156,19 @@ New("TextLabel", {
     Font=Enum.Font.GothamBold,
     TextSize=13,
     TextXAlignment=Enum.TextXAlignment.Left,
+    ZIndex=4,
+}, titleBar)
+
+-- NÚT MỞ KHÓA DI CHUYỂN MENU (NẰM BÊN PHẢI TÊN MENU)
+local dragLockBtn = New("TextButton", {
+    Size=UDim2.new(0,30,0,30),
+    Position=UDim2.new(1,-64,0,0),
+    Text="🔒",
+    BackgroundTransparency=1,
+    TextColor3=Color3.fromRGB(120,120,130),
+    Font=Enum.Font.GothamBold,
+    TextSize=15,
+    BorderSizePixel=0,
     ZIndex=4,
 }, titleBar)
 
@@ -339,14 +352,13 @@ local function AddTab(name, icon, order)
     return sf
 end
 
--- 7 TABS
+-- 6 TABS (Đã xóa Tab Cài Đặt Menu)
 local codeTab      = AddTab("Code", "💻", 1)
 local savedCodeTab = AddTab("Code Đã Lưu", "💾", 2)
 local moveTab      = AddTab("Di Chuyển", "🏃", 3)
 local tpPlayerTab  = AddTab("Bay Đến Player", "🎯", 4)
 local playerTab    = AddTab("Người Chơi", "👤", 5)
 local envTab       = AddTab("Môi Trường", "⚙️", 6)
-local menuSetTab   = AddTab("Cài Đặt Menu", "🛠️", 7)
 
 SwitchTab(1)
 
@@ -1831,35 +1843,6 @@ end)
 envTab.CanvasSize=UDim2.new(0,0,0,ey+50)
 
 
--- ==================== TAB 7: CÀI ĐẶT MENU ====================
-local mty = 8
-
-Label(menuSetTab, "⚙️ Tùy chỉnh giao diện Menu", mty)
-mty = mty + 20
-
-Label(menuSetTab, "Bật tính năng này để có thể di chuyển Menu", mty)
-mty = mty + 12
-Label(menuSetTab, "chính (Banana Cat Hub) và nút 🍌.", mty)
-mty = mty + 20
-
-local dragMenuBtn = Button(menuSetTab, "Di Chuyển Menu: TẮT", 8, mty, 200, 24, C.GRAY)
-dragMenuBtn.Activated:Connect(function()
-    S.dragMenu = not S.dragMenu
-    dragMenuBtn.Text = S.dragMenu and "Di Chuyển Menu: BẬT" or "Di Chuyển Menu: TẮT"
-    dragMenuBtn.BackgroundColor3 = S.dragMenu and C.GREEN or C.GRAY
-end)
-mty = mty + 30
-
-Label(menuSetTab, "Khi BẬT: NHẤN GIỮ thanh tiêu đề Menu", mty)
-mty = mty + 12
-Label(menuSetTab, "hoặc nút 🍌 để kéo đi chỗ khác.", mty)
-mty = mty + 12
-Label(menuSetTab, "Khi TẮT: Menu bị khóa cố định.", mty)
-mty = mty + 20
-
-menuSetTab.CanvasSize = UDim2.new(0,0,0,mty+40)
-
-
 -- ==================== TOGGLE MENU LOGIC & DRAG SYSTEM ====================
 local function ToggleMainFrame()
     if S.flyRun then
@@ -1875,10 +1858,21 @@ closeBtn.Activated:Connect(function()
     togBtn.Text = "🍌"
 end)
 
+-- LOGIC NÚT MỞ KHÓA DI CHUYỂN
+dragLockBtn.Activated:Connect(function()
+    S.dragMenu = not S.dragMenu
+    if S.dragMenu then
+        dragLockBtn.Text = "🔓"
+        dragLockBtn.TextColor3 = C.BLUE
+    else
+        dragLockBtn.Text = "🔒"
+        dragLockBtn.TextColor3 = Color3.fromRGB(120,120,130)
+    end
+end)
+
 -- ===== DRAG MENU CHÍNH (NHẤN GIỮ THANH TIÊU ĐỀ) =====
 local dragging, dragStart, startPos
 titleBar.InputBegan:Connect(function(i)
-    -- Chỉ cho phép kéo khi S.dragMenu đang BẬT
     if S.dragMenu and (i.UserInputType==Enum.UserInputType.MouseButton1 or i.UserInputType==Enum.UserInputType.Touch) then
         dragging=true
         dragStart=i.Position
@@ -1918,7 +1912,7 @@ end)
 UserInputService.InputChanged:Connect(function(i)
     if togDragging and S.dragMenu and (i.UserInputType == Enum.UserInputType.MouseMovement or i.UserInputType == Enum.UserInputType.Touch) then
         local delta = i.Position - togDragStart
-        if delta.Magnitude > 5 then -- Ngưỡng nhận diện kéo
+        if delta.Magnitude > 5 then
             togMoved = true
         end
         if togMoved then
@@ -1934,7 +1928,6 @@ UserInputService.InputEnded:Connect(function(i)
     if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then
         if togDragging then
             togDragging = false
-            -- Nếu chỉ click bình thường (không kéo) thì vẫn bật/tắt menu
             if not togMoved then
                 ToggleMainFrame()
             end
@@ -1942,7 +1935,6 @@ UserInputService.InputEnded:Connect(function(i)
     end
 end)
 
--- Dự phòng: Nếu tính năng kéo đang tắt, nút hoạt động bình thường
 togBtn.Activated:Connect(function()
     if not S.dragMenu then
         ToggleMainFrame()
@@ -1973,4 +1965,4 @@ end)
 UpdChar()
 if S.noClip then EnNC() end
 
-print("✅ Đã cập nhật: Tab Cài Đặt Menu (Nhấn giữ để di chuyển Menu & Nút Bật)")
+print("✅ Đã cập nhật: Nút Khóa/Mở Khóa Menu nằm trên thanh tiêu đề (Cạnh nút X)")
