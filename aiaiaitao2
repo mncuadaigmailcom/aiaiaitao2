@@ -2390,10 +2390,22 @@ local function GetClosestPlayerInCircle()
     return closestTarget
 end
 
+-- Biến kiểm tra đang bắn chuột trái hay không
+local isFiring = false
+UserInputService.InputBegan:Connect(function(input, gpe)
+    if gpe then return end
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        isFiring = true
+    end
+end)
+UserInputService.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        isFiring = false
+    end
+end)
+
 RunService.RenderStepped:Connect(function()
     if S.aimLock and S.xrayCircle then
-        -- Chỉ ngắm khi nhấn chuột trái (bắn)
-        local isFiring = UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1)
         local target = GetClosestPlayerInCircle()
         local camera = workspace.CurrentCamera
 
@@ -2536,4 +2548,4 @@ end)
 UpdChar()
 if S.noClip then EnNC() end
 
-print("✅ Đã cập nhật Aimbot: Ngắm khi bắn + Định vị Tên/Màu Đỏ khi Hạ Ngục!")
+print("✅ Đã sửa lỗi UI và cập nhật Aimbot thành công!")
