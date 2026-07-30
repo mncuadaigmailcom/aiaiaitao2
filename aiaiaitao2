@@ -4,7 +4,7 @@
 -- + ESP: Phân biệt Bạn Bè (Hồng/Tím) & Hạ ngục/Chết + Đếm giờ Hạ Ngục
 -- + Định Vị Lẻ: Bật tính năng -> Nhấn tên người chơi -> Chỉ định vị 1 người đó
 -- + Tab Tọa Độ: Lưu, Đặt tên, ESP All/Lẻ, Xóa, Bay tới Tọa Độ
--- + Tab Niệm Tâm: Vòng tròn trên màn hình + Tự động ngắm người trong vòng (Aimbot)
+-- + Tab Niệm Tâm: Vòng tròn trên màn hình + Tự động ngắm người trong vòng (Chỉ ngắm khi bắn + ESP Tên/Máu/Khoảng cách)
 -- StarterGui -> LocalScript hoặc Executor
 -- ============================================
 
@@ -2215,6 +2215,9 @@ local xy = 8
 Label(xrayTab, "🎯 Niệm Tâm - Vòng tròn & Tự Động Ngắm", xy)
 xy = xy + 14
 
+Label(xrayTab, "💡 Cách dùng: Bật vòng tròn + Bật tự ngắm. Giữ chuột trái (hoặc chạm màn hình) để ngắm người trong vòng.", xy)
+xy = xy + 22
+
 local xrayToggleBtn = Button(xrayTab, "👁️ Bật Vòng Tròn: TẮT", 8, xy, 220, 24, C.GRAY)
 xrayToggleBtn.Activated:Connect(function()
     S.xrayCircle = not S.xrayCircle
@@ -2225,10 +2228,10 @@ end)
 xy = xy + 30
 
 -- Nút Bật Tự Động Ngắm (Aim Lock)
-local aimLockBtn = Button(xrayTab, "🔒 Tự Ngắm Người Trong Vòng: TẮT", 8, xy, 250, 24, C.GRAY)
+local aimLockBtn = Button(xrayTab, "🔒 Tự Ngắm (Giữ chuột để bắn): TẮT", 8, xy, 250, 24, C.GRAY)
 aimLockBtn.Activated:Connect(function()
     S.aimLock = not S.aimLock
-    aimLockBtn.Text = S.aimLock and "🔓 Tự Ngắm Người Trong Vòng: BẬT" or "🔒 Tự Ngắm Người Trong Vòng: TẮT"
+    aimLockBtn.Text = S.aimLock and "🔓 Tự Ngắm (Giữ chuột để bắn): BẬT" or "🔒 Tự Ngắm (Giữ chuột để bắn): TẮT"
     aimLockBtn.BackgroundColor3 = S.aimLock and C.RED or C.GRAY
 end)
 xy = xy + 30
@@ -2299,47 +2302,167 @@ end)
 
 xrayTab.CanvasSize = UDim2.new(0,0,0,xy+40)
 
+-- ==================== ESP CHO MỤC TIÊU BỊ NGẮM (LOCKED TARGET) ====================
+local aimTargetGui = New("BillboardGui", {
+    Name = "AimTargetESP",
+    Size = UDim2.new(0, 200, 0, 50),
+    AlwaysOnTop = true,
+    Visible = false,
+    ZIndex = 9999,
+}, espGui)
 
--- VÒNG LẶP XỬ LÝ TỰ ĐỘNG NGẮM (AIMBOT CIRCLE)
+local aimTargetName = New("TextLabel", {
+    Size = UDim2.new(1, 0, 0, 16),
+    BackgroundTransparency = 1,
+    TextColor3 = Color3.fromRGB(255, 50, 50),
+    TextStrokeTransparency = 0.2,
+    Font = Enum.Font.GothamBold,
+    TextSize = 14,
+    ZIndex = 10000,
+}, aimTargetGui)
+
+local aimTargetHealthBg = New("Frame", {
+    Size = UDim2.new(1, 0, 0, 6),
+    Position = UDim2.new(0, 0, 0, 18),
+    BackgroundColor3 = Color3.fromRGB(30, 30, 30),
+    BorderSizePixel = 0,
+    ZIndex = 10000,
+}, aimTargetGui)
+Corner(aimTargetHealthBg, UDim.new(1, 0))
+
+local aimTargetHealthFill = New("Frame", {
+    Size = UDim2.new(1, 0, 1, 0),
+    BackgroundColor3 = Color3.fromRGB(0, 255, 0),
+    BorderSizePixel = 0,
+    ZIndex = 10001,
+}, aimTargetHealthBg)
+Corner(aimTargetHealthFill, UDim.new(1, 0))
+
+local aimTargetDist = New("TextLabel", {
+    Size = UDim2.new(1, 0, 0, 14),
+    Position = UDim2.new(0, 0, 0, 28),
+    BackgroundTransparency = 1,
+    TextColor3 = Color3.fromRGB(255, 255, 255),
+    TextStrokeTransparency = 0.2,
+    Font = Enum.Font.GothamBold,
+    TextSize = 12,
+    ZIndex = 10000,
+}, aimTargetGui)
+
+-- ==================== XỬ LÝ BẮN & TỰ ĐỘNG NGẮM (AIMBOT CIRCLE) ====================
+S.isFiring = false
+local currentAimTarget = nil
+
+-- Phát hiện khi người chơi nhấn giữ chuột/chạm màn hình để bắn
+UserInputService.InputBegan:Connect(function(i, gp)
+    if gp then return end
+    if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then
+        S.isFiring = true
+    end
+end)
+
+UserInputService.InputEnded:Connect(function(i)
+    if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then
+        S.isFiring = false
+        currentAimTarget = nil
+        aimTargetGui.Visible = false
+    end
+end)
+
 local function GetClosestPlayerInCircle()
     local camera = workspace.CurrentCamera
     if not camera then return nil end
     
     local centerScreen = Vector2.new(camera.ViewportSize.X / 2, camera.ViewportSize.Y / 2)
     local radius = S.xrayCircleSize / 2
-    local closestTarget = nil
+    local closestTargetPart = nil
+    local closestPlayer = nil
     local shortestDist = math.huge
 
     for _, p in ipairs(Players:GetPlayers()) do
-        if p ~= player and p.Character and p.Character:FindFirstChild("HumanoidRootPart") and p.Character:FindFirstChild("Humanoid") then
-            local hum = p.Character.Humanoid
-            if hum.Health > 0 then
-                local targetPos = p.Character.HumanoidRootPart.Position
-                local screenPos, onScreen = camera:WorldToViewportPoint(targetPos)
+        if p ~= player and p.Character then
+            local char = p.Character
+            local hum = char:FindFirstChildOfClass("Humanoid")
+            local hrp = char:FindFirstChild("HumanoidRootPart")
+            local head = char:FindFirstChild("Head")
+            
+            if hum and hrp and hum.Health > 0 then
+                -- Ưu tiên ngắm vào đầu nếu có, không thì ngắm vào thân
+                local aimPart = head or hrp
+                local screenPos, onScreen = camera:WorldToViewportPoint(aimPart.Position)
                 
                 if onScreen then
                     local distToCenter = (Vector2.new(screenPos.X, screenPos.Y) - centerScreen).Magnitude
                     if distToCenter <= radius then
                         if distToCenter < shortestDist then
                             shortestDist = distToCenter
-                            closestTarget = p.Character.HumanoidRootPart
+                            closestTargetPart = aimPart
+                            closestPlayer = p
                         end
                     end
                 end
             end
         end
     end
-    return closestTarget
+    return closestTargetPart, closestPlayer
 end
 
 RunService.RenderStepped:Connect(function()
     if S.aimLock and S.xrayCircle then
-        local target = GetClosestPlayerInCircle()
         local camera = workspace.CurrentCamera
-        if target and camera then
-            -- Xoay camera để ngắm vào người chơi
-            camera.CFrame = CFrame.lookAt(camera.CFrame.Position, target.Position)
+        
+        -- CHỈ KHOÁ MỤC TIÊU VÀ NGẮM KHI ĐANG BẮN (isFiring = true)
+        if S.isFiring then
+            local targetPart, targetPlayer = GetClosestPlayerInCircle()
+            if targetPart and camera then
+                currentAimTarget = targetPlayer
+                -- Xoay camera ngắm vào mục tiêu
+                camera.CFrame = CFrame.lookAt(camera.CFrame.Position, targetPart.Position)
+            else
+                currentAimTarget = nil
+            end
+        else
+            currentAimTarget = nil
         end
+
+        -- CẬP NHẬT ESP CHO NGƯỜI BỊ NGẮM
+        if currentAimTarget and currentAimTarget.Character then
+            local char = currentAimTarget.Character
+            local hum = char:FindFirstChildOfClass("Humanoid")
+            local hrp = char:FindFirstChild("HumanoidRootPart")
+            local head = char:FindFirstChild("Head")
+            local localChar = GetChar()
+            local localHrp = localChar and localChar:FindFirstChild("HumanoidRootPart")
+
+            if hum and hrp then
+                aimTargetGui.Adornee = head or hrp
+                aimTargetGui.Visible = true
+                
+                -- Cập nhật Tên
+                aimTargetName.Text = "🎯 " .. currentAimTarget.Name
+                
+                -- Cập nhật Thanh Máu
+                local hpPercent = math.clamp(hum.Health / math.max(hum.MaxHealth, 1), 0, 1)
+                aimTargetHealthFill.Size = UDim2.new(hpPercent,0, 1, 0)
+                -- Đổi màu thanh máu từ Xanh -> Đỏ khi mất máu
+                aimTargetHealthFill.BackgroundColor3 = Color3.fromRGB(255 * (1 - hpPercent), 255 * hpPercent, 0)
+                
+                -- Cập nhật khoảng cách
+                if localHrp then
+                    local dist = math.floor((localHrp.Position - hrp.Position).Magnitude)
+                    aimTargetDist.Text = "📏 " .. dist .. "m"
+                else
+                    aimTargetDist.Text = "📏 --m"
+                end
+            else
+                aimTargetGui.Visible = false
+            end
+        else
+            aimTargetGui.Visible = false
+        end
+    else
+        aimTargetGui.Visible = false
+        currentAimTarget = nil
     end
 end)
 
