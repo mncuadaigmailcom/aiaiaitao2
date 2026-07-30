@@ -3,6 +3,7 @@
 -- (Banana Cat Hub Style + Caro Pattern + Chỉnh kích thước 4 góc + Chỉnh Rộng/Dày/Dài Thảm Kính)
 -- + ESP: Phân biệt Bạn Bè (Hồng/Tím) & Hạ ngục/Chết + Đếm giờ Hạ Ngục
 -- + Định Vị Lẻ: Bật tính năng -> Nhấn tên người chơi -> Chỉ định vị 1 người đó
+-- + Tab Tọa Độ: Lưu, Đặt tên, ESP All/Lẻ, Xóa, Bay tới Tọa Độ
 -- StarterGui -> LocalScript hoặc Executor
 -- ============================================
 
@@ -352,13 +353,14 @@ local function AddTab(name, icon, order)
     return sf
 end
 
--- 6 TABS
+-- 7 TABS
 local codeTab      = AddTab("Code", "💻", 1)
 local savedCodeTab = AddTab("Code Đã Lưu", "💾", 2)
 local moveTab      = AddTab("Di Chuyển", "🏃", 3)
 local tpPlayerTab  = AddTab("Bay Đến Player", "🎯", 4)
 local playerTab    = AddTab("Người Chơi", "👤", 5)
 local envTab       = AddTab("Môi Trường", "⚙️", 6)
+local locTab       = AddTab("Tọa Độ", "📍", 7)
 
 SwitchTab(1)
 
@@ -373,13 +375,16 @@ local S = {
     blockServer=false, freezeOthers=false,
     flyToTarget=nil, flyToSpeed=150, 
     dragMenu=false, 
-    soloTrack=false, soloTarget=nil, -- Định vị lẻ
+    soloTrack=false, soloTarget=nil, -- Định vị lẻ player
+    locEspAll=false, locEspSingle=false, locTarget=nil, flyToLocTarget=nil, -- Tọa độ
 }
 
 local noclipBtn 
 local RebuildTPList
+local RebuildLocList
 
 local scripts = {}
+local savedLocations = {}
 local totalRuns, cancelled = 0, false
 local curThread, curIndicator = nil, nil
 
@@ -830,6 +835,83 @@ local function StartFlyTo(targetPlayer)
     end)
 end
 
+-- ==================== FLY TO LOCATION SYSTEM ====================
+local flyToLocConn = nil
+local autoNoClipLocActive = false
+
+local function StopFlyToLoc()
+    if flyToLocConn then 
+        flyToLocConn:Disconnect() 
+        flyToLocConn = nil 
+    end
+    local h = Hum()
+    if h then h.PlatformStand = false end
+    S.flyToLocTarget = nil
+    
+    if autoNoClipLocActive and S.noClip then
+        S.noClip = false
+        if noclipBtn then
+            noclipBtn.Text = "🚶 NoClip: TẮT"
+            noclipBtn.BackgroundColor3 = C.GRAY
+        end
+        DisNC()
+        autoNoClipLocActive = false
+    end
+    if RebuildLocList then RebuildLocList() end
+end
+
+local function StartFlyToLoc(locItem)
+    if S.flying then S.flying = false; TogFly() end
+    if S.flyRun then S.flyRun = false; StopFlyRun() end
+    StopFlyTo()
+    StopFlyToLoc()
+
+    if not locItem then return end
+
+    S.flyToLocTarget = locItem
+    local h = Hum()
+    if h then h.PlatformStand = true end
+
+    if not S.noClip then
+        S.noClip = true
+        if noclipBtn then
+            noclipBtn.Text = "🚶 NoClip: BẬT"
+            noclipBtn.BackgroundColor3 = Color3.fromRGB(0, 180, 100)
+        end
+        EnNC()
+        autoNoClipLocActive = true
+    else
+        autoNoClipLocActive = false
+    end
+
+    if RebuildLocList then RebuildLocList() end
+
+    flyToLocConn = RunService.RenderStepped:Connect(function(dt)
+        local r = Root()
+        local h = Hum()
+        if not r or not h or not S.flyToLocTarget then 
+            StopFlyToLoc()
+            return 
+        end
+
+        local targetPos = S.flyToLocTarget.pos
+        local dir = (targetPos - r.Position)
+        local dist = dir.Magnitude
+        local stopDist = 3 
+
+        if dist > stopDist then
+            local moveAmount = math.min(dist - stopDist, S.flyToSpeed * dt)
+            local newPos = r.Position + dir.Unit * moveAmount
+            r.CFrame = CFrame.lookAt(newPos, targetPos)
+        else
+            r.CFrame = CFrame.new(r.Position, targetPos)
+            r.AssemblyLinearVelocity = Vector3.new(0,0,0)
+            StopFlyToLoc()
+        end
+    end)
+end
+
+
 -- ==================== ESP SYSTEM (CẬP NHẬT MÀU BẠN BÈ & TRẠNG THÁI) ====================
 local espGui = New("ScreenGui", {
     Name = "ExMenu_ESP",
@@ -859,7 +941,6 @@ local function CreatePlayerESP(p)
     RemovePlayerESP(p)
 
     if not S.esp or p == player then return end
-    -- Chặn tạo ESP nếu đang định vị lẻ mà không phải mục tiêu
     if S.soloTrack and p ~= S.soloTarget then return end
 
     local pChar = p.Character
@@ -908,7 +989,6 @@ local function CreatePlayerESP(p)
         local downStart = 0
         
         while S.esp and pChar and pChar.Parent and hum and hum.Parent do
-            -- Nếu đột nhiên bật định vị lẻ mà không phải mục tiêu thì tự dừng ESP này
             if S.soloTrack and p ~= S.soloTarget then
                 break
             end
@@ -923,7 +1003,6 @@ local function CreatePlayerESP(p)
             local isDowned = hum.PlatformStand or hum.Health <= 0
             local isFriend = friendCache[p.UserId] or false
 
-            -- Xử lý đếm thời gian hạ ngục
             if isDowned and not wasDown then
                 wasDown = true
                 downStart = tick()
@@ -999,13 +1078,11 @@ local function UpdateESP()
     ClearAllESP()
     if not S.esp then return end
     
-    -- Nếu bật định vị lẻ, chỉ tạo ESP cho mục tiêu đã chọn (nếu có)
     if S.soloTrack then
         if S.soloTarget then
             CreatePlayerESP(S.soloTarget)
         end
     else
-        -- Định vị tất cả
         for _, p in ipairs(Players:GetPlayers()) do
             if p ~= player then
                 CreatePlayerESP(p)
@@ -1629,7 +1706,6 @@ Corner(flyToSpdIn,UDim.new(0,5)); Stroke(flyToSpdIn)
 local stopFlyToBtn = Button(tpPlayerTab, "⏹ Dừng Bay", 72, ty, 100, 24, C.RED)
 ty = ty + 30
 
--- NÚT ESP VÀ NÚT ĐỊNH VỊ LẺ NẰM CẠNH NHAU
 local espBtn = Button(tpPlayerTab, "👁️ ESP: TẮT", 8, ty, 140, 24, C.GRAY)
 espBtn.Activated:Connect(function()
     S.esp = not S.esp
@@ -1689,7 +1765,6 @@ RebuildTPList = function()
             }, tpList)
             Corner(row,UDim.new(0,5)); Stroke(row)
 
-            -- Biến Tên thành TextButton để có thể nhấn định vị lẻ
             local nameBtn = New("TextButton", {
                 Size=UDim2.new(1,-100,1,0), Position=UDim2.new(0,8,0,0),
                 Text=p.Name, BackgroundTransparency=1, TextColor3=C.DARK,
@@ -1697,7 +1772,6 @@ RebuildTPList = function()
                 AutoButtonColor=false, TextTruncate=Enum.TextTruncate.AtEnd
             }, row)
 
-            -- Đổi màu tên nếu đang là mục tiêu định vị lẻ
             if S.soloTrack and S.soloTarget == p then
                 nameBtn.TextColor3 = C.PURPLE
                 nameBtn.Text = "🎯 " .. p.Name
@@ -1906,6 +1980,211 @@ end)
 
 envTab.CanvasSize=UDim2.new(0,0,0,ey+50)
 
+-- ==================== TAB 7: TỌA ĐỘ ====================
+local ly = 8
+
+Label(locTab, "⚡ Tốc độ bay tới tọa độ", ly)
+ly = ly + 14
+
+local locFlySpdIn = New("TextBox", {
+    Size=UDim2.new(0,55,0,24), Position=UDim2.new(0,8,0,ly), Text="150",
+    BackgroundColor3=Color3.fromRGB(255,255,255), BackgroundTransparency=0, TextColor3=Color3.fromRGB(20,20,20),
+    Font=Enum.Font.GothamMedium, TextSize=12, BorderSizePixel=0, ClearTextOnFocus=false,
+    Active=true, Selectable=true, ZIndex=8,
+}, locTab)
+Corner(locFlySpdIn,UDim.new(0,5)); Stroke(locFlySpdIn)
+locFlySpdIn.FocusLost:Connect(function(e) if not e then return end; local n=tonumber(locFlySpdIn.Text); if n and n>0 then S.flyToSpeed=n else locFlySpdIn.Text=tostring(S.flyToSpeed) end end)
+
+ly = ly + 30
+
+Label(locTab, "📌 Lưu Tọa Độ Hiện Tại & Đặt Tên", ly)
+ly = ly + 14
+
+local locNameIn = New("TextBox", {
+    Size=UDim2.new(1,-110,0,26), Position=UDim2.new(0,8,0,ly), Text="",
+    PlaceholderText="Nhập tên tọa độ...", PlaceholderColor3=Color3.fromRGB(160,160,160),
+    BackgroundColor3=Color3.fromRGB(255,255,255), BackgroundTransparency=0, TextColor3=Color3.fromRGB(20,20,20),
+    Font=Enum.Font.GothamMedium, TextSize=12, BorderSizePixel=0, ClearTextOnFocus=false,
+    Active=true, Selectable=true, ZIndex=10, TextXAlignment=Enum.TextXAlignment.Left,
+}, locTab)
+Corner(locNameIn, UDim.new(0,5))
+Stroke(locNameIn, Color3.fromRGB(100,120,200), 1.5)
+New("UIPadding", {PaddingLeft=UDim.new(0,6)}, locNameIn)
+
+local saveLocBtn = Button(locTab, "📌 Lưu Vị Trí", -100, ly, 90, 26, C.BLUE)
+saveLocBtn.Position = UDim2.new(1, -98, 0, ly)
+ly = ly + 32
+
+local locEspAllBtn = Button(locTab, "📍 Loc ESP: TẮT", 8, ly, 150, 24, C.GRAY)
+local locEspSingleBtn = Button(locTab, "🎯 Loc ESP Lẻ: TẮT", 165, ly, 150, 24, C.GRAY)
+ly = ly + 30
+
+Label(locTab, "📍 Danh Sách Tọa Độ (Nhấn tên để định vị lẻ)", ly)
+ly = ly + 14
+
+local locList = New("ScrollingFrame", {
+    Size=UDim2.new(1,-16,1,-ly-10), Position=UDim2.new(0,8,0,ly),
+    BackgroundTransparency=1, BorderSizePixel=0, ScrollBarThickness=5,
+    CanvasSize=UDim2.new(0,0,0,0), ZIndex=6,
+}, locTab)
+New("UIListLayout", {SortOrder=Enum.SortOrder.LayoutOrder, Padding=UDim.new(0,6)}, locList)
+
+RebuildLocList = function()
+    for _,c in ipairs(locList:GetChildren()) do
+        if not c:IsA("UIListLayout") then c:Destroy() end
+    end
+
+    local totalHeight = 0
+    for _, loc in ipairs(savedLocations) do
+        local row = New("Frame", {
+            Size=UDim2.new(1,0,0,34), BackgroundColor3=Color3.fromRGB(255,255,255),
+            BackgroundTransparency=0.1, BorderSizePixel=0, ZIndex=6,
+        }, locList)
+        Corner(row,UDim.new(0,5)); Stroke(row)
+
+        local nameBtn = New("TextButton", {
+            Size=UDim2.new(1,-175,1,0), Position=UDim2.new(0,8,0,0),
+            Text=loc.name, BackgroundTransparency=1, TextColor3=C.DARK,
+            Font=Enum.Font.GothamBold, TextSize=11, TextXAlignment=Enum.TextXAlignment.Left, ZIndex=7,
+            AutoButtonColor=false, TextTruncate=Enum.TextTruncate.AtEnd
+        }, row)
+
+        if S.locEspSingle and S.locTarget == loc then
+            nameBtn.TextColor3 = C.PURPLE
+            nameBtn.Text = "🎯 " .. loc.name
+        end
+
+        nameBtn.Activated:Connect(function()
+            if S.locEspSingle then
+                S.locTarget = loc
+                RebuildLocList()
+            end
+        end)
+
+        local flyBtn = Button(row, "🚀 Bay", -160, 5, 70, 24, C.BLUE)
+        flyBtn.Position = UDim2.new(1, -160, 0, 5)
+
+        if S.flyToLocTarget == loc then
+            flyBtn.Text = "🛑 Dừng"
+            flyBtn.BackgroundColor3 = C.RED
+        end
+
+        flyBtn.Activated:Connect(function()
+            S.flyToSpeed = tonumber(locFlySpdIn.Text) or 150
+            if S.flyToLocTarget == loc then
+                StopFlyToLoc()
+            else
+                StartFlyToLoc(loc)
+            end
+        end)
+
+        local delBtn = Button(row, "🗑 Xóa", -80, 5, 70, 24, C.RED)
+        delBtn.Position = UDim2.new(1, -80, 0, 5)
+        delBtn.Activated:Connect(function()
+            for idx, l in ipairs(savedLocations) do
+                if l == loc then table.remove(savedLocations, idx) break end
+            end
+            if S.locTarget == loc then S.locTarget = nil end
+            if S.flyToLocTarget == loc then StopFlyToLoc() end
+            RebuildLocList()
+        end)
+
+        totalHeight = totalHeight + 40
+    end
+    locList.CanvasSize = UDim2.new(0,0,0,totalHeight)
+end
+
+saveLocBtn.Activated:Connect(function()
+    local r = Root()
+    if not r then return end
+    local name = locNameIn.Text
+    if name == "" then name = "Tọa độ "..(#savedLocations+1) end
+    table.insert(savedLocations, {name=name, pos=r.Position})
+    locNameIn.Text = ""
+    RebuildLocList()
+end)
+
+locEspAllBtn.Activated:Connect(function()
+    S.locEspAll = not S.locEspAll
+    locEspAllBtn.Text = S.locEspAll and "📍 Loc ESP: BẬT" or "📍 Loc ESP: TẮT"
+    locEspAllBtn.BackgroundColor3 = S.locEspAll and C.GREEN or C.GRAY
+end)
+
+locEspSingleBtn.Activated:Connect(function()
+    S.locEspSingle = not S.locEspSingle
+    locEspSingleBtn.Text = S.locEspSingle and "🎯 Loc ESP Lẻ: BẬT" or "🎯 Loc ESP Lẻ: TẮT"
+    locEspSingleBtn.BackgroundColor3 = S.locEspSingle and C.PURPLE or C.GRAY
+    if not S.locEspSingle then S.locTarget = nil end
+    RebuildLocList()
+end)
+
+RebuildLocList()
+
+-- VÒNG LẶP CẬP NHẬT ESP TỌA ĐỘ REALTIME
+local locEspObjs = {}
+RunService.RenderStepped:Connect(function()
+    if not S.locEspAll and not S.locEspSingle then
+        if next(locEspObjs) then
+            for loc, obj in pairs(locEspObjs) do
+                if obj.Att then obj.Att:Destroy() end
+                if obj.BB then obj.BB:Destroy() end
+            end
+            locEspObjs = {}
+        end
+        return
+    end
+
+    local r = Root()
+    local activeLocs = {}
+    if S.locEspAll then
+        for _, loc in ipairs(savedLocations) do table.insert(activeLocs, loc) end
+    elseif S.locEspSingle and S.locTarget then
+        table.insert(activeLocs, S.locTarget)
+    end
+
+    -- Clean up removed/unused
+    for loc, obj in pairs(locEspObjs) do
+        local stillActive = false
+        for _, aloc in ipairs(activeLocs) do
+            if aloc == loc then stillActive = true break end
+        end
+        if not stillActive then
+            if obj.Att then obj.Att:Destroy() end
+            if obj.BB then obj.BB:Destroy() end
+            locEspObjs[loc] = nil
+        end
+    end
+
+    -- Create/Update active
+    for _, loc in ipairs(activeLocs) do
+        if not locEspObjs[loc] then
+            local att = Instance.new("Attachment")
+            att.Name = "LocESP_Att"
+            att.Parent = workspace.Terrain
+            
+            local bb = New("BillboardGui", {
+                Name="LocESP_BB", Size=UDim2.new(0,150,0,40), AlwaysOnTop=true, Adornee=att, StudsOffset=Vector3.new(0,3,0), ZIndex=5
+            }, espGui)
+            local lbl = New("TextLabel", {
+                Size=UDim2.new(1,0,1,0), BackgroundTransparency=1, TextColor3=Color3.fromRGB(255,215,0),
+                Font=Enum.Font.GothamBold, TextSize=11, TextStrokeTransparency=0.2, ZIndex=6
+            }, bb)
+            
+            locEspObjs[loc] = {Att=att, BB=bb, Lbl=lbl}
+        end
+        
+        local obj = locEspObjs[loc]
+        obj.Att.WorldPosition = loc.pos
+        local dist = r and math.floor((r.Position - loc.pos).Magnitude) or 0
+        obj.Lbl.Text = string.format("📍 %s\n📏 %dm", loc.name, dist)
+        
+        if S.locEspSingle and S.locTarget == loc then
+            obj.Lbl.TextColor3 = Color3.fromRGB(255, 105, 180) -- Hồng
+        else
+            obj.Lbl.TextColor3 = Color3.fromRGB(255, 215, 0) -- Vàng
+        end
+    end
+end)
 
 -- ==================== TOGGLE MENU LOGIC & DRAG SYSTEM ====================
 local function ToggleMainFrame()
@@ -1922,7 +2201,6 @@ closeBtn.Activated:Connect(function()
     togBtn.Text = "🍌"
 end)
 
--- LOGIC NÚT MỞ KHÓA DI CHUYỂN MENU
 dragLockBtn.Activated:Connect(function()
     S.dragMenu = not S.dragMenu
     if S.dragMenu then
@@ -1934,7 +2212,6 @@ dragLockBtn.Activated:Connect(function()
     end
 end)
 
--- ===== DRAG MENU CHÍNH (NHẤN GIỮ THANH TIÊU ĐỀ) =====
 local dragging, dragStart, startPos
 titleBar.InputBegan:Connect(function(i)
     if S.dragMenu and (i.UserInputType==Enum.UserInputType.MouseButton1 or i.UserInputType==Enum.UserInputType.Touch) then
@@ -1957,7 +2234,6 @@ UserInputService.InputEnded:Connect(function(i)
     end
 end)
 
--- ===== DRAG NÚT TOGGLE (NHẤN GIỮ NÚT 🍌) =====
 local togDragging = false
 local togDragStart, togStartPos
 local togMoved = false
@@ -2023,10 +2299,11 @@ player.CharacterAdded:Connect(function(c)
     if S.carpet then StopCarpet(); TogCarpet() end
     if S.flyRun then TogFlyRun() end
     StopFlyTo() 
+    StopFlyToLoc()
     if S.esp then UpdateESP() end
 end)
 
 UpdChar()
 if S.noClip then EnNC() end
 
-print("✅ Đã sửa lỗi Định Vị Lẻ + Cập nhật ESP Đếm giờ hạ ngục")
+print("✅ Đã cập nhật Tab Tọa Độ: Lưu, Đặt tên, ESP, Xóa, Bay tới")
