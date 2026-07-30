@@ -2,6 +2,7 @@
 -- EXECUTOR MENU - Fix NoClip Không Lỗi Thảm & Xuyên Tường Mượt 100%
 -- (Banana Cat Hub Style + Caro Pattern + Chỉnh kích thước 4 góc + Chỉnh Rộng/Dày/Dài Thảm Kính)
 -- + ESP: Phân biệt Bạn Bè (Hồng/Tím) & Hạ ngục/Chết
+-- + Tab Cài Đặt Menu: Di chuyển nút bật menu
 -- StarterGui -> LocalScript hoặc Executor
 -- ============================================
 
@@ -170,7 +171,7 @@ local closeBtn = New("TextButton", {
     ZIndex=4,
 }, titleBar)
 
--- ===== DRAG MENU =====
+-- ===== DRAG MENU CHÍNH (NHẤN GIỮ THANH TIÊU ĐỀ) =====
 local dragging, dragStart, startPos
 titleBar.InputBegan:Connect(function(i)
     if i.UserInputType==Enum.UserInputType.MouseButton1 or i.UserInputType==Enum.UserInputType.Touch then
@@ -361,13 +362,14 @@ local function AddTab(name, icon, order)
     return sf
 end
 
--- 6 TABS
+-- 7 TABS (Thêm Tab Cài Đặt Menu)
 local codeTab      = AddTab("Code", "💻", 1)
 local savedCodeTab = AddTab("Code Đã Lưu", "💾", 2)
 local moveTab      = AddTab("Di Chuyển", "🏃", 3)
 local tpPlayerTab  = AddTab("Bay Đến Player", "🎯", 4)
 local playerTab    = AddTab("Người Chơi", "👤", 5)
 local envTab       = AddTab("Môi Trường", "⚙️", 6)
+local menuSetTab   = AddTab("Menu Cài Đặt", "🛠️", 7)
 
 SwitchTab(1)
 
@@ -381,6 +383,7 @@ local S = {
     infJump=false, clickTp=false, esp=false, antiAfk=true, fullBright=false,
     blockServer=false, freezeOthers=false,
     flyToTarget=nil, flyToSpeed=150, 
+    dragTogBtn=false, -- Trạng thái bật/tắt di chuyển nút menu
 }
 
 -- Forward declare nút NoClip và RebuildTPList
@@ -877,7 +880,6 @@ local function CreatePlayerESP(p)
 
     if not rPart or not hum then return end
 
-    -- Kiểm tra và cache trạng thái bạn bè
     if friendCache[p.UserId] == nil then
         task.spawn(function()
             local ok, res = pcall(function() return player:IsFriendsWith(p.UserId) end)
@@ -916,13 +918,11 @@ local function CreatePlayerESP(p)
             local r = Root()
             local state = hum:GetState()
             
-            -- Nếu chết thật sự (trạng thái Dead), xóa ESP và dừng vòng lặp
             if state == Enum.HumanoidStateType.Dead then
                 RemovePlayerESP(p)
                 return
             end
 
-            -- Kiểm tra hạ ngục (PlatformStand hoặc Health <= 0 nhưng chưa Dead)
             local isDowned = hum.PlatformStand or hum.Health <= 0
             local isFriend = friendCache[p.UserId] or false
 
@@ -930,21 +930,21 @@ local function CreatePlayerESP(p)
             if isDowned then
                 stateText = " [☠️ Hạ ngục]"
                 if isFriend then
-                    hl.FillColor = Color3.fromRGB(138, 43, 226) -- Tím cho bạn bè hạ ngục
+                    hl.FillColor = Color3.fromRGB(138, 43, 226)
                     hl.OutlineColor = Color3.fromRGB(200, 150, 255)
                     lbl.TextColor3 = Color3.fromRGB(200, 150, 255)
                 else
-                    hl.FillColor = Color3.fromRGB(200, 0, 0) -- Đỏ cho người khác hạ ngục
+                    hl.FillColor = Color3.fromRGB(200, 0, 0)
                     hl.OutlineColor = Color3.fromRGB(255, 100, 100)
                     lbl.TextColor3 = Color3.fromRGB(255, 100, 100)
                 end
             else
                 if isFriend then
-                    hl.FillColor = Color3.fromRGB(255, 105, 180) -- Hồng cho bạn bè bình thường
+                    hl.FillColor = Color3.fromRGB(255, 105, 180)
                     hl.OutlineColor = Color3.fromRGB(255, 182, 193)
                     lbl.TextColor3 = Color3.fromRGB(255, 182, 193)
                 else
-                    hl.FillColor = Color3.fromRGB(0, 255, 100) -- Xanh cho người khác bình thường
+                    hl.FillColor = Color3.fromRGB(0, 255, 100)
                     hl.OutlineColor = Color3.fromRGB(255, 255, 255)
                     lbl.TextColor3 = Color3.fromRGB(0, 255, 100)
                 end
@@ -1011,7 +1011,7 @@ end)
 
 Players.PlayerRemoving:Connect(function(p) 
     RemovePlayerESP(p)
-    friendCache[p.UserId] = nil -- Dọn dẹp cache khi người chơi rời đi
+    friendCache[p.UserId] = nil
 end)
 
 -- ==================== CODE EXECUTION ====================
@@ -1081,7 +1081,6 @@ end
 
 -- ==================== TAB 1: CODE ====================
 local y = 8
-
 Label(codeTab, "⚡ Code Nhanh - Nhấn để chạy ngay", y)
 y = y + 16
 
@@ -1110,7 +1109,6 @@ end
 y = y + 6
 Label(codeTab, "━━━━━━━━━━━━━━━━━━━━━━", y)
 y = y + 16
-
 Label(codeTab, "💻 Nhập Code Tùy Chỉnh", y)
 y = y + 14
 Label(codeTab, "👤 Tên Script", y)
@@ -1144,7 +1142,6 @@ Stroke(codeIn, Color3.fromRGB(100,120,200), 1.5)
 New("UIPadding", {PaddingLeft=UDim.new(0,6), PaddingTop=UDim.new(0,4)}, codeIn)
 
 y = y + 86
-
 Label(codeTab, "🔁 Cài đặt lặp", y)
 y = y + 14
 Label(codeTab, "Số lần lặp:", y)
@@ -1608,7 +1605,6 @@ Corner(flyToSpdIn,UDim.new(0,5)); Stroke(flyToSpdIn)
 local stopFlyToBtn = Button(tpPlayerTab, "⏹ Dừng Bay", 72, ty, 100, 24, C.RED)
 ty = ty + 30
 
--- NÚT ESP NGƯỜI CHƠI
 local espBtn = Button(tpPlayerTab, "👁️ ESP Người Chơi: TẮT", 8, ty, 200, 24, C.GRAY)
 espBtn.Activated:Connect(function()
     S.esp = not S.esp
@@ -1618,7 +1614,6 @@ espBtn.Activated:Connect(function()
 end)
 ty = ty + 30
 
--- THANH TÌM KIẾM NGƯỜI CHƠI
 Label(tpPlayerTab, "🔍 Tìm tên người chơi", ty)
 ty = ty + 14
 
@@ -1860,7 +1855,44 @@ end)
 
 envTab.CanvasSize=UDim2.new(0,0,0,ey+50)
 
--- ==================== TOGGLE MENU LOGIC ====================
+
+-- ==================== TAB 7: CÀI ĐẾT MENU (MỚI) ====================
+local mty = 8
+
+Label(menuSetTab, "⚙️ Tùy chỉnh giao diện Menu", mty)
+mty = mty + 20
+
+Label(menuSetTab, "Menu chính có thể di chuyển bằng cách", mty)
+mty = mty + 12
+Label(menuSetTab, "nhấn giữ và kéo thanh tiêu đề trên cùng.", mty)
+mty = mty + 20
+
+Label(menuSetTab, "Để di chuyển nút Bật/Tắt Menu (🍌):", mty)
+mty = mty + 14
+
+local dragTogBtn = Button(menuSetTab, "Di Chuyển Nút Menu: TẮT", 8, mty, 200, 24, C.GRAY)
+dragTogBtn.Activated:Connect(function()
+    S.dragTogBtn = not S.dragTogBtn
+    dragTogBtn.Text = S.dragTogBtn and "Di Chuyển Nút Menu: BẬT" or "Di Chuyển Nút Menu: TẮT"
+    dragTogBtn.BackgroundColor3 = S.dragTogBtn and C.GREEN or C.GRAY
+end)
+mty = mty + 30
+
+Label(menuSetTab, "Khi BẬT, nhấn giữ nút 🍌 để kéo đi.", mty)
+mty = mty + 12
+Label(menuSetTab, "Khi TẮT, nhấn nút 🍌 để bật/tắt menu.", mty)
+mty = mty + 20
+
+local resetTogPosBtn = Button(menuSetTab, "Đặt Lại Vị Trí Nút Menu", 8, mty, 200, 24, C.BLUE)
+resetTogPosBtn.Activated:Connect(function()
+    togBtn.Position = UDim2.new(1, -60, 1, -60)
+end)
+mty = mty + 30
+
+menuSetTab.CanvasSize = UDim2.new(0,0,0,mty+40)
+
+
+-- ==================== TOGGLE MENU LOGIC & DRAG TOGGLE BTN ====================
 local function ToggleMainFrame()
     if S.flyRun then
         S.flyRun = false
@@ -1875,7 +1907,58 @@ closeBtn.Activated:Connect(function()
     togBtn.Text = "🍌"
 end)
 
-togBtn.Activated:Connect(ToggleMainFrame)
+-- Xử lý nhấn giữ và kéo nút Toggle Button
+local togDragging = false
+local togDragStart, togStartPos
+local togMoved = false
+
+togBtn.InputBegan:Connect(function(i)
+    if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then
+        if S.dragTogBtn then
+            togDragging = true
+            togDragStart = i.Position
+            togStartPos = togBtn.Position
+            togMoved = false
+        end
+    end
+end)
+
+UserInputService.InputChanged:Connect(function(i)
+    if togDragging and S.dragTogBtn and (i.UserInputType == Enum.UserInputType.MouseMovement or i.UserInputType == Enum.UserInputType.Touch) then
+        local delta = i.Position - togDragStart
+        if delta.Magnitude > 5 then -- Ngưỡng nhận diện kéo
+            togMoved = true
+        end
+        if togMoved then
+            togBtn.Position = UDim2.new(
+                togStartPos.X.Scale, togStartPos.X.Offset + delta.X,
+                togStartPos.Y.Scale, togStartPos.Y.Offset + delta.Y
+            )
+        end
+    end
+end)
+
+UserInputService.InputEnded:Connect(function(i)
+    if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then
+        if togDragging then
+            togDragging = false
+            if not togMoved then
+                -- Nếu chỉ click bình thường (không kéo) thì vẫn bật/tắt menu
+                ToggleMainFrame()
+            end
+        elseif not S.dragTogBtn then
+            -- Nếu tính năng kéo đang tắt, nút hoạt động bình thường
+            -- (Đã bắt bằng Activated bên dưới, nhưng giữ lại để dự phòng)
+        end
+    end
+end)
+
+-- Dự phòng: Nếu tính năng kéo đang tắt, nút hoạt động bình thường
+togBtn.Activated:Connect(function()
+    if not S.dragTogBtn then
+        ToggleMainFrame()
+    end
+end)
 
 UserInputService.InputBegan:Connect(function(i, gp)
     if not gp and i.KeyCode == Enum.KeyCode.RightControl then
@@ -1901,4 +1984,4 @@ end)
 UpdChar()
 if S.noClip then EnNC() end
 
-print("✅ Đã cập nhật ESP: Phân biệt Bạn Bè, Hạ ngục và Chết!")
+print("✅ Đã cập nhật: Thêm Tab Cài Đặt Menu, Di chuyển nút Menu & ESP Phân biệt Bạn Bè!")
