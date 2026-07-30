@@ -2,7 +2,7 @@
 -- EXECUTOR MENU - Fix NoClip Không Lỗi Thảm & Xuyên Tường Mượt 100%
 -- (Banana Cat Hub Style + Caro Pattern + Chỉnh kích thước 4 góc + Chỉnh Rộng/Dày/Dài Thảm Kính)
 -- + ESP: Phân biệt Bạn Bè (Hồng/Tím) & Hạ ngục/Chết + Đếm giờ Hạ Ngục
--- + Định Vị Lẻ: Nhấn tên người chơi để chỉ ESP người đó (Đã sửa lỗi)
+-- + Định Vị Lẻ: Bật tính năng -> Nhấn tên người chơi -> Chỉ định vị 1 người đó
 -- StarterGui -> LocalScript hoặc Executor
 -- ============================================
 
@@ -858,9 +858,9 @@ end
 local function CreatePlayerESP(p)
     RemovePlayerESP(p)
 
-    -- Chỉ tạo ESP nếu ESP đang bật, và (Định vị lẻ đang tắt HOẶC đây chính là mục tiêu định vị lẻ)
     if not S.esp or p == player then return end
-    if S.soloTrack and S.soloTarget and p ~= S.soloTarget then return end
+    -- Chặn tạo ESP nếu đang định vị lẻ mà không phải mục tiêu
+    if S.soloTrack and p ~= S.soloTarget then return end
 
     local pChar = p.Character
     if not pChar then return end
@@ -908,8 +908,8 @@ local function CreatePlayerESP(p)
         local downStart = 0
         
         while S.esp and pChar and pChar.Parent and hum and hum.Parent do
-            -- Nếu bật định vị lẻ nhưng không phải người được chọn -> dừng ESP này
-            if S.soloTrack and S.soloTarget and p ~= S.soloTarget then
+            -- Nếu đột nhiên bật định vị lẻ mà không phải mục tiêu thì tự dừng ESP này
+            if S.soloTrack and p ~= S.soloTarget then
                 break
             end
 
@@ -997,12 +997,13 @@ end
 
 local function UpdateESP()
     ClearAllESP()
-    -- Nếu ESP đang tắt, không làm gì cả
     if not S.esp then return end
     
-    -- Nếu định vị lẻ đang bật và có mục tiêu
-    if S.soloTrack and S.soloTarget then
-        CreatePlayerESP(S.soloTarget)
+    -- Nếu bật định vị lẻ, chỉ tạo ESP cho mục tiêu đã chọn (nếu có)
+    if S.soloTrack then
+        if S.soloTarget then
+            CreatePlayerESP(S.soloTarget)
+        end
     else
         -- Định vị tất cả
         for _, p in ipairs(Players:GetPlayers()) do
