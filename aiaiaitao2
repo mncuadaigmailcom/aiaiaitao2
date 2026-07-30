@@ -4,7 +4,7 @@
 -- + ESP: Phân biệt Bạn Bè (Hồng/Tím) & Hạ ngục/Chết + Đếm giờ Hạ Ngục
 -- + Định Vị Lẻ: Bật tính năng -> Nhấn tên người chơi -> Chỉ định vị 1 người đó
 -- + Tab Tọa Độ: Lưu, Đặt tên, ESP All/Lẻ, Xóa, Bay tới Tọa Độ
--- + Tab Niệm Tâm: Vòng tròn trên màn hình + Tự động ngắm người trong vòng (Chỉ ngắm khi bắn + ESP Tên/Máu/Khoảng cách)
+-- + Tab Niệm Tâm: Vòng tròn + Tự động ngắm + Nút Củ Xẻn Ẩn Hiện (Nhấn nút mới ngắm, không nhấn chỉ định vị ESP)
 -- StarterGui -> LocalScript hoặc Executor
 -- ============================================
 
@@ -379,8 +379,9 @@ local S = {
     dragMenu=false, 
     soloTrack=false, soloTarget=nil, 
     locEspAll=false, locEspSingle=false, locTarget=nil, flyToLocTarget=nil, 
-    xrayCircle=false, xrayCircleSize=150, -- Niệm Tâm Vòng Tròn
-    aimLock=false, -- Tự ngắm người trong vòng
+    xrayCircle=false, xrayCircleSize=150, 
+    aimLock=false, 
+    aimButtonToggle=false, -- Bật nút Củ Xẻn
 }
 
 local noclipBtn 
@@ -2209,13 +2210,13 @@ RunService.RenderStepped:Connect(function()
 end)
 
 
--- ==================== TAB 8: NIỆM TÂM (VÒNG TRÒN TÂM NGẮM & AIM) ====================
+-- ==================== TAB 8: NIỆM TÂM (VÒNG TRÒN TÂM NGẮM & NÚT CỦ XẺN) ====================
 local xy = 8
 
 Label(xrayTab, "🎯 Niệm Tâm - Vòng tròn & Tự Động Ngắm", xy)
 xy = xy + 14
 
-Label(xrayTab, "💡 Cách dùng: Bật vòng tròn + Bật tự ngắm. Giữ chuột trái (hoặc chạm màn hình) để ngắm người trong vòng.", xy)
+Label(xrayTab, "💡 Bật Vòng Tròn + Tự Ngắm + Nút Củ Xẻn. Khi game chạy, nhấn nút tròn mới bắn.", xy)
 xy = xy + 22
 
 local xrayToggleBtn = Button(xrayTab, "👁️ Bật Vòng Tròn: TẮT", 8, xy, 220, 24, C.GRAY)
@@ -2224,15 +2225,31 @@ xrayToggleBtn.Activated:Connect(function()
     xrayToggleBtn.Text = S.xrayCircle and "👁️ Bật Vòng Tròn: BẬT" or "👁️ Bật Vòng Tròn: TẮT"
     xrayToggleBtn.BackgroundColor3 = S.xrayCircle and C.GREEN or C.GRAY
     xrayCircleFrame.Visible = S.xrayCircle
+    
+    -- Cập nhật hiện nút Củ Xẻn nếu đủ điều kiện
+    aimButton.Visible = (S.xrayCircle and S.aimLock and S.aimButtonToggle)
 end)
 xy = xy + 30
 
--- Nút Bật Tự Động Ngắm (Aim Lock)
-local aimLockBtn = Button(xrayTab, "🔒 Tự Ngắm (Giữ chuột để bắn): TẮT", 8, xy, 250, 24, C.GRAY)
+local aimLockBtn = Button(xrayTab, "🔒 Tự Ngắm Người Trong Vòng: TẮT", 8, xy, 250, 24, C.GRAY)
 aimLockBtn.Activated:Connect(function()
     S.aimLock = not S.aimLock
-    aimLockBtn.Text = S.aimLock and "🔓 Tự Ngắm (Giữ chuột để bắn): BẬT" or "🔒 Tự Ngắm (Giữ chuột để bắn): TẮT"
+    aimLockBtn.Text = S.aimLock and "🔓 Tự Ngắm Người Trong Vòng: BẬT" or "🔒 Tự Ngắm Người Trong Vòng: TẮT"
     aimLockBtn.BackgroundColor3 = S.aimLock and C.RED or C.GRAY
+    
+    -- Cập nhật hiện nút Củ Xẻn nếu đủ điều kiện
+    aimButton.Visible = (S.xrayCircle and S.aimLock and S.aimButtonToggle)
+end)
+xy = xy + 30
+
+local aimBtnToggleUI = Button(xrayTab, "🔘 Ngắm Bằng Nút (Củ Xẻn): TẮT", 8, xy, 250, 24, C.GRAY)
+aimBtnToggleUI.Activated:Connect(function()
+    S.aimButtonToggle = not S.aimButtonToggle
+    aimBtnToggleUI.Text = S.aimButtonToggle and "🔘 Ngắm Bằng Nút (Củ Xẻn): BẬT" or "🔘 Ngắm Bằng Nút (Củ Xẻn): TẮT"
+    aimBtnToggleUI.BackgroundColor3 = S.aimButtonToggle and C.GREEN or C.GRAY
+    
+    -- Cập nhật hiện nút Củ Xẻn nếu đủ điều kiện
+    aimButton.Visible = (S.xrayCircle and S.aimLock and S.aimButtonToggle)
 end)
 xy = xy + 30
 
@@ -2302,7 +2319,48 @@ end)
 
 xrayTab.CanvasSize = UDim2.new(0,0,0,xy+40)
 
--- ==================== ESP CHO MỤC TIÊU BỊ NGẮM (LOCKED TARGET) ====================
+
+-- ==================== NÚT CỦ XẺN (AIM BUTTON) ====================
+local aimButton = New("TextButton", {
+    Name = "AimCircleBtn",
+    Size = UDim2.new(0, 60, 0, 60),
+    Position = UDim2.new(0.5, -30, 1, -120), -- Nằm giữa dưới, dễ bấm
+    Text = "🎯",
+    BackgroundColor3 = C.RED,
+    BackgroundTransparency = 0.2,
+    TextColor3 = C.WHITE,
+    Font = Enum.Font.GothamBold,
+    TextSize = 30,
+    BorderSizePixel = 0,
+    ZIndex = 1000,
+    Visible = false,
+    Parent = gui
+})
+Corner(aimButton, UDim.new(1, 0))
+Stroke(aimButton, C.WHITE, 2)
+
+local isAimingBtnHeld = false
+
+-- Nhấn giữ nút để ngắm
+aimButton.InputBegan:Connect(function(i)
+    if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then
+        isAimingBtnHeld = true
+        aimButton.BackgroundColor3 = C.GREEN -- Đổi màu sang Xanh khi đang ngắm
+        aimButton.Text = "👁️"
+    end
+end)
+
+-- Nhả nút ra thì dừng ngắm, chỉ định vị
+aimButton.InputEnded:Connect(function(i)
+    if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then
+        isAimingBtnHeld = false
+        aimButton.BackgroundColor3 = C.RED -- Đổi lại màu Đỏ khi không ngắm
+        aimButton.Text = "🎯"
+    end
+end)
+
+
+-- ==================== ESP CHO MỤC TIÊU BỊ ĐỊNH VỊ / NGẮM ====================
 local aimTargetGui = New("BillboardGui", {
     Name = "AimTargetESP",
     Size = UDim2.new(0, 200, 0, 50),
@@ -2349,29 +2407,11 @@ local aimTargetDist = New("TextLabel", {
     ZIndex = 10000,
 }, aimTargetGui)
 
--- ==================== XỬ LÝ BẮN & TỰ ĐỘNG NGẮM (AIMBOT CIRCLE) ====================
-S.isFiring = false
-local currentAimTarget = nil
 
--- Phát hiện khi người chơi nhấn giữ chuột/chạm màn hình để bắn
-UserInputService.InputBegan:Connect(function(i, gp)
-    if gp then return end
-    if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then
-        S.isFiring = true
-    end
-end)
-
-UserInputService.InputEnded:Connect(function(i)
-    if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then
-        S.isFiring = false
-        currentAimTarget = nil
-        aimTargetGui.Visible = false
-    end
-end)
-
+-- ==================== XỬ LÝ TỰ ĐỘNG NGẮM & ĐỊNH VỊ (AIMBOT CIRCLE) ====================
 local function GetClosestPlayerInCircle()
     local camera = workspace.CurrentCamera
-    if not camera then return nil end
+    if not camera then return nil, nil end
     
     local centerScreen = Vector2.new(camera.ViewportSize.X / 2, camera.ViewportSize.Y / 2)
     local radius = S.xrayCircleSize / 2
@@ -2387,7 +2427,6 @@ local function GetClosestPlayerInCircle()
             local head = char:FindFirstChild("Head")
             
             if hum and hrp and hum.Health > 0 then
-                -- Ưu tiên ngắm vào đầu nếu có, không thì ngắm vào thân
                 local aimPart = head or hrp
                 local screenPos, onScreen = camera:WorldToViewportPoint(aimPart.Position)
                 
@@ -2408,26 +2447,32 @@ local function GetClosestPlayerInCircle()
 end
 
 RunService.RenderStepped:Connect(function()
+    -- Đảm bảo nút Củ Xẻn chỉ hiện khi đủ điều kiện
+    if S.aimButtonToggle and S.aimLock and S.xrayCircle then
+        if not aimButton.Visible then aimButton.Visible = true end
+    else
+        if aimButton.Visible then aimButton.Visible = false; isAimingBtnHeld = false end
+    end
+
     if S.aimLock and S.xrayCircle then
+        local targetPart, targetPlayer = GetClosestPlayerInCircle()
         local camera = workspace.CurrentCamera
         
-        -- CHỈ KHOÁ MỤC TIÊU VÀ NGẮM KHI ĐANG BẮN (isFiring = true)
-        if S.isFiring then
-            local targetPart, targetPlayer = GetClosestPlayerInCircle()
-            if targetPart and camera then
-                currentAimTarget = targetPlayer
-                -- Xoay camera ngắm vào mục tiêu
-                camera.CFrame = CFrame.lookAt(camera.CFrame.Position, targetPart.Position)
-            else
-                currentAimTarget = nil
-            end
-        else
-            currentAimTarget = nil
+        -- LOGIC NGẮM BẮN:
+        -- Nếu bật Nút Củ Xẻn: Chỉ ngắm khi isAimingBtnHeld = true
+        -- Nếu không bật Nút Củ Xẻn: Luôn ngắm khi có mục tiêu (như cũ)
+        local shouldAim = true
+        if S.aimButtonToggle then
+            shouldAim = isAimingBtnHeld
         end
-
-        -- CẬP NHẬT ESP CHO NGƯỜI BỊ NGẮM
-        if currentAimTarget and currentAimTarget.Character then
-            local char = currentAimTarget.Character
+        
+        if targetPart and camera and shouldAim then
+            camera.CFrame = CFrame.lookAt(camera.CFrame.Position, targetPart.Position)
+        end
+        
+        -- CẬP NHẬT ESP ĐỊNH VỊ (Luôn hiện khi có mục tiêu trong vòng, kể cả khi không bắn)
+        if targetPlayer and targetPlayer.Character then
+            local char = targetPlayer.Character
             local hum = char:FindFirstChildOfClass("Humanoid")
             local hrp = char:FindFirstChild("HumanoidRootPart")
             local head = char:FindFirstChild("Head")
@@ -2438,16 +2483,12 @@ RunService.RenderStepped:Connect(function()
                 aimTargetGui.Adornee = head or hrp
                 aimTargetGui.Visible = true
                 
-                -- Cập nhật Tên
-                aimTargetName.Text = "🎯 " .. currentAimTarget.Name
+                aimTargetName.Text = "🎯 " .. targetPlayer.Name
                 
-                -- Cập nhật Thanh Máu
                 local hpPercent = math.clamp(hum.Health / math.max(hum.MaxHealth, 1), 0, 1)
-                aimTargetHealthFill.Size = UDim2.new(hpPercent,0, 1, 0)
-                -- Đổi màu thanh máu từ Xanh -> Đỏ khi mất máu
+                aimTargetHealthFill.Size = UDim2.new(hpPercent, 0, 1, 0)
                 aimTargetHealthFill.BackgroundColor3 = Color3.fromRGB(255 * (1 - hpPercent), 255 * hpPercent, 0)
                 
-                -- Cập nhật khoảng cách
                 if localHrp then
                     local dist = math.floor((localHrp.Position - hrp.Position).Magnitude)
                     aimTargetDist.Text = "📏 " .. dist .. "m"
@@ -2462,7 +2503,6 @@ RunService.RenderStepped:Connect(function()
         end
     else
         aimTargetGui.Visible = false
-        currentAimTarget = nil
     end
 end)
 
@@ -2587,4 +2627,4 @@ end)
 UpdChar()
 if S.noClip then EnNC() end
 
-print("✅ Đã thêm Tính Năng Tự Ngắm Người Trong Vòng Tròn Niệm Tâm!")
+print("✅ Đã thêm Tính Năng Nút Củ Xẻn Ngắm Bắn!")
