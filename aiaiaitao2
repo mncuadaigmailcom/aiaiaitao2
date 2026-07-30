@@ -4,7 +4,6 @@
 -- + ESP: Phân biệt Bạn Bè (Hồng/Tím) & Hạ ngục/Chết + Đếm giờ Hạ Ngục
 -- + Định Vị Lẻ: Bật tính năng -> Nhấn tên người chơi -> Chỉ định vị 1 người đó
 -- + Tab Tọa Độ: Lưu, Đặt tên, ESP All/Lẻ, Xóa, Bay tới Tọa Độ
--- + Tab Niệm Tâm (X-Ray): Người, Động Vật, Đào, Hết Sốt + Chỉnh độ dày/trong suốt
 -- StarterGui -> LocalScript hoặc Executor
 -- ============================================
 
@@ -354,7 +353,7 @@ local function AddTab(name, icon, order)
     return sf
 end
 
--- 8 TABS
+-- 7 TABS (Đã xóa Tab Niệm Tâm)
 local codeTab      = AddTab("Code", "💻", 1)
 local savedCodeTab = AddTab("Code Đã Lưu", "💾", 2)
 local moveTab      = AddTab("Di Chuyển", "🏃", 3)
@@ -362,7 +361,6 @@ local tpPlayerTab  = AddTab("Bay Đến Player", "🎯", 4)
 local playerTab    = AddTab("Người Chơi", "👤", 5)
 local envTab       = AddTab("Môi Trường", "⚙️", 6)
 local locTab       = AddTab("Tọa Độ", "📍", 7)
-local xrayTab      = AddTab("Niệm Tâm", "👁️", 8)
 
 SwitchTab(1)
 
@@ -379,8 +377,6 @@ local S = {
     dragMenu=false, 
     soloTrack=false, soloTarget=nil, -- Định vị lẻ player
     locEspAll=false, locEspSingle=false, locTarget=nil, flyToLocTarget=nil, -- Tọa độ
-    xrayPlayers=false, xrayMobs=false, xrayOres=false, xrayAll=false, -- Niệm Tâm
-    xrayThickness=1, xrayTransparency=0.5, oreKeywords={"Ore", "Rock", "Stone", "Mine", "Đá", "Quặng"},
 }
 
 local noclipBtn 
@@ -2190,231 +2186,6 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
--- ==================== TAB 8: NIỆM TÂM (X-RAY) ====================
-local xy = 8
-
--- ĐƯA CÁC NÚT BẬT/TẮT LÊN ĐẦU TIÊN ĐỂ DỄ THẤY
-Label(xrayTab, "⚡ Bật/Tắt Niệm Tâm (X-Ray)", xy)
-xy = xy + 14
-
-local xrayPlayerBtn = Button(xrayTab, "👁️ Niệm Tâm Người: TẮT", 8, xy, 220, 24, C.GRAY)
-xrayPlayerBtn.Activated:Connect(function()
-    S.xrayPlayers = not S.xrayPlayers
-    xrayPlayerBtn.Text = S.xrayPlayers and "👁️ Niệm Tâm Người: BẬT" or "👁️ Niệm Tâm Người: TẮT"
-    xrayPlayerBtn.BackgroundColor3 = S.xrayPlayers and C.GREEN or C.GRAY
-end)
-xy = xy + 30
-
-local xrayMobBtn = Button(xrayTab, "🐺 Niệm Tâm Động Vật: TẮT", 8, xy, 220, 24, C.GRAY)
-xrayMobBtn.Activated:Connect(function()
-    S.xrayMobs = not S.xrayMobs
-    xrayMobBtn.Text = S.xrayMobs and "🐺 Niệm Tâm Động Vật: BẬT" or "🐺 Niệm Tâm Động Vật: TẮT"
-    xrayMobBtn.BackgroundColor3 = S.xrayMobs and C.RED or C.GRAY
-end)
-xy = xy + 30
-
-local xrayOreBtn = Button(xrayTab, "⛏️ Niệm Tâm Vào Đào: TẮT", 8, xy, 220, 24, C.GRAY)
-xrayOreBtn.Activated:Connect(function()
-    S.xrayOres = not S.xrayOres
-    xrayOreBtn.Text = S.xrayOres and "⛏️ Niệm Tâm Vào Đào: BẬT" or "⛏️ Niệm Tâm Vào Đào: TẮT"
-    xrayOreBtn.BackgroundColor3 = S.xrayOres and C.YELLOW or C.GRAY
-end)
-xy = xy + 30
-
-local xrayAllBtn = Button(xrayTab, "🌍 Niệm Tâm Hết Sốt: TẮT", 8, xy, 220, 24, C.GRAY)
-xrayAllBtn.Activated:Connect(function()
-    S.xrayAll = not S.xrayAll
-    xrayAllBtn.Text = S.xrayAll and "🌍 Niệm Tâm Hết Sốt: BẬT" or "🌍 Niệm Tâm Hết Sốt: TẮT"
-    xrayAllBtn.BackgroundColor3 = S.xrayAll and C.PURPLE or C.GRAY
-end)
-xy = xy + 34
-
--- PHẦN CÀI ĐẶT CHI TIẾT ĐỂ DƯỚI
-Label(xrayTab, "━━━━━━━━━━━━━━━━━━━━━━", xy)
-xy = xy + 16
-Label(xrayTab, "⚙️ Cài đặt chi tiết Niệm Tâm", xy)
-xy = xy + 14
-
-Label(xrayTab, "⭕ Độ dày vòng (1 - 5):", xy)
-xy = xy + 14
-local thickIn = New("TextBox", {
-    Size=UDim2.new(0,55,0,24), Position=UDim2.new(0,8,0,xy), Text="1",
-    BackgroundColor3=Color3.fromRGB(255,255,255), BackgroundTransparency=0, TextColor3=Color3.fromRGB(20,20,20),
-    Font=Enum.Font.GothamMedium, TextSize=12, BorderSizePixel=0, ClearTextOnFocus=false,
-    Active=true, Selectable=true, ZIndex=8,
-}, xrayTab)
-Corner(thickIn,UDim.new(0,5)); Stroke(thickIn)
-thickIn.FocusLost:Connect(function(e) 
-    if not e then return end 
-    local n=tonumber(thickIn.Text)
-    if n and n>=1 and n<=5 then S.xrayThickness=n else thickIn.Text=tostring(S.xrayThickness) end
-end)
-
-xy = xy + 30
-Label(xrayTab, "💧 Độ trong suốt (0 - 1):", xy)
-xy = xy + 14
-local transIn = New("TextBox", {
-    Size=UDim2.new(0,55,0,24), Position=UDim2.new(0,8,0,xy), Text="0.5",
-    BackgroundColor3=Color3.fromRGB(255,255,255), BackgroundTransparency=0, TextColor3=Color3.fromRGB(20,20,20),
-    Font=Enum.Font.GothamMedium, TextSize=12, BorderSizePixel=0, ClearTextOnFocus=false,
-    Active=true, Selectable=true, ZIndex=8,
-}, xrayTab)
-Corner(transIn,UDim.new(0,5)); Stroke(transIn)
-transIn.FocusLost:Connect(function(e) 
-    if not e then return end 
-    local n=tonumber(transIn.Text)
-    if n and n>=0 and n<=1 then S.xrayTransparency=n else transIn.Text=tostring(S.xrayTransparency) end
-end)
-
-xy = xy + 30
-Label(xrayTab, "🎯 Từ khóa Niệm Tâm Đào (cách nhau bởi dấu phẩy)", xy)
-xy = xy + 14
-local kwIn = New("TextBox", {
-    Size=UDim2.new(1,-16,0,26), Position=UDim2.new(0,8,0,xy), Text="Ore,Rock,Stone,Mine,Đá,Quặng",
-    BackgroundColor3=Color3.fromRGB(255,255,255), BackgroundTransparency=0, TextColor3=Color3.fromRGB(20,20,20),
-    Font=Enum.Font.GothamMedium, TextSize=12, BorderSizePixel=0, ClearTextOnFocus=false,
-    Active=true, Selectable=true, ZIndex=10, TextXAlignment=Enum.TextXAlignment.Left,
-}, xrayTab)
-Corner(kwIn, UDim.new(0,5))
-Stroke(kwIn, Color3.fromRGB(180,180,200), 1.2)
-New("UIPadding", {PaddingLeft=UDim.new(0,6)}, kwIn)
-kwIn.FocusLost:Connect(function()
-    local kws = {}
-    for kw in string.gmatch(kwIn.Text, "[^,%s]+") do
-        table.insert(kws, kw)
-    end
-    if #kws == 0 then
-        kws = {"Ore", "Rock", "Stone", "Mine", "Đá", "Quặng"}
-    end
-    S.oreKeywords = kws
-end)
-
-xy = xy + 34
-local warnLbl = Label(xrayTab, "⚠️ Cảnh báo: Niệm Tâm Hết Sốt có thể gây lag nếu map quá lớn.", xy)
-warnLbl.TextSize = 9
-warnLbl.TextColor3 = C.RED
-warnLbl.TextWrapped = true
-warnLbl.Size = UDim2.new(1, -16, 0, 28)
-
-xrayTab.CanvasSize = UDim2.new(0,0,0,xy+40)
-
--- VÒNG LẶP CẬP NHẬT NIỆM TÂM (X-RAY)
-local xrayObjs = {}
-local xrayLastScan = 0
-
-RunService.Heartbeat:Connect(function()
-    if not S.xrayPlayers and not S.xrayMobs and not S.xrayOres and not S.xrayAll then
-        if next(xrayObjs) then
-            for obj, hl in pairs(xrayObjs) do
-                if hl then hl:Destroy() end
-            end
-            xrayObjs = {}
-        end
-        return
-    end
-
-    -- Update thickness/transparency constantly (cheap operation)
-    for obj, hl in pairs(xrayObjs) do
-        if hl and hl.Parent then
-            hl.FillTransparency = S.xrayTransparency
-            hl.OutlineThickness = S.xrayThickness
-        end
-    end
-
-    -- Scan workspace every 0.5 seconds to avoid lag
-    if tick() - xrayLastScan < 0.5 then return end
-    xrayLastScan = tick()
-
-    local activeObjs = {}
-
-    -- 1. Players
-    if S.xrayPlayers then
-        for _, p in ipairs(Players:GetPlayers()) do
-            if p ~= player and p.Character then
-                activeObjs[p.Character] = "Player"
-            end
-        end
-    end
-
-    -- 2. Mobs, Ores, All
-    for _, desc in ipairs(workspace:GetDescendants()) do
-        if desc:IsA("Model") or desc:IsA("BasePart") then
-            local isPlayerChar = false
-            for _, p in ipairs(Players:GetPlayers()) do
-                if p.Character and desc:IsDescendantOf(p.Character) then
-                    isPlayerChar = true
-                    break
-                end
-            end
-            if not isPlayerChar then
-                if S.xrayMobs and desc:IsA("Model") then
-                    local hum = desc:FindFirstChildOfClass("Humanoid")
-                    if hum and hum.Health > 0 then
-                        activeObjs[desc] = "Mob"
-                    end
-                end
-                if S.xrayOres then
-                    local name = desc.Name:lower()
-                    local isOre = false
-                    for _, kw in ipairs(S.oreKeywords) do
-                        if kw ~= "" and name:find(kw:lower(), 1, true) then
-                            isOre = true
-                            break
-                        end
-                    end
-                    if isOre then
-                        activeObjs[desc] = "Ore"
-                    end
-                end
-                if S.xrayAll then
-                    if desc:IsA("Model") or (desc:IsA("BasePart") and desc.Size.Magnitude > 2) then
-                        if not activeObjs[desc] then
-                            activeObjs[desc] = "All"
-                        end
-                    end
-                end
-            end
-        end
-    end
-
-    -- Remove old/unused
-    for obj, hl in pairs(xrayObjs) do
-        if not activeObjs[obj] or not obj.Parent then
-            if hl then hl:Destroy() end
-            xrayObjs[obj] = nil
-        end
-    end
-
-    -- Add new and update existing
-    for obj, cat in pairs(activeObjs) do
-        if obj.Parent then
-            if not xrayObjs[obj] then
-                local hl = Instance.new("Highlight")
-                hl.Parent = obj
-                xrayObjs[obj] = hl
-            end
-            
-            local hl = xrayObjs[obj]
-            hl.FillTransparency = S.xrayTransparency
-            hl.OutlineThickness = S.xrayThickness
-            
-            if cat == "Player" then
-                hl.FillColor = Color3.fromRGB(0, 255, 100)
-                hl.OutlineColor = Color3.fromRGB(255, 255, 255)
-            elseif cat == "Mob" then
-                hl.FillColor = Color3.fromRGB(255, 0, 0)
-                hl.OutlineColor = Color3.fromRGB(255, 255, 0)
-            elseif cat == "Ore" then
-                hl.FillColor = Color3.fromRGB(255, 200, 0)
-                hl.OutlineColor = Color3.fromRGB(255, 100, 0)
-            else -- All
-                hl.FillColor = Color3.fromRGB(0, 140, 240)
-                hl.OutlineColor = Color3.fromRGB(255, 255, 255)
-            end
-        end
-    end
-end)
-
 
 -- ==================== TOGGLE MENU LOGIC & DRAG SYSTEM ====================
 local function ToggleMainFrame()
@@ -2536,4 +2307,4 @@ end)
 UpdChar()
 if S.noClip then EnNC() end
 
-print("✅ Đã cập nhật Tab Tọa Độ & Tab Niệm Tâm (X-Ray)")
+print("✅ Đã xóa Tab Niệm Tâm, menu giờ chỉ còn 7 Tab gọn gàng!")
