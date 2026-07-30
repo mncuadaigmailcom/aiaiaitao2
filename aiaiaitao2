@@ -4,7 +4,7 @@
 -- + ESP: Phân biệt Bạn Bè (Hồng/Tím) & Hạ ngục/Chết + Đếm giờ Hạ Ngục
 -- + Định Vị Lẻ: Bật tính năng -> Nhấn tên người chơi -> Chỉ định vị 1 người đó
 -- + Tab Tọa Độ: Lưu, Đặt tên, ESP All/Lẻ, Xóa, Bay tới Tọa Độ
--- + Tab Niệm Tâm: Vòng tròn trên màn hình + Tự động ngắm người trong vòng (Aimbot)
+-- + Tab Niệm Tâm: Vòng tròn + Tự động ESP Tên/Máu người trong vòng + Nút bấm Bật/Tắt Niệm Tâm (Aimbot)
 -- StarterGui -> LocalScript hoặc Executor
 -- ============================================
 
@@ -396,8 +396,8 @@ local S = {
     dragMenu=false, 
     soloTrack=false, soloTarget=nil, 
     locEspAll=false, locEspSingle=false, locTarget=nil, flyToLocTarget=nil, 
-    xrayCircle=false, xrayCircleSize=150, -- Niệm Tâm Vòng Tròn
-    aimLock=false, -- Tự ngắm người trong vòng
+    xrayCircle=false, xrayCircleSize=150, 
+    aimLockActive=false, -- Chỉ khi bằng true mới tự động niệm tâm camera
 }
 
 local noclipBtn
@@ -447,6 +447,62 @@ local xrayStroke = New("UIStroke", {
     Transparency = 0.2,
     ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
 }, xrayCircleFrame)
+
+-- NÚT BẬM TRÔI NỔI ĐỂ KÍCH HOẠT NIỆM TÂM
+local aimToggleBtn = New("TextButton", {
+    Name = "AimToggleButton",
+    Size = UDim2.new(0, 130, 0, 40),
+    Position = UDim2.new(0.5, -65, 0.8, -20),
+    Text = "🎯 BẬT NIỆM TÂM",
+    BackgroundColor3 = C.GRAY,
+    BackgroundTransparency = 0.1,
+    TextColor3 = C.WHITE,
+    Font = Enum.Font.GothamBold,
+    TextSize = 13,
+    BorderSizePixel = 0,
+    Visible = false,
+    ZIndex = 1001,
+}, gui)
+Corner(aimToggleBtn, UDim.new(0, 8))
+Stroke(aimToggleBtn, C.WHITE, 2)
+
+-- Kéo thả nút Niệm Tâm
+local aimDragging, aimDragStart, aimStartPos, aimMoved = false, nil, nil, false
+trackConn(aimToggleBtn.InputBegan:Connect(function(i)
+    if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then
+        aimDragging = true
+        aimDragStart = i.Position
+        aimStartPos = aimToggleBtn.Position
+        aimMoved = false
+    end
+end))
+trackConn(UserInputService.InputChanged:Connect(function(i)
+    if aimDragging and (i.UserInputType == Enum.UserInputType.MouseMovement or i.UserInputType == Enum.UserInputType.Touch) then
+        local delta = i.Position - aimDragStart
+        if delta.Magnitude > 5 then aimMoved = true end
+        if aimMoved then
+            aimToggleBtn.Position = UDim2.new(aimStartPos.X.Scale, aimStartPos.X.Offset + delta.X, aimStartPos.Y.Scale, aimStartPos.Y.Offset + delta.Y)
+        end
+    end
+end))
+trackConn(UserInputService.InputEnded:Connect(function(i)
+    if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then
+        if aimDragging then
+            aimDragging = false
+            if not aimMoved then
+                -- Nếu nhấn (không kéo) thì bật/tắt Niệm Tâm
+                S.aimLockActive = not S.aimLockActive
+                if S.aimLockActive then
+                    aimToggleBtn.Text = "🛑 TẮT NIỆM TÂM"
+                    aimToggleBtn.BackgroundColor3 = C.RED
+                else
+                    aimToggleBtn.Text = "🎯 BẬT NIỆM TÂM"
+                    aimToggleBtn.BackgroundColor3 = C.GRAY
+                end
+            end
+        end
+    end
+end))
 
 -- ==================== CHẶN SERVER TÁC ĐỘNG BẢO VỆ BẢN THÂN ====================
 local oldNamecall
@@ -964,7 +1020,7 @@ local function StartFlyToLoc(locItem)
 end
 
 
--- ==================== ESP SYSTEM (CẬP NHẬT MÀU BẠN BÈ & TRẠNG THÁI) ====================
+-- ==================== ESP SYSTEM ====================
 local espGui = New("ScreenGui", {
     Name = "ExMenu_ESP",
     ResetOnSpawn = false,
@@ -2194,7 +2250,6 @@ trackConn(RunService.RenderStepped:Connect(function()
         table.insert(activeLocs, S.locTarget)
     end
 
-    -- Clean up removed/unused
     for loc, obj in pairs(locEspObjs) do
         local stillActive = false
         for _, aloc in ipairs(activeLocs) do
@@ -2207,7 +2262,6 @@ trackConn(RunService.RenderStepped:Connect(function()
         end
     end
 
-    -- Create/Update active
     for _, loc in ipairs(activeLocs) do
         if not locEspObjs[loc] then
             local att = Instance.new("Attachment")
@@ -2231,15 +2285,15 @@ trackConn(RunService.RenderStepped:Connect(function()
         obj.Lbl.Text = string.format("📍 %s\n📏 %dm", loc.name, dist)
         
         if S.locEspSingle and S.locTarget == loc then
-            obj.Lbl.TextColor3 = Color3.fromRGB(255, 105, 180) -- Hồng
+            obj.Lbl.TextColor3 = Color3.fromRGB(255, 105, 180)
         else
-            obj.Lbl.TextColor3 = Color3.fromRGB(255, 215, 0) -- Vàng
+            obj.Lbl.TextColor3 = Color3.fromRGB(255, 215, 0)
         end
     end
 end))
 
 
--- ==================== TAB 8: NIỆM TÂM (VÒNG TRÒN TÂM NGẮM & AIM) ====================
+-- ==================== TAB 8: NIỆM TÂM (VÒNG TRÒN + NÚT AIMBOT) ====================
 local xy = 8
 
 Label(xrayTab, "🎯 Niệm Tâm - Vòng tròn & Tự Động Ngắm", xy)
@@ -2251,15 +2305,14 @@ xrayToggleBtn.Activated:Connect(function()
     xrayToggleBtn.Text = S.xrayCircle and "👁️ Bật Vòng Tròn: BẬT" or "👁️ Bật Vòng Tròn: TẮT"
     xrayToggleBtn.BackgroundColor3 = S.xrayCircle and C.GREEN or C.GRAY
     xrayCircleFrame.Visible = S.xrayCircle
-end)
-xy = xy + 30
-
--- Nút Bật Tự Động Ngắm (Aim Lock)
-local aimLockBtn = Button(xrayTab, "🔒 Tự Ngắm Người Trong Vòng: TẮT", 8, xy, 250, 24, C.GRAY)
-aimLockBtn.Activated:Connect(function()
-    S.aimLock = not S.aimLock
-    aimLockBtn.Text = S.aimLock and "🔓 Tự Ngắm Người Trong Vòng: BẬT" or "🔒 Tự Ngắm Người Trong Vòng: TẮT"
-    aimLockBtn.BackgroundColor3 = S.aimLock and C.RED or C.GRAY
+    
+    -- Hiện nút bấm Niệm Tâm trôi nổi nếu bật vòng tròn
+    aimToggleBtn.Visible = S.xrayCircle
+    if not S.xrayCircle then
+        S.aimLockActive = false
+        aimToggleBtn.Text = "🎯 BẬT NIỆM TÂM"
+        aimToggleBtn.BackgroundColor3 = C.GRAY
+    end
 end)
 xy = xy + 30
 
@@ -2329,48 +2382,98 @@ end)
 
 xrayTab.CanvasSize = UDim2.new(0,0,0,xy+40)
 
+-- ==================== XỬ LÝ NIỆM TÂM: ĐÁNH DẤU & KHÓA CAMERA ====================
+local circleEspObjects = {} -- Lưu trữ ESP của những người trong vòng
 
--- VÒNG LẶP XỬ LÝ TỰ ĐỘNG NGẮM (AIMBOT CIRCLE)
-local function GetClosestPlayerInCircle()
+local function ClearCircleEsp()
+    for p, obj in pairs(circleEspObjects) do
+        if obj.BB then obj.BB:Destroy() end
+    end
+    circleEspObjects = {}
+end
+
+trackConn(RunService.RenderStepped:Connect(function()
+    if not S.xrayCircle then
+        if next(circleEspObjects) then ClearCircleEsp() end
+        return
+    end
+
     local camera = workspace.CurrentCamera
-    if not camera then return nil end
-    
+    if not camera then return end
+
     local centerScreen = Vector2.new(camera.ViewportSize.X / 2, camera.ViewportSize.Y / 2)
     local radius = S.xrayCircleSize / 2
     local closestTarget = nil
     local shortestDist = math.huge
 
+    -- Duyệt qua tất cả người chơi để tìm người trong vòng
     for _, p in ipairs(Players:GetPlayers()) do
-        if p ~= player and p.Character and p.Character:FindFirstChild("HumanoidRootPart") and p.Character:FindFirstChild("Humanoid") then
-            local hum = p.Character.Humanoid
-            if hum.Health > 0 then
-                local targetPos = p.Character.HumanoidRootPart.Position
-                local screenPos, onScreen = camera:WorldToViewportPoint(targetPos)
+        if p ~= player and p.Character then
+            local hrp = p.Character:FindFirstChild("HumanoidRootPart")
+            local hum = p.Character:FindFirstChild("Humanoid")
+            if hrp and hum and hum.Health > 0 then
+                local screenPos, onScreen = camera:WorldToViewportPoint(hrp.Position)
                 
                 if onScreen then
                     local distToCenter = (Vector2.new(screenPos.X, screenPos.Y) - centerScreen).Magnitude
+                    
                     if distToCenter <= radius then
+                        -- 1. Đánh dấu ESP (Tên & Máu) cho người trong vòng
+                        if not circleEspObjects[p] then
+                            local bb = New("BillboardGui", {
+                                Name = "CircleESP_BB", Size = UDim2.new(0, 100, 0, 30), 
+                                AlwaysOnTop = true, Adornee = hrp, StudsOffset = Vector3.new(0, 2.5, 0), ZIndex = 998
+                            }, espGui)
+                            local lbl = New("TextLabel", {
+                                Size = UDim2.new(1,0,1,0), BackgroundTransparency = 1, TextColor3 = Color3.fromRGB(255, 50, 50),
+                                Font = Enum.Font.GothamBold, TextSize = 11, TextStrokeTransparency = 0.2, ZIndex = 999
+                            }, bb)
+                            circleEspObjects[p] = {BB = bb, Lbl = lbl}
+                        end
+                        
+                        local obj = circleEspObjects[p]
+                        obj.BB.Adornee = hrp
+                        obj.Lbl.Text = string.format("%s\n❤️ %d", p.Name, math.floor(hum.Health))
+
+                        -- 2. Tìm người gần tâm vòng tròn nhất
                         if distToCenter < shortestDist then
                             shortestDist = distToCenter
-                            closestTarget = p.Character.HumanoidRootPart
+                            closestTarget = hrp
+                        end
+                    else
+                        -- Ngoài vòng: Xóa ESP
+                        if circleEspObjects[p] then
+                            circleEspObjects[p].BB:Destroy()
+                            circleEspObjects[p] = nil
                         end
                     end
+                else
+                    if circleEspObjects[p] then
+                        circleEspObjects[p].BB:Destroy()
+                        circleEspObjects[p] = nil
+                    end
+                end
+            else
+                if circleEspObjects[p] then
+                    circleEspObjects[p].BB:Destroy()
+                    circleEspObjects[p] = nil
                 end
             end
         end
     end
-    return closestTarget
-end
 
-trackConn(RunService.RenderStepped:Connect(function()
-    if S.aimLock and S.xrayCircle then
-        local target = GetClosestPlayerInCircle()
-        local camera = workspace.CurrentCamera
-        if target and camera then
-            local camPos = camera.CFrame.Position
-            if (camPos - target.Position).Magnitude > 0.1 then
-                camera.CFrame = CFrame.lookAt(camPos, target.Position)
-            end
+    -- Dọn dẹp những kẻ đã rời đi/chết
+    for p, _ in pairs(circleEspObjects) do
+        if not p.Parent or not p.Character or not p.Character:FindFirstChild("Humanoid") or p.Character.Humanoid.Health <= 0 then
+            if circleEspObjects[p] then circleEspObjects[p].BB:Destroy(); circleEspObjects[p] = nil end
+        end
+    end
+
+    -- 3. Khóa camera (Aimbot) - CHỈ KHI S.aimLockActive = true (nhấn nút trôi nổi)
+    if S.aimLockActive and closestTarget then
+        local camPos = camera.CFrame.Position
+        if (camPos - closestTarget.Position).Magnitude > 0.1 then
+            camera.CFrame = CFrame.lookAt(camPos, closestTarget.Position)
         end
     end
 end))
@@ -2496,4 +2599,4 @@ end))
 UpdChar()
 if S.noClip then EnNC() end
 
-print("✅ Đã thêm Tính Năng Tự Ngắm Người Trong Vòng Tròn Niệm Tâm!")
+print("✅ Đã cập nhật hệ thống Niệm Tâm: Đánh dấu ESP & Nút bấm Bật/Tắt Aimbot!")
