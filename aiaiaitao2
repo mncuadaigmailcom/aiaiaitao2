@@ -2193,7 +2193,46 @@ end)
 -- ==================== TAB 8: NIỆM TÂM (X-RAY) ====================
 local xy = 8
 
-Label(xrayTab, "⚙️ Cài đặt Niệm Tâm (X-Ray)", xy)
+-- ĐƯA CÁC NÚT BẬT/TẮT LÊN ĐẦU TIÊN ĐỂ DỄ THẤY
+Label(xrayTab, "⚡ Bật/Tắt Niệm Tâm (X-Ray)", xy)
+xy = xy + 14
+
+local xrayPlayerBtn = Button(xrayTab, "👁️ Niệm Tâm Người: TẮT", 8, xy, 220, 24, C.GRAY)
+xrayPlayerBtn.Activated:Connect(function()
+    S.xrayPlayers = not S.xrayPlayers
+    xrayPlayerBtn.Text = S.xrayPlayers and "👁️ Niệm Tâm Người: BẬT" or "👁️ Niệm Tâm Người: TẮT"
+    xrayPlayerBtn.BackgroundColor3 = S.xrayPlayers and C.GREEN or C.GRAY
+end)
+xy = xy + 30
+
+local xrayMobBtn = Button(xrayTab, "🐺 Niệm Tâm Động Vật: TẮT", 8, xy, 220, 24, C.GRAY)
+xrayMobBtn.Activated:Connect(function()
+    S.xrayMobs = not S.xrayMobs
+    xrayMobBtn.Text = S.xrayMobs and "🐺 Niệm Tâm Động Vật: BẬT" or "🐺 Niệm Tâm Động Vật: TẮT"
+    xrayMobBtn.BackgroundColor3 = S.xrayMobs and C.RED or C.GRAY
+end)
+xy = xy + 30
+
+local xrayOreBtn = Button(xrayTab, "⛏️ Niệm Tâm Vào Đào: TẮT", 8, xy, 220, 24, C.GRAY)
+xrayOreBtn.Activated:Connect(function()
+    S.xrayOres = not S.xrayOres
+    xrayOreBtn.Text = S.xrayOres and "⛏️ Niệm Tâm Vào Đào: BẬT" or "⛏️ Niệm Tâm Vào Đào: TẮT"
+    xrayOreBtn.BackgroundColor3 = S.xrayOres and C.YELLOW or C.GRAY
+end)
+xy = xy + 30
+
+local xrayAllBtn = Button(xrayTab, "🌍 Niệm Tâm Hết Sốt: TẮT", 8, xy, 220, 24, C.GRAY)
+xrayAllBtn.Activated:Connect(function()
+    S.xrayAll = not S.xrayAll
+    xrayAllBtn.Text = S.xrayAll and "🌍 Niệm Tâm Hết Sốt: BẬT" or "🌍 Niệm Tâm Hết Sốt: TẮT"
+    xrayAllBtn.BackgroundColor3 = S.xrayAll and C.PURPLE or C.GRAY
+end)
+xy = xy + 34
+
+-- PHẦN CÀI ĐẶT CHI TIẾT ĐỂ DƯỚI
+Label(xrayTab, "━━━━━━━━━━━━━━━━━━━━━━", xy)
+xy = xy + 16
+Label(xrayTab, "⚙️ Cài đặt chi tiết Niệm Tâm", xy)
 xy = xy + 14
 
 Label(xrayTab, "⭕ Độ dày vòng (1 - 5):", xy)
@@ -2248,41 +2287,6 @@ kwIn.FocusLost:Connect(function()
         kws = {"Ore", "Rock", "Stone", "Mine", "Đá", "Quặng"}
     end
     S.oreKeywords = kws
-end)
-
-xy = xy + 32
-Label(xrayTab, "⚡ Bật tắt Niệm Tâm", xy)
-xy = xy + 14
-
-local xrayPlayerBtn = Button(xrayTab, "👁️ Niệm Tâm Người: TẮT", 8, xy, 220, 24, C.GRAY)
-xrayPlayerBtn.Activated:Connect(function()
-    S.xrayPlayers = not S.xrayPlayers
-    xrayPlayerBtn.Text = S.xrayPlayers and "👁️ Niệm Tâm Người: BẬT" or "👁️ Niệm Tâm Người: TẮT"
-    xrayPlayerBtn.BackgroundColor3 = S.xrayPlayers and C.GREEN or C.GRAY
-end)
-
-xy = xy + 30
-local xrayMobBtn = Button(xrayTab, "🐺 Niệm Tâm Động Vật: TẮT", 8, xy, 220, 24, C.GRAY)
-xrayMobBtn.Activated:Connect(function()
-    S.xrayMobs = not S.xrayMobs
-    xrayMobBtn.Text = S.xrayMobs and "🐺 Niệm Tâm Động Vật: BẬT" or "🐺 Niệm Tâm Động Vật: TẮT"
-    xrayMobBtn.BackgroundColor3 = S.xrayMobs and C.RED or C.GRAY
-end)
-
-xy = xy + 30
-local xrayOreBtn = Button(xrayTab, "⛏️ Niệm Tâm Vào Đào: TẮT", 8, xy, 220, 24, C.GRAY)
-xrayOreBtn.Activated:Connect(function()
-    S.xrayOres = not S.xrayOres
-    xrayOreBtn.Text = S.xrayOres and "⛏️ Niệm Tâm Vào Đào: BẬT" or "⛏️ Niệm Tâm Vào Đào: TẮT"
-    xrayOreBtn.BackgroundColor3 = S.xrayOres and C.YELLOW or C.GRAY
-end)
-
-xy = xy + 30
-local xrayAllBtn = Button(xrayTab, "🌍 Niệm Tâm Hết Sốt: TẮT", 8, xy, 220, 24, C.GRAY)
-xrayAllBtn.Activated:Connect(function()
-    S.xrayAll = not S.xrayAll
-    xrayAllBtn.Text = S.xrayAll and "🌍 Niệm Tâm Hết Sốt: BẬT" or "🌍 Niệm Tâm Hết Sốt: TẮT"
-    xrayAllBtn.BackgroundColor3 = S.xrayAll and C.PURPLE or C.GRAY
 end)
 
 xy = xy + 34
