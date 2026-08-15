@@ -2,9 +2,9 @@
 -- EXECUTOR MENU - Fix NoClip Không Lỗi Thảm & Xuyên Tường Mượt 100%
 -- (Banana Cat Hub Style + Caro Pattern + Chỉnh kích thước 4 góc + Chỉnh Rộng/Dày/Dài Thảm Kính)
 -- + ESP: Phân biệt Bạn Bè (Hồng/Tím) & Hạ ngục/Chết + Đếm giờ Hạ Ngục
--- + Định Vị Lẻ: Bật tính năng -> Nhấn tên người chơi -> Chỉ định vị 1 người đó
+-- + Định Vị Lẻ: Bật tính năng -> Nhấn tên người chơi -> Chỉ định vị 1 người đó (ĐÃ FIX MƯỢT 100%)
 -- + Tab Tọa Độ: Lưu, Đặt tên, ESP All/Lẻ, Xóa, Bay tới Tọa Độ
--- + Tab Niệm Tâm: Vòng tròn + Tự động ESP Tên/Máu người trong vòng + Nút bấm Bật/Tắt Niệm Tâm (Aimbot)
+-- + Tab Niệm Tâm: Vòng tròn trên màn hình + Tự động ngắm người trong vòng (Aimbot)
 -- StarterGui -> LocalScript hoặc Executor
 -- ============================================
 
@@ -396,8 +396,8 @@ local S = {
     dragMenu=false, 
     soloTrack=false, soloTarget=nil, 
     locEspAll=false, locEspSingle=false, locTarget=nil, flyToLocTarget=nil, 
-    xrayCircle=false, xrayCircleSize=150, 
-    aimLockActive=false, -- Chỉ khi bằng true mới tự động niệm tâm camera
+    xrayCircle=false, xrayCircleSize=150,
+    aimLock=false,
 }
 
 local noclipBtn
@@ -447,62 +447,6 @@ local xrayStroke = New("UIStroke", {
     Transparency = 0.2,
     ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
 }, xrayCircleFrame)
-
--- NÚT BẬM TRÔI NỔI ĐỂ KÍCH HOẠT NIỆM TÂM
-local aimToggleBtn = New("TextButton", {
-    Name = "AimToggleButton",
-    Size = UDim2.new(0, 130, 0, 40),
-    Position = UDim2.new(0.5, -65, 0.8, -20),
-    Text = "🎯 BẬT NIỆM TÂM",
-    BackgroundColor3 = C.GRAY,
-    BackgroundTransparency = 0.1,
-    TextColor3 = C.WHITE,
-    Font = Enum.Font.GothamBold,
-    TextSize = 13,
-    BorderSizePixel = 0,
-    Visible = false,
-    ZIndex = 1001,
-}, gui)
-Corner(aimToggleBtn, UDim.new(0, 8))
-Stroke(aimToggleBtn, C.WHITE, 2)
-
--- Kéo thả nút Niệm Tâm
-local aimDragging, aimDragStart, aimStartPos, aimMoved = false, nil, nil, false
-trackConn(aimToggleBtn.InputBegan:Connect(function(i)
-    if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then
-        aimDragging = true
-        aimDragStart = i.Position
-        aimStartPos = aimToggleBtn.Position
-        aimMoved = false
-    end
-end))
-trackConn(UserInputService.InputChanged:Connect(function(i)
-    if aimDragging and (i.UserInputType == Enum.UserInputType.MouseMovement or i.UserInputType == Enum.UserInputType.Touch) then
-        local delta = i.Position - aimDragStart
-        if delta.Magnitude > 5 then aimMoved = true end
-        if aimMoved then
-            aimToggleBtn.Position = UDim2.new(aimStartPos.X.Scale, aimStartPos.X.Offset + delta.X, aimStartPos.Y.Scale, aimStartPos.Y.Offset + delta.Y)
-        end
-    end
-end))
-trackConn(UserInputService.InputEnded:Connect(function(i)
-    if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then
-        if aimDragging then
-            aimDragging = false
-            if not aimMoved then
-                -- Nếu nhấn (không kéo) thì bật/tắt Niệm Tâm
-                S.aimLockActive = not S.aimLockActive
-                if S.aimLockActive then
-                    aimToggleBtn.Text = "🛑 TẮT NIỆM TÂM"
-                    aimToggleBtn.BackgroundColor3 = C.RED
-                else
-                    aimToggleBtn.Text = "🎯 BẬT NIỆM TÂM"
-                    aimToggleBtn.BackgroundColor3 = C.GRAY
-                end
-            end
-        end
-    end
-end))
 
 -- ==================== CHẶN SERVER TÁC ĐỘNG BẢO VỆ BẢN THÂN ====================
 local oldNamecall
@@ -1019,8 +963,7 @@ local function StartFlyToLoc(locItem)
     end))
 end
 
-
--- ==================== ESP SYSTEM ====================
+-- ==================== ESP SYSTEM (CẬP NHẬT ĐỊNH VỊ LẺ & BẠN BÈ) ====================
 local espGui = New("ScreenGui", {
     Name = "ExMenu_ESP",
     ResetOnSpawn = false,
@@ -1029,10 +972,19 @@ local espGui = New("ScreenGui", {
 
 local activeESPs = {}
 
+-- Kiểm tra xem người chơi có được phép hiển thị ESP hay không
+local function CanShowESP(p)
+    if not p or p == player then return false end
+    if S.soloTrack then
+        return S.soloTarget == p
+    end
+    return S.esp
+end
+
 local function RemovePlayerESP(p)
     if activeESPs[p] then
-        if activeESPs[p].HL then activeESPs[p].HL:Destroy() end
-        if activeESPs[p].BB then activeESPs[p].BB:Destroy() end
+        if activeESPs[p].HL then pcall(function() activeESPs[p].HL:Destroy() end) end
+        if activeESPs[p].BB then pcall(function() activeESPs[p].BB:Destroy() end) end
         if activeESPs[p].Thread then pcall(task.cancel, activeESPs[p].Thread) end
         activeESPs[p] = nil
     end
@@ -1048,30 +1000,32 @@ end
 local function CreatePlayerESP(p)
     RemovePlayerESP(p)
 
-    if not S.esp or p == player then return end
-    if S.soloTrack and p ~= S.soloTarget then return end
+    if not CanShowESP(p) then return end
 
     local pChar = p.Character
     if not pChar then return end
 
-    local rPart = pChar:WaitForChild("HumanoidRootPart", 3)
-    local hum = pChar:WaitForChild("Humanoid", 3)
+    local rPart = pChar:FindFirstChild("HumanoidRootPart") or pChar:WaitForChild("HumanoidRootPart", 3)
+    local hum = pChar:FindFirstChildOfClass("Humanoid") or pChar:WaitForChild("Humanoid", 3)
 
     if not rPart or not hum then return end
 
     if friendCache[p.UserId] == nil then
         task.spawn(function()
             local ok, res = pcall(function() return player:IsFriendsWith(p.UserId) end)
-            if ok then friendCache[p.UserId] = res else friendCache[p.UserId] = false end
+            friendCache[p.UserId] = (ok and res) or false
         end)
     end
+
+    local isSolo = (S.soloTrack and S.soloTarget == p)
+    local defaultColor = isSolo and Color3.fromRGB(180, 70, 255) or Color3.fromRGB(0, 255, 100)
 
     local hl = Instance.new("Highlight")
     hl.Name = p.Name .. "_HL"
     hl.Adornee = pChar
-    hl.FillColor = Color3.fromRGB(0, 255, 100)
+    hl.FillColor = defaultColor
     hl.FillTransparency = 0.5
-    hl.OutlineColor = Color3.fromRGB(255, 255, 255)
+    hl.OutlineColor = isSolo and Color3.fromRGB(255, 255, 0) or Color3.fromRGB(255, 255, 255)
     hl.OutlineTransparency = 0
     hl.Parent = espGui
 
@@ -1086,7 +1040,7 @@ local function CreatePlayerESP(p)
     local lbl = Instance.new("TextLabel")
     lbl.Size = UDim2.new(1, 0, 1, 0)
     lbl.BackgroundTransparency = 1
-    lbl.TextColor3 = Color3.fromRGB(0, 255, 100)
+    lbl.TextColor3 = defaultColor
     lbl.Font = Enum.Font.GothamBold
     lbl.TextSize = 11
     lbl.TextStrokeTransparency = 0.2
@@ -1096,11 +1050,7 @@ local function CreatePlayerESP(p)
         local wasDown = false
         local downStart = 0
         
-        while S.esp and pChar and pChar.Parent and hum and hum.Parent do
-            if S.soloTrack and p ~= S.soloTarget then
-                break
-            end
-
+        while CanShowESP(p) and pChar and pChar.Parent and hum and hum.Parent and rPart and rPart.Parent do
             local r = Root()
             local state = hum:GetState()
             
@@ -1110,6 +1060,7 @@ local function CreatePlayerESP(p)
 
             local isDowned = hum.PlatformStand or hum.Health <= 0
             local isFriend = friendCache[p.UserId] or false
+            local currentlySolo = (S.soloTrack and S.soloTarget == p)
 
             if isDowned and not wasDown then
                 wasDown = true
@@ -1141,6 +1092,10 @@ local function CreatePlayerESP(p)
                     hl.FillColor = Color3.fromRGB(255, 105, 180)
                     hl.OutlineColor = Color3.fromRGB(255, 182, 193)
                     lbl.TextColor3 = Color3.fromRGB(255, 182, 193)
+                elseif currentlySolo then
+                    hl.FillColor = Color3.fromRGB(180, 70, 255)
+                    hl.OutlineColor = Color3.fromRGB(255, 255, 0)
+                    lbl.TextColor3 = Color3.fromRGB(255, 255, 0)
                 else
                     hl.FillColor = Color3.fromRGB(0, 255, 100)
                     hl.OutlineColor = Color3.fromRGB(255, 255, 255)
@@ -1149,11 +1104,12 @@ local function CreatePlayerESP(p)
             end
 
             local friendText = isFriend and " [💗 Bạn Bè]" or ""
+            local soloPrefix = currentlySolo and "🎯 " or ""
             if r then
                 local dist = math.round((r.Position - rPart.Position).Magnitude)
-                lbl.Text = string.format("%s%s%s\n❤️ %d/%d | 📏 %dm", p.Name, friendText, stateText, math.round(hum.Health), math.round(hum.MaxHealth), dist)
+                lbl.Text = string.format("%s%s%s%s\n❤️ %d/%d | 📏 %dm", soloPrefix, p.Name, friendText, stateText, math.round(hum.Health), math.round(hum.MaxHealth), dist)
             else
-                lbl.Text = string.format("%s%s%s\n❤️ %d/%d | 📏 --m", p.Name, friendText, stateText, math.round(hum.Health), math.round(hum.MaxHealth))
+                lbl.Text = string.format("%s%s%s%s\n❤️ %d/%d | 📏 --m", soloPrefix, p.Name, friendText, stateText, math.round(hum.Health), math.round(hum.MaxHealth))
             end
             task.wait(0.2)
         end
@@ -1167,8 +1123,8 @@ local function HookPlayer(p)
     if p == player then return end
 
     trackConn(p.CharacterAdded:Connect(function()
-        if S.esp then
-            task.wait(0.5)
+        task.wait(0.5)
+        if CanShowESP(p) then
             CreatePlayerESP(p)
         end
     end))
@@ -1177,20 +1133,18 @@ local function HookPlayer(p)
         RemovePlayerESP(p)
     end))
 
-    if p.Character and S.esp then
+    if p.Character and CanShowESP(p) then
         CreatePlayerESP(p)
     end
 end
 
 local function UpdateESP()
     ClearAllESP()
-    if not S.esp then return end
-    
     if S.soloTrack then
         if S.soloTarget then
             CreatePlayerESP(S.soloTarget)
         end
-    else
+    elseif S.esp then
         for _, p in ipairs(Players:GetPlayers()) do
             if p ~= player then
                 CreatePlayerESP(p)
@@ -1203,14 +1157,9 @@ for _, p in ipairs(Players:GetPlayers()) do HookPlayer(p) end
 
 trackConn(Players.PlayerAdded:Connect(function(p) 
     HookPlayer(p)
-    if S.esp then
-        task.spawn(function()
-            local char = p.Character or p.CharacterAdded:Wait()
-            task.wait(0.5)
-            if S.esp and char and char.Parent then
-                CreatePlayerESP(p)
-            end
-        end)
+    task.wait(0.5)
+    if CanShowESP(p) then
+        CreatePlayerESP(p)
     end
 end))
 
@@ -1221,6 +1170,7 @@ trackConn(Players.PlayerRemoving:Connect(function(p)
     end
     RemovePlayerESP(p)
     friendCache[p.UserId] = nil
+    if RebuildTPList then RebuildTPList() end
 end))
 
 -- ==================== CODE EXECUTION ====================
@@ -1815,6 +1765,8 @@ local stopFlyToBtn = Button(tpPlayerTab, "⏹ Dừng Bay", 72, ty, 100, 24, C.RE
 ty = ty + 30
 
 local espBtn = Button(tpPlayerTab, "👁️ ESP: TẮT", 8, ty, 140, 24, C.GRAY)
+local soloTrackBtn = Button(tpPlayerTab, "🎯 Định Vị Lẻ: TẮT", 152, ty, 170, 24, C.GRAY)
+
 espBtn.Activated:Connect(function()
     S.esp = not S.esp
     espBtn.Text = S.esp and "👁️ ESP: BẬT" or "👁️ ESP: TẮT"
@@ -1822,12 +1774,13 @@ espBtn.Activated:Connect(function()
     UpdateESP()
 end)
 
-local soloTrackBtn = Button(tpPlayerTab, "🎯 Định Vị Lẻ: TẮT", 152, ty, 170, 24, C.GRAY)
 soloTrackBtn.Activated:Connect(function()
     S.soloTrack = not S.soloTrack
     soloTrackBtn.Text = S.soloTrack and "🎯 Định Vị Lẻ: BẬT" or "🎯 Định Vị Lẻ: TẮT"
     soloTrackBtn.BackgroundColor3 = S.soloTrack and C.PURPLE or C.GRAY
-    if not S.soloTrack then S.soloTarget = nil end
+    if not S.soloTrack then 
+        S.soloTarget = nil 
+    end
     UpdateESP()
     RebuildTPList()
 end)
@@ -1867,30 +1820,39 @@ RebuildTPList = function()
     local totalHeight = 0
     for _, p in ipairs(Players:GetPlayers()) do
         if p ~= player and (term == "" or p.Name:lower():find(term, 1, true)) then
+            local isSolo = (S.soloTrack and S.soloTarget == p)
             local row = New("Frame", {
-                Size=UDim2.new(1,0,0,34), BackgroundColor3=Color3.fromRGB(255,255,255),
+                Size=UDim2.new(1,0,0,34), 
+                BackgroundColor3=isSolo and Color3.fromRGB(240, 230, 255) or Color3.fromRGB(255,255,255),
                 BackgroundTransparency=0.1, BorderSizePixel=0, ZIndex=6,
             }, tpList)
-            Corner(row,UDim.new(0,5)); Stroke(row)
+            Corner(row,UDim.new(0,5))
+            Stroke(row, isSolo and C.PURPLE or Color3.fromRGB(200,200,210), isSolo and 1.5 or 1)
 
             local nameBtn = New("TextButton", {
                 Size=UDim2.new(1,-100,1,0), Position=UDim2.new(0,8,0,0),
-                Text=p.Name, BackgroundTransparency=1, TextColor3=C.DARK,
+                Text=(isSolo and "🎯 " or "") .. p.Name, 
+                BackgroundTransparency=1, 
+                TextColor3=isSolo and C.PURPLE or C.DARK,
                 Font=Enum.Font.GothamBold, TextSize=11, TextXAlignment=Enum.TextXAlignment.Left, ZIndex=7,
-                AutoButtonColor=false, TextTruncate=Enum.TextTruncate.AtEnd
+                AutoButtonColor=true, TextTruncate=Enum.TextTruncate.AtEnd
             }, row)
-
-            if S.soloTrack and S.soloTarget == p then
-                nameBtn.TextColor3 = C.PURPLE
-                nameBtn.Text = "🎯 " .. p.Name
-            end
 
             nameBtn.Activated:Connect(function()
                 if S.soloTrack then
+                    if S.soloTarget == p then
+                        S.soloTarget = nil
+                    else
+                        S.soloTarget = p
+                    end
+                else
+                    S.soloTrack = true
+                    soloTrackBtn.Text = "🎯 Định Vị Lẻ: BẬT"
+                    soloTrackBtn.BackgroundColor3 = C.PURPLE
                     S.soloTarget = p
-                    UpdateESP()
-                    RebuildTPList()
                 end
+                UpdateESP()
+                RebuildTPList()
             end)
 
             local flyToBtn = Button(row, "🚀 Bay Đến", -90, 5, 80, 24, C.BLUE)
@@ -2250,6 +2212,7 @@ trackConn(RunService.RenderStepped:Connect(function()
         table.insert(activeLocs, S.locTarget)
     end
 
+    -- Clean up removed/unused
     for loc, obj in pairs(locEspObjs) do
         local stillActive = false
         for _, aloc in ipairs(activeLocs) do
@@ -2262,6 +2225,7 @@ trackConn(RunService.RenderStepped:Connect(function()
         end
     end
 
+    -- Create/Update active
     for _, loc in ipairs(activeLocs) do
         if not locEspObjs[loc] then
             local att = Instance.new("Attachment")
@@ -2292,8 +2256,7 @@ trackConn(RunService.RenderStepped:Connect(function()
     end
 end))
 
-
--- ==================== TAB 8: NIỆM TÂM (VÒNG TRÒN + NÚT AIMBOT) ====================
+-- ==================== TAB 8: NIỆM TÂM (VÒNG TRÒN TÂM NGẮM & AIM) ====================
 local xy = 8
 
 Label(xrayTab, "🎯 Niệm Tâm - Vòng tròn & Tự Động Ngắm", xy)
@@ -2305,14 +2268,15 @@ xrayToggleBtn.Activated:Connect(function()
     xrayToggleBtn.Text = S.xrayCircle and "👁️ Bật Vòng Tròn: BẬT" or "👁️ Bật Vòng Tròn: TẮT"
     xrayToggleBtn.BackgroundColor3 = S.xrayCircle and C.GREEN or C.GRAY
     xrayCircleFrame.Visible = S.xrayCircle
-    
-    -- Hiện nút bấm Niệm Tâm trôi nổi nếu bật vòng tròn
-    aimToggleBtn.Visible = S.xrayCircle
-    if not S.xrayCircle then
-        S.aimLockActive = false
-        aimToggleBtn.Text = "🎯 BẬT NIỆM TÂM"
-        aimToggleBtn.BackgroundColor3 = C.GRAY
-    end
+end)
+xy = xy + 30
+
+-- Nút Bật Tự Động Ngắm (Aim Lock)
+local aimLockBtn = Button(xrayTab, "🔒 Tự Ngắm Người Trong Vòng: TẮT", 8, xy, 250, 24, C.GRAY)
+aimLockBtn.Activated:Connect(function()
+    S.aimLock = not S.aimLock
+    aimLockBtn.Text = S.aimLock and "🔓 Tự Ngắm Người Trong Vòng: BẬT" or "🔒 Tự Ngắm Người Trong Vòng: TẮT"
+    aimLockBtn.BackgroundColor3 = S.aimLock and C.RED or C.GRAY
 end)
 xy = xy + 30
 
@@ -2366,9 +2330,9 @@ xy = xy + 14
 
 local cR = New("TextBox", {Size=UDim2.new(0,40,0,24), Position=UDim2.new(0,8,0,xy), Text="0", BackgroundColor3=Color3.fromRGB(255,255,255), BackgroundTransparency=0, TextColor3=Color3.fromRGB(20,20,20), Font=Enum.Font.GothamMedium, TextSize=12, BorderSizePixel=0, ClearTextOnFocus=false, Active=true, Selectable=true, ZIndex=8}, xrayTab)
 Corner(cR,UDim.new(0,5)); Stroke(cR)
-local cG = New("TextBox", {Size=UDim2.new(0,40,0,24), Position=UDim2.new(0,54,0,xy), Text="255", BackgroundColor3=Color3.fromRGB(255,255,255), BackgroundTransparency=0, TextColor3=Color3.fromRGB(20,20,20), Font=Enum.Font.GothamMedium, TextSize=12, BorderSizePixel=0, ClearTextOnFocus=false, Active=true, Selectable=true, ZIndex=8}, xrayTab)
+local cG = New("TextBox", {Size=UDim2.new(0,40,0,24), Position=UDim2.new(0,54,0,ey or xy), Text="255", BackgroundColor3=Color3.fromRGB(255,255,255), BackgroundTransparency=0, TextColor3=Color3.fromRGB(20,20,20), Font=Enum.Font.GothamMedium, TextSize=12, BorderSizePixel=0, ClearTextOnFocus=false, Active=true, Selectable=true, ZIndex=8}, xrayTab)
 Corner(cG,UDim.new(0,5)); Stroke(cG)
-local cB = New("TextBox", {Size=UDim2.new(0,40,0,24), Position=UDim2.new(0,100,0,xy), Text="0", BackgroundColor3=Color3.fromRGB(255,255,255), BackgroundTransparency=0, TextColor3=Color3.fromRGB(20,20,20), Font=Enum.Font.GothamMedium, TextSize=12, BorderSizePixel=0, ClearTextOnFocus=false, Active=true, Selectable=true, ZIndex=8}, xrayTab)
+local cB = New("TextBox", {Size=UDim2.new(0,40,0,24), Position=UDim2.new(0,100,0,ey or xy), Text="0", BackgroundColor3=Color3.fromRGB(255,255,255), BackgroundTransparency=0, TextColor3=Color3.fromRGB(20,20,20), Font=Enum.Font.GothamMedium, TextSize=12, BorderSizePixel=0, ClearTextOnFocus=false, Active=true, Selectable=true, ZIndex=8}, xrayTab)
 Corner(cB,UDim.new(0,5)); Stroke(cB)
 
 local applyColorBtn = Button(xrayTab, "✔ Áp dụng", 150, xy, 80, 24, C.BLUE)
@@ -2382,102 +2346,50 @@ end)
 
 xrayTab.CanvasSize = UDim2.new(0,0,0,xy+40)
 
--- ==================== XỬ LÝ NIỆM TÂM: ĐÁNH DẤU & KHÓA CAMERA ====================
-local circleEspObjects = {} -- Lưu trữ ESP của những người trong vòng
-
-local function ClearCircleEsp()
-    for p, obj in pairs(circleEspObjects) do
-        if obj.BB then obj.BB:Destroy() end
-    end
-    circleEspObjects = {}
-end
-
-trackConn(RunService.RenderStepped:Connect(function()
-    if not S.xrayCircle then
-        if next(circleEspObjects) then ClearCircleEsp() end
-        return
-    end
-
+-- VÒNG LẶP XỬ LÝ TỰ ĐỘNG NGẮM (AIMBOT CIRCLE)
+local function GetClosestPlayerInCircle()
     local camera = workspace.CurrentCamera
-    if not camera then return end
-
+    if not camera then return nil end
+    
     local centerScreen = Vector2.new(camera.ViewportSize.X / 2, camera.ViewportSize.Y / 2)
     local radius = S.xrayCircleSize / 2
     local closestTarget = nil
     local shortestDist = math.huge
 
-    -- Duyệt qua tất cả người chơi để tìm người trong vòng
     for _, p in ipairs(Players:GetPlayers()) do
-        if p ~= player and p.Character then
-            local hrp = p.Character:FindFirstChild("HumanoidRootPart")
-            local hum = p.Character:FindFirstChild("Humanoid")
-            if hrp and hum and hum.Health > 0 then
-                local screenPos, onScreen = camera:WorldToViewportPoint(hrp.Position)
+        if p ~= player and p.Character and p.Character:FindFirstChild("HumanoidRootPart") and p.Character:FindFirstChild("Humanoid") then
+            local hum = p.Character.Humanoid
+            if hum.Health > 0 then
+                local targetPos = p.Character.HumanoidRootPart.Position
+                local screenPos, onScreen = camera:WorldToViewportPoint(targetPos)
                 
                 if onScreen then
                     local distToCenter = (Vector2.new(screenPos.X, screenPos.Y) - centerScreen).Magnitude
-                    
                     if distToCenter <= radius then
-                        -- 1. Đánh dấu ESP (Tên & Máu) cho người trong vòng
-                        if not circleEspObjects[p] then
-                            local bb = New("BillboardGui", {
-                                Name = "CircleESP_BB", Size = UDim2.new(0, 100, 0, 30), 
-                                AlwaysOnTop = true, Adornee = hrp, StudsOffset = Vector3.new(0, 2.5, 0), ZIndex = 998
-                            }, espGui)
-                            local lbl = New("TextLabel", {
-                                Size = UDim2.new(1,0,1,0), BackgroundTransparency = 1, TextColor3 = Color3.fromRGB(255, 50, 50),
-                                Font = Enum.Font.GothamBold, TextSize = 11, TextStrokeTransparency = 0.2, ZIndex = 999
-                            }, bb)
-                            circleEspObjects[p] = {BB = bb, Lbl = lbl}
-                        end
-                        
-                        local obj = circleEspObjects[p]
-                        obj.BB.Adornee = hrp
-                        obj.Lbl.Text = string.format("%s\n❤️ %d", p.Name, math.floor(hum.Health))
-
-                        -- 2. Tìm người gần tâm vòng tròn nhất
                         if distToCenter < shortestDist then
                             shortestDist = distToCenter
-                            closestTarget = hrp
-                        end
-                    else
-                        -- Ngoài vòng: Xóa ESP
-                        if circleEspObjects[p] then
-                            circleEspObjects[p].BB:Destroy()
-                            circleEspObjects[p] = nil
+                            closestTarget = p.Character.HumanoidRootPart
                         end
                     end
-                else
-                    if circleEspObjects[p] then
-                        circleEspObjects[p].BB:Destroy()
-                        circleEspObjects[p] = nil
-                    end
-                end
-            else
-                if circleEspObjects[p] then
-                    circleEspObjects[p].BB:Destroy()
-                    circleEspObjects[p] = nil
                 end
             end
         end
     end
+    return closestTarget
+end
 
-    -- Dọn dẹp những kẻ đã rời đi/chết
-    for p, _ in pairs(circleEspObjects) do
-        if not p.Parent or not p.Character or not p.Character:FindFirstChild("Humanoid") or p.Character.Humanoid.Health <= 0 then
-            if circleEspObjects[p] then circleEspObjects[p].BB:Destroy(); circleEspObjects[p] = nil end
-        end
-    end
-
-    -- 3. Khóa camera (Aimbot) - CHỈ KHI S.aimLockActive = true (nhấn nút trôi nổi)
-    if S.aimLockActive and closestTarget then
-        local camPos = camera.CFrame.Position
-        if (camPos - closestTarget.Position).Magnitude > 0.1 then
-            camera.CFrame = CFrame.lookAt(camPos, closestTarget.Position)
+trackConn(RunService.RenderStepped:Connect(function()
+    if S.aimLock and S.xrayCircle then
+        local target = GetClosestPlayerInCircle()
+        local camera = workspace.CurrentCamera
+        if target and camera then
+            local camPos = camera.CFrame.Position
+            if (camPos - target.Position).Magnitude > 0.1 then
+                camera.CFrame = CFrame.lookAt(camPos, target.Position)
+            end
         end
     end
 end))
-
 
 -- ==================== TOGGLE MENU LOGIC & DRAG SYSTEM ====================
 local function ToggleMainFrame()
@@ -2593,10 +2505,10 @@ trackConn(player.CharacterAdded:Connect(function(c)
     if S.flyRun then TogFlyRun() end
     StopFlyTo()
     StopFlyToLoc()
-    if S.esp then UpdateESP() end
+    UpdateESP()
 end))
 
 UpdChar()
 if S.noClip then EnNC() end
 
-print("✅ Đã cập nhật hệ thống Niệm Tâm: Đánh dấu ESP & Nút bấm Bật/Tắt Aimbot!")
+print("✅ Banana Cat Hub đã tải thành công & Đã fix hoàn thiện Định Vị Lẻ!")
