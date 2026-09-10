@@ -2,7 +2,7 @@
 -- EXECUTOR MENU - Fix NoClip Không Lỗi Thảm & Xuyên Tường Mượt 100%
 -- (Banana Cat Hub Style + Caro Pattern + Chỉnh kích thước 4 góc + Chỉnh Rộng/Dày/Dài Thảm Kính)
 -- + ESP: Phân biệt Bạn Bè (Hồng/Tím) & Hạ ngục/Chết + Đếm giờ Hạ Ngục
--- + Định Vị Lẻ: Bật tính năng -> Nhấn tên người chơi -> Chỉ định vị 1 người đó (ĐÃ FIX MƯỢT 100%)
+-- + Định Vị Lẻ: Bật tính năng -> Nhấn tên người chơi -> Chỉ định vị 1 người đó
 -- + Tab Tọa Độ: Lưu, Đặt tên, ESP All/Lẻ, Xóa, Bay tới Tọa Độ
 -- + Tab Niệm Tâm: Vòng tròn trên màn hình + Tự động ngắm người trong vòng (Aimbot)
 -- StarterGui -> LocalScript hoặc Executor
@@ -396,8 +396,8 @@ local S = {
     dragMenu=false, 
     soloTrack=false, soloTarget=nil, 
     locEspAll=false, locEspSingle=false, locTarget=nil, flyToLocTarget=nil, 
-    xrayCircle=false, xrayCircleSize=150,
-    aimLock=false,
+    xrayCircle=false, xrayCircleSize=150, -- Niệm Tâm Vòng Tròn
+    aimLock=false, -- Tự ngắm người trong vòng
 }
 
 local noclipBtn
@@ -963,7 +963,8 @@ local function StartFlyToLoc(locItem)
     end))
 end
 
--- ==================== ESP SYSTEM (CẬP NHẬT ĐỊNH VỊ LẺ & BẠN BÈ) ====================
+
+-- ==================== ESP SYSTEM (CẬP NHẬT MÀU BẠN BÈ & TRẠNG THÁI) ====================
 local espGui = New("ScreenGui", {
     Name = "ExMenu_ESP",
     ResetOnSpawn = false,
@@ -972,19 +973,10 @@ local espGui = New("ScreenGui", {
 
 local activeESPs = {}
 
--- Kiểm tra xem người chơi có được phép hiển thị ESP hay không
-local function CanShowESP(p)
-    if not p or p == player then return false end
-    if S.soloTrack then
-        return S.soloTarget == p
-    end
-    return S.esp
-end
-
 local function RemovePlayerESP(p)
     if activeESPs[p] then
-        if activeESPs[p].HL then pcall(function() activeESPs[p].HL:Destroy() end) end
-        if activeESPs[p].BB then pcall(function() activeESPs[p].BB:Destroy() end) end
+        if activeESPs[p].HL then activeESPs[p].HL:Destroy() end
+        if activeESPs[p].BB then activeESPs[p].BB:Destroy() end
         if activeESPs[p].Thread then pcall(task.cancel, activeESPs[p].Thread) end
         activeESPs[p] = nil
     end
@@ -1000,32 +992,30 @@ end
 local function CreatePlayerESP(p)
     RemovePlayerESP(p)
 
-    if not CanShowESP(p) then return end
+    if not S.esp or p == player then return end
+    if S.soloTrack and p ~= S.soloTarget then return end
 
     local pChar = p.Character
     if not pChar then return end
 
-    local rPart = pChar:FindFirstChild("HumanoidRootPart") or pChar:WaitForChild("HumanoidRootPart", 3)
-    local hum = pChar:FindFirstChildOfClass("Humanoid") or pChar:WaitForChild("Humanoid", 3)
+    local rPart = pChar:WaitForChild("HumanoidRootPart", 3)
+    local hum = pChar:WaitForChild("Humanoid", 3)
 
     if not rPart or not hum then return end
 
     if friendCache[p.UserId] == nil then
         task.spawn(function()
             local ok, res = pcall(function() return player:IsFriendsWith(p.UserId) end)
-            friendCache[p.UserId] = (ok and res) or false
+            if ok then friendCache[p.UserId] = res else friendCache[p.UserId] = false end
         end)
     end
-
-    local isSolo = (S.soloTrack and S.soloTarget == p)
-    local defaultColor = isSolo and Color3.fromRGB(180, 70, 255) or Color3.fromRGB(0, 255, 100)
 
     local hl = Instance.new("Highlight")
     hl.Name = p.Name .. "_HL"
     hl.Adornee = pChar
-    hl.FillColor = defaultColor
+    hl.FillColor = Color3.fromRGB(0, 255, 100)
     hl.FillTransparency = 0.5
-    hl.OutlineColor = isSolo and Color3.fromRGB(255, 255, 0) or Color3.fromRGB(255, 255, 255)
+    hl.OutlineColor = Color3.fromRGB(255, 255, 255)
     hl.OutlineTransparency = 0
     hl.Parent = espGui
 
@@ -1040,7 +1030,7 @@ local function CreatePlayerESP(p)
     local lbl = Instance.new("TextLabel")
     lbl.Size = UDim2.new(1, 0, 1, 0)
     lbl.BackgroundTransparency = 1
-    lbl.TextColor3 = defaultColor
+    lbl.TextColor3 = Color3.fromRGB(0, 255, 100)
     lbl.Font = Enum.Font.GothamBold
     lbl.TextSize = 11
     lbl.TextStrokeTransparency = 0.2
@@ -1050,7 +1040,11 @@ local function CreatePlayerESP(p)
         local wasDown = false
         local downStart = 0
         
-        while CanShowESP(p) and pChar and pChar.Parent and hum and hum.Parent and rPart and rPart.Parent do
+        while S.esp and pChar and pChar.Parent and hum and hum.Parent do
+            if S.soloTrack and p ~= S.soloTarget then
+                break
+            end
+
             local r = Root()
             local state = hum:GetState()
             
@@ -1060,7 +1054,6 @@ local function CreatePlayerESP(p)
 
             local isDowned = hum.PlatformStand or hum.Health <= 0
             local isFriend = friendCache[p.UserId] or false
-            local currentlySolo = (S.soloTrack and S.soloTarget == p)
 
             if isDowned and not wasDown then
                 wasDown = true
@@ -1092,10 +1085,6 @@ local function CreatePlayerESP(p)
                     hl.FillColor = Color3.fromRGB(255, 105, 180)
                     hl.OutlineColor = Color3.fromRGB(255, 182, 193)
                     lbl.TextColor3 = Color3.fromRGB(255, 182, 193)
-                elseif currentlySolo then
-                    hl.FillColor = Color3.fromRGB(180, 70, 255)
-                    hl.OutlineColor = Color3.fromRGB(255, 255, 0)
-                    lbl.TextColor3 = Color3.fromRGB(255, 255, 0)
                 else
                     hl.FillColor = Color3.fromRGB(0, 255, 100)
                     hl.OutlineColor = Color3.fromRGB(255, 255, 255)
@@ -1104,12 +1093,11 @@ local function CreatePlayerESP(p)
             end
 
             local friendText = isFriend and " [💗 Bạn Bè]" or ""
-            local soloPrefix = currentlySolo and "🎯 " or ""
             if r then
                 local dist = math.round((r.Position - rPart.Position).Magnitude)
-                lbl.Text = string.format("%s%s%s%s\n❤️ %d/%d | 📏 %dm", soloPrefix, p.Name, friendText, stateText, math.round(hum.Health), math.round(hum.MaxHealth), dist)
+                lbl.Text = string.format("%s%s%s\n❤️ %d/%d | 📏 %dm", p.Name, friendText, stateText, math.round(hum.Health), math.round(hum.MaxHealth), dist)
             else
-                lbl.Text = string.format("%s%s%s%s\n❤️ %d/%d | 📏 --m", soloPrefix, p.Name, friendText, stateText, math.round(hum.Health), math.round(hum.MaxHealth))
+                lbl.Text = string.format("%s%s%s\n❤️ %d/%d | 📏 --m", p.Name, friendText, stateText, math.round(hum.Health), math.round(hum.MaxHealth))
             end
             task.wait(0.2)
         end
@@ -1123,8 +1111,8 @@ local function HookPlayer(p)
     if p == player then return end
 
     trackConn(p.CharacterAdded:Connect(function()
-        task.wait(0.5)
-        if CanShowESP(p) then
+        if S.esp then
+            task.wait(0.5)
             CreatePlayerESP(p)
         end
     end))
@@ -1133,18 +1121,20 @@ local function HookPlayer(p)
         RemovePlayerESP(p)
     end))
 
-    if p.Character and CanShowESP(p) then
+    if p.Character and S.esp then
         CreatePlayerESP(p)
     end
 end
 
 local function UpdateESP()
     ClearAllESP()
+    if not S.esp then return end
+    
     if S.soloTrack then
         if S.soloTarget then
             CreatePlayerESP(S.soloTarget)
         end
-    elseif S.esp then
+    else
         for _, p in ipairs(Players:GetPlayers()) do
             if p ~= player then
                 CreatePlayerESP(p)
@@ -1157,9 +1147,14 @@ for _, p in ipairs(Players:GetPlayers()) do HookPlayer(p) end
 
 trackConn(Players.PlayerAdded:Connect(function(p) 
     HookPlayer(p)
-    task.wait(0.5)
-    if CanShowESP(p) then
-        CreatePlayerESP(p)
+    if S.esp then
+        task.spawn(function()
+            local char = p.Character or p.CharacterAdded:Wait()
+            task.wait(0.5)
+            if S.esp and char and char.Parent then
+                CreatePlayerESP(p)
+            end
+        end)
     end
 end))
 
@@ -1170,7 +1165,6 @@ trackConn(Players.PlayerRemoving:Connect(function(p)
     end
     RemovePlayerESP(p)
     friendCache[p.UserId] = nil
-    if RebuildTPList then RebuildTPList() end
 end))
 
 -- ==================== CODE EXECUTION ====================
@@ -1765,8 +1759,6 @@ local stopFlyToBtn = Button(tpPlayerTab, "⏹ Dừng Bay", 72, ty, 100, 24, C.RE
 ty = ty + 30
 
 local espBtn = Button(tpPlayerTab, "👁️ ESP: TẮT", 8, ty, 140, 24, C.GRAY)
-local soloTrackBtn = Button(tpPlayerTab, "🎯 Định Vị Lẻ: TẮT", 152, ty, 170, 24, C.GRAY)
-
 espBtn.Activated:Connect(function()
     S.esp = not S.esp
     espBtn.Text = S.esp and "👁️ ESP: BẬT" or "👁️ ESP: TẮT"
@@ -1774,13 +1766,12 @@ espBtn.Activated:Connect(function()
     UpdateESP()
 end)
 
+local soloTrackBtn = Button(tpPlayerTab, "🎯 Định Vị Lẻ: TẮT", 152, ty, 170, 24, C.GRAY)
 soloTrackBtn.Activated:Connect(function()
     S.soloTrack = not S.soloTrack
     soloTrackBtn.Text = S.soloTrack and "🎯 Định Vị Lẻ: BẬT" or "🎯 Định Vị Lẻ: TẮT"
     soloTrackBtn.BackgroundColor3 = S.soloTrack and C.PURPLE or C.GRAY
-    if not S.soloTrack then 
-        S.soloTarget = nil 
-    end
+    if not S.soloTrack then S.soloTarget = nil end
     UpdateESP()
     RebuildTPList()
 end)
@@ -1820,39 +1811,30 @@ RebuildTPList = function()
     local totalHeight = 0
     for _, p in ipairs(Players:GetPlayers()) do
         if p ~= player and (term == "" or p.Name:lower():find(term, 1, true)) then
-            local isSolo = (S.soloTrack and S.soloTarget == p)
             local row = New("Frame", {
-                Size=UDim2.new(1,0,0,34), 
-                BackgroundColor3=isSolo and Color3.fromRGB(240, 230, 255) or Color3.fromRGB(255,255,255),
+                Size=UDim2.new(1,0,0,34), BackgroundColor3=Color3.fromRGB(255,255,255),
                 BackgroundTransparency=0.1, BorderSizePixel=0, ZIndex=6,
             }, tpList)
-            Corner(row,UDim.new(0,5))
-            Stroke(row, isSolo and C.PURPLE or Color3.fromRGB(200,200,210), isSolo and 1.5 or 1)
+            Corner(row,UDim.new(0,5)); Stroke(row)
 
             local nameBtn = New("TextButton", {
                 Size=UDim2.new(1,-100,1,0), Position=UDim2.new(0,8,0,0),
-                Text=(isSolo and "🎯 " or "") .. p.Name, 
-                BackgroundTransparency=1, 
-                TextColor3=isSolo and C.PURPLE or C.DARK,
+                Text=p.Name, BackgroundTransparency=1, TextColor3=C.DARK,
                 Font=Enum.Font.GothamBold, TextSize=11, TextXAlignment=Enum.TextXAlignment.Left, ZIndex=7,
-                AutoButtonColor=true, TextTruncate=Enum.TextTruncate.AtEnd
+                AutoButtonColor=false, TextTruncate=Enum.TextTruncate.AtEnd
             }, row)
+
+            if S.soloTrack and S.soloTarget == p then
+                nameBtn.TextColor3 = C.PURPLE
+                nameBtn.Text = "🎯 " .. p.Name
+            end
 
             nameBtn.Activated:Connect(function()
                 if S.soloTrack then
-                    if S.soloTarget == p then
-                        S.soloTarget = nil
-                    else
-                        S.soloTarget = p
-                    end
-                else
-                    S.soloTrack = true
-                    soloTrackBtn.Text = "🎯 Định Vị Lẻ: BẬT"
-                    soloTrackBtn.BackgroundColor3 = C.PURPLE
                     S.soloTarget = p
+                    UpdateESP()
+                    RebuildTPList()
                 end
-                UpdateESP()
-                RebuildTPList()
             end)
 
             local flyToBtn = Button(row, "🚀 Bay Đến", -90, 5, 80, 24, C.BLUE)
@@ -2249,12 +2231,13 @@ trackConn(RunService.RenderStepped:Connect(function()
         obj.Lbl.Text = string.format("📍 %s\n📏 %dm", loc.name, dist)
         
         if S.locEspSingle and S.locTarget == loc then
-            obj.Lbl.TextColor3 = Color3.fromRGB(255, 105, 180)
+            obj.Lbl.TextColor3 = Color3.fromRGB(255, 105, 180) -- Hồng
         else
-            obj.Lbl.TextColor3 = Color3.fromRGB(255, 215, 0)
+            obj.Lbl.TextColor3 = Color3.fromRGB(255, 215, 0) -- Vàng
         end
     end
 end))
+
 
 -- ==================== TAB 8: NIỆM TÂM (VÒNG TRÒN TÂM NGẮM & AIM) ====================
 local xy = 8
@@ -2330,9 +2313,9 @@ xy = xy + 14
 
 local cR = New("TextBox", {Size=UDim2.new(0,40,0,24), Position=UDim2.new(0,8,0,xy), Text="0", BackgroundColor3=Color3.fromRGB(255,255,255), BackgroundTransparency=0, TextColor3=Color3.fromRGB(20,20,20), Font=Enum.Font.GothamMedium, TextSize=12, BorderSizePixel=0, ClearTextOnFocus=false, Active=true, Selectable=true, ZIndex=8}, xrayTab)
 Corner(cR,UDim.new(0,5)); Stroke(cR)
-local cG = New("TextBox", {Size=UDim2.new(0,40,0,24), Position=UDim2.new(0,54,0,ey or xy), Text="255", BackgroundColor3=Color3.fromRGB(255,255,255), BackgroundTransparency=0, TextColor3=Color3.fromRGB(20,20,20), Font=Enum.Font.GothamMedium, TextSize=12, BorderSizePixel=0, ClearTextOnFocus=false, Active=true, Selectable=true, ZIndex=8}, xrayTab)
+local cG = New("TextBox", {Size=UDim2.new(0,40,0,24), Position=UDim2.new(0,54,0,xy), Text="255", BackgroundColor3=Color3.fromRGB(255,255,255), BackgroundTransparency=0, TextColor3=Color3.fromRGB(20,20,20), Font=Enum.Font.GothamMedium, TextSize=12, BorderSizePixel=0, ClearTextOnFocus=false, Active=true, Selectable=true, ZIndex=8}, xrayTab)
 Corner(cG,UDim.new(0,5)); Stroke(cG)
-local cB = New("TextBox", {Size=UDim2.new(0,40,0,24), Position=UDim2.new(0,100,0,ey or xy), Text="0", BackgroundColor3=Color3.fromRGB(255,255,255), BackgroundTransparency=0, TextColor3=Color3.fromRGB(20,20,20), Font=Enum.Font.GothamMedium, TextSize=12, BorderSizePixel=0, ClearTextOnFocus=false, Active=true, Selectable=true, ZIndex=8}, xrayTab)
+local cB = New("TextBox", {Size=UDim2.new(0,40,0,24), Position=UDim2.new(0,100,0,xy), Text="0", BackgroundColor3=Color3.fromRGB(255,255,255), BackgroundTransparency=0, TextColor3=Color3.fromRGB(20,20,20), Font=Enum.Font.GothamMedium, TextSize=12, BorderSizePixel=0, ClearTextOnFocus=false, Active=true, Selectable=true, ZIndex=8}, xrayTab)
 Corner(cB,UDim.new(0,5)); Stroke(cB)
 
 local applyColorBtn = Button(xrayTab, "✔ Áp dụng", 150, xy, 80, 24, C.BLUE)
@@ -2345,6 +2328,7 @@ applyColorBtn.Activated:Connect(function()
 end)
 
 xrayTab.CanvasSize = UDim2.new(0,0,0,xy+40)
+
 
 -- VÒNG LẶP XỬ LÝ TỰ ĐỘNG NGẮM (AIMBOT CIRCLE)
 local function GetClosestPlayerInCircle()
@@ -2390,6 +2374,7 @@ trackConn(RunService.RenderStepped:Connect(function()
         end
     end
 end))
+
 
 -- ==================== TOGGLE MENU LOGIC & DRAG SYSTEM ====================
 local function ToggleMainFrame()
@@ -2505,10 +2490,10 @@ trackConn(player.CharacterAdded:Connect(function(c)
     if S.flyRun then TogFlyRun() end
     StopFlyTo()
     StopFlyToLoc()
-    UpdateESP()
+    if S.esp then UpdateESP() end
 end))
 
 UpdChar()
 if S.noClip then EnNC() end
 
-print("✅ Banana Cat Hub đã tải thành công & Đã fix hoàn thiện Định Vị Lẻ!")
+print("✅ Đã thêm Tính Năng Tự Ngắm Người Trong Vòng Tròn Niệm Tâm!")
