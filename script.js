@@ -1,6 +1,11 @@
 --[[
     🍌 Banana Cat Hub — FULL CODE  ·  giao diện "OBSIDIAN NOIR" + layout kiểu DELTA
-    🦘 v4.38: NHẢY CAO — công tắc độc lập kiểu 👤 Né người (🛡): BẬT/TẮT + chỉnh tốc độ nhảy.
+    📚 v4.39: DỌN SCRIPT HUB — bỏ thẻ trùng (kính/bay-tới/dừng), giữ 2 chế độ bay khác nhau.
+      · 🚀 Bay theo camera (tay lái) ≠ 🛡 Bay An Toàn (tự bay + né). Không xoá engine nào.
+      · Thẻ lẻ Đặt/Xóa/Tự đặt kính, Bay tới kính/người, Dừng, Định vị lẻ, Tắt 📍/👣 đã có ở ⚙ / 👥.
+      · Đổi tên 🧱 Đặt Kính → 🪩 Thảm Kính (không lẫn với đặt kính cố định). 👣 thẻ tự TẮT khi đang xem.
+      · Test: tests/test-hub-dedupe.js (node tests/run.js).
+    🦘 v4.38 (lịch sử): NHẢY CAO — công tắc độc lập kiểu 👤 Né người (🛡): BẬT/TẮT + chỉnh tốc độ nhảy.
       · Bấm Space/JumpRequest là nhảy cao theo số 💨 (giữ vận tốc XZ, không khóa Y).
       · Rơi theo trọng lực game. Không xuyên tường, không nút ảo, không PlatformStand.
       · Khung 🦘 + thẻ trong 📚 Script Hub. 🦘 Nhảy vô hạn / 💨 tốc độ / 🚀 / 🛡 / 👤 né người giữ nguyên.
@@ -1387,7 +1392,7 @@ D.verPill = New("Frame", {
 Corner(D.verPill, UDim.new(1,0))
 Stroke(D.verPill, C.ACCENT2, 1)   -- v4.9: huy hiệu đen + viền đồng, chữ champagne
 New("TextLabel", {
-    Size=UDim2.new(1,0,1,0), Text="v4.38 · NOIR", BackgroundTransparency=1,
+    Size=UDim2.new(1,0,1,0), Text="v4.39 · NOIR", BackgroundTransparency=1,
     TextColor3=C.ACCENT3, Font=Enum.Font.GothamBold, TextSize=8, ZIndex=6,
 }, D.verPill)
 
@@ -4818,7 +4823,7 @@ function S.FitToTab(obj, nm)
 end
 
 _G.BananaCatHubAPI = {
-    Version = "4.38",
+    Version = "4.39",
     HubGui = gui,     -- v4.4e: sửa lỗi cũ — biến tên là `gui`, không phải `hubGui` (trước đây là nil)
     Main = main,
     -- gọi bằng dấu hai chấm: API:TabArea("Tên Tab")  ->  Vector2 khổ vùng nội dung của tab
@@ -10174,8 +10179,8 @@ S.ScriptHubList = {
      desc="Đọc mã server hiện tại, copy ra clipboard và điền sẵn vào ô 🎟 để gửi cho bạn bè vào cùng."},
     -- v4.12: BỘ DI CHUYỂN (port từ menu "EXECUTOR MENU"). Tất cả là TIỆN ÍCH NỘI BỘ:
     -- gọi thẳng hàm của hub -> không tải gì từ mạng, không bao giờ "chạy không được".
-    {icon="🚀", name="Bay", cat="Di chuyển", ord=12, action="fly",
-     desc="Bay như 🛡 nhưng điều khiển TAY theo camera: nhìn xuống 60° + tiến tới = xuống 60°. WASD/joystick; thả phím đứng lơ lửng. Space lên · Shift/Ctrl xuống. Không tự bay/né/vòng tròn/khiên; 🧱 bật/tắt riêng ở khung 🚀."},
+    {icon="🚀", name="Bay theo camera", cat="Di chuyển", ord=12, action="fly",
+     desc="Bay ĐIỀU KHIỂN TAY theo camera (khác 🛡 Bay An Toàn). Nhìn xuống 60° + tiến tới = xuống 60°. WASD/joystick; thả phím đứng lơ lửng. Space lên · Shift/Ctrl xuống. 🧱 xuyên tường bật/tắt riêng ở khung 🚀."},
     {icon="💨", name="Tốc độ theo camera", cat="Di chuyển", ord=12.2, action="camspeed",
      desc="Chạy trên mặt đất 100% kiểu 🚀: WASD/joystick theo hướng camera. KHÔNG xuyên tường, nhảy bình thường, rơi theo trọng lực game, không nút ảo. Chỉnh tốc độ ở khung 💨."},
     {icon="🧱", name="Xuyên Tường", cat="Di chuyển", ord=13, action="noclip",
@@ -10186,41 +10191,18 @@ S.ScriptHubList = {
      desc="Công tắc độc lập kiểu 👤 Né người (🛡): BẬT/TẮT + chỉnh tốc độ nhảy. Space là nhảy cao, rơi theo trọng lực game. Không xuyên tường, không nút ảo. Không thay 🦘 Nhảy vô hạn."},
     {icon="🏃", name="Chạy Trên Thảm", cat="Di chuyển", ord=15, action="runmode",
      desc="Y HỆT '🕹️ Bay chạy bộ' của aiaiaitao3: thảm kính dưới chân + ẨN MENU + cụm nút tròn ⬆🪩⬇✕ nổi góc phải màn hình (⬆⬇ đưa cả thảm lẫn bạn lên/xuống). Thêm 2 cái tốt hơn bản gốc: KHÔNG rơi xuyên thảm và tốc độ THEO GAME ×3."},
-    {icon="🧱", name="Đặt Kính", cat="Di chuyển", ord=16, action="carpet",
-     desc="ĐẶT KÍNH dưới chân để đứng/làm cầu/thang: bấm 🧱 Đặt Kính Dưới Chân trong khung ⚙ để đặt 1 tấm CỐ ĐỊNH tại chỗ đang đứng (đặt nhiều tấm thành đường đi), 🔄 Tự Đặt để đi tới đâu đặt tới đó, 🧹 Xóa để dọn. Vẫn giữ 🪩 Thảm bay theo người (bám theo) + chỉnh RỘNG×CAO×DÀI + ⬆⬇ + 🛟 chống rơi + 🔲 viền. Không rơi xuyên dù KHÔNG bật Xuyên Tường."},
-    {icon="🧱", name="Đặt 1 Tấm Kính Dưới Chân", cat="Di chuyển", ord=16.1, action="placeglass",
-     desc="Đặt ngay 1 tấm kính CỐ ĐỊNH dưới chân (kích thước lấy từ khung ⚙ Rộng×Cao×Dài). Đặt nhiều lần để làm đường đi/cầu/thang trên không. Không mất — chỉ bị game xóa mới mất, dùng 🧹 Xóa Kính để dọn."},
-    {icon="🧹", name="Xóa Kính Đã Đặt", cat="Di chuyển", ord=16.2, action="clearglass",
-     desc="Xóa sạch tất cả tấm kính CỐ ĐỊNH đã đặt bằng 🧱 Đặt Kính (không xóa thảm bay theo)."},
-    {icon="🔄", name="Tự Đặt Kính", cat="Di chuyển", ord=16.3, action="autoglass",
-     desc="BẬT là tự động đặt kính CỐ ĐỊNH dưới chân khi bạn di chuyển — đi tới đâu đặt tới đó, khoảng cách = max(2, Rộng×0.7). TẮT thì chỉ đặt thủ công."},
-    {icon="🧱", name="Quản Lý Kính (trong Người Chơi)", cat="Di chuyển", ord=16.4, action="openglasspanel",
-     desc="Mở trang 👥 Người Chơi → khung 🧱 ĐẶT KÍNH: đặt nhiều tấm, danh sách tất cả kính đã đặt hiện trong menu để bấm 🗑 xóa lẻ, 📍 tới gần nhất, 🧹 xóa hết, 🔄 tự đặt. Không mất tính năng cũ."},
-    {icon="🚀", name="Bay Tới Kính", cat="Di chuyển", ord=16.5, action="flyglass",
-     desc="Bay mượt tới tấm kính đã đặt (chỉnh được tốc độ bay tới kính trong khung 🧱 ở tab 👥 Người Chơi). Bấm là bay tới kính gần nhất, danh sách kính trong 👥 để chọn bay tới từng tấm (nút 🚀)."},
-    {icon="⏹", name="Dừng Bay Tới Kính", cat="Di chuyển", ord=16.6, action="stopglassfly",
-     desc="Dừng việc bay tới kính (nếu đang bay tới tấm kính)."},
-    {icon="🚀", name="Bay Tới Người Chơi", cat="Di chuyển", ord=16.7, action="flyplayer",
-     desc="Bay mượt tới người chơi gần nhất (xuyên tường: tự bật 🧱 Xuyên tường + 🚀 Bay). Chỉnh tốc độ bay tới người trong khung 📍 ở tab 👥 Người Chơi (0=auto lấy tốc độ mặc định của game). Theo dõi mục tiêu di chuyển, dừng khi <2 studs."},
-    {icon="⏹", name="Dừng Bay Tới Người", cat="Di chuyển", ord=16.8, action="stopflyplayer",
-     desc="Dừng việc bay tới người chơi (nếu đang bay tới người)."},
+    {icon="🪩", name="Thảm Kính", cat="Di chuyển", ord=16, action="carpet",
+     desc="Thảm kính BÁM THEO chân (chạy trên không). Đặt kính cố định / bay tới kính / bay tới người nằm ở khung ⚙ trên danh sách và tab 👥 Người Chơi — không lặp thẻ."},
     -- v4.13: ĐỊNH VỊ NGƯỜI CHƠI (port từ "ESP System" của menu EXECUTOR MENU trong aiaiaitao3).
     {icon="✨", name="Phát Sáng", cat="Tiện ích", ord=22, action="glow",
      desc="CHÍNH BẠN phát sáng: nhuộm sáng cả nhân vật + đèn toả sáng thật quanh người. Chỉnh CHIỀU RỘNG + ĐỘ SÁNG + MÀU ở khung ✨ ngay đầu danh sách. 👁 xuyên tường (sáng xuyên vật cản) · 💡 đèn không bị vật cản chặn · bị game xoá hay respawn thì tự gắn lại."},
     {icon="🛡", name="Bay An Toàn", cat="Di chuyển", ord=23, action="safefly",
      desc="Bật là TỰ BAY + TỰ NÉ NGƯỜI CHƠI và mọi vật có dấu hiệu chuyển động (kể cả vật bị script/tween kéo đi) trong bán kính bạn chỉnh: càng gần đẩy càng mạnh, quá gần thì vọt lên trên. 🔲 Có BỨC TƯỜNG TRONG SUỐT HÌNH VUÔNG bao quanh cho thấy vùng né · 🧱 tự bật Xuyên Tường để đẩy bạn QUA vật cản. Chỉnh 💨 tốc độ · 📏 khoảng cách né · 🌀 né gắt ở khung 🛡 ngay đầu danh sách."},
-    -- v4.15: 5 thẻ 📍👣 vẫn ở đây (bấm là chạy ngay) — khung điều khiển ĐẦY ĐỦ (danh sách
-    -- người chơi, 📏 giới hạn tầm, 📏/⬆ camera...) nằm ở trang 👥 Người Chơi cho gọn trang này.
+    -- v4.39: 1 thẻ 📍 + 1 thẻ 👣 (bấm lại = TẮT). Danh sách người / định vị lẻ / kính / bay tới: tab 👥.
     {icon="📍", name="Định Vị Người Chơi", cat="Định vị", ord=17, action="loc_all",
-     desc="Xuyên tường thấy TẤT CẢ người chơi: tên + 💗 bạn bè + ☠️ bị hạ gục (kèm ⏱ đếm giờ) + ❤️ máu + 📏 khoảng cách. Màu: 🟢 thường · 💗 bạn bè · 🔴 bị hạ gục · 🟣 bạn bè bị hạ gục."},
-    {icon="🎯", name="Định Vị Lẻ", cat="Định vị", ord=18, action="loc_solo",
-     desc="Chỉ định vị ĐÚNG 1 người: bấm nút rồi BẤM TÊN trong khung 📍 ngay trên đầu danh sách (chưa chọn thì tự lấy người đứng gần nhất)."},
-    {icon="👣", name="Xem Người Chơi", cat="Định vị", ord=19, action="spec_on",   -- v4.15: khung đầy đủ ở trang 👥
-     desc="Bám theo 1 người để XEM HỌ ĐANG LÀM GÌ: camera rời khỏi bạn bay theo họ, kèm bảng nổi trên màn hình (TÊN · 💗 bạn bè · ❤️ máu · 📏 khoảng cách · 💨 tốc độ · 🏃 đang chạy/nhảy/ngồi/gục/đứng yên). Chỉ ĐỔI CAMERA — nhân vật bạn không bị dịch chuyển."},
-    {icon="🚫", name="Dừng Xem Người Chơi", cat="Định vị", ord=20, action="spec_off",
-     desc="Trả camera về cho bạn ngay (CameraType gốc của game) + ẩn bảng 👣. Nhân vật bạn không hề bị đụng tới."},
-    {icon="🚫", name="Tắt Định Vị", cat="Định vị", ord=21, action="loc_stop",
-     desc="Tắt sạch mọi định vị: bỏ hết nhãn tên + viền sáng khỏi tất cả người chơi, giải phóng vòng lặp."},
+     desc="Xuyên tường thấy TẤT CẢ người chơi. Bấm lại để TẮT. Chọn từng người / khoảng cách: tab 👥 Người Chơi."},
+    {icon="👣", name="Xem Người Chơi", cat="Định vị", ord=19, action="spec_on",
+     desc="Bám camera theo người gần nhất. Bấm lại để TRẢ CAMERA. Danh sách chọn người: tab 👥."},
 }
 S.hubFavs   = S.hubFavs or {}
 S.hubCat    = "Tất cả"
@@ -10469,13 +10451,19 @@ function S.RunHubAction(id)
 
     -- ---------- v4.14: 👣 XEM NGƯỜI CHƠI ----------
     elseif id == "spec_on" then
+        if S.Spec and S.Spec.on then
+            pcall(function() S.Spec.Stop() end)
+            pcall(function() if S.Spec.RefreshList then S.Spec.RefreshList() end end)
+            S.Rebuild()
+            return "🚫 " .. (S.Spec.Status and S.Spec.Status() or "đã dừng xem")
+        end
         local p = S.Spec.target or S.Loc.target or S.Loc.Nearest()
         if not p then return "⚠️ chưa có ai để xem (server chỉ có mình bạn)" end
         pcall(function() S.Loc.SetTarget(p) end)
         pcall(function() S.Spec.Set(p) end)
         pcall(function() if S.Spec.RefreshList then S.Spec.RefreshList() end end)
         S.Rebuild()
-        return "👣 " .. S.Spec.Status() .. " (bấm tên người khác trong khung 👣 để đổi)"
+        return "👣 " .. S.Spec.Status() .. " (bấm lại thẻ để dừng · chọn người ở tab 👥)"
     elseif id == "spec_off" then
         pcall(function() S.Spec.Stop() end)
         pcall(function() if S.Spec.RefreshList then S.Spec.RefreshList() end end)
@@ -14020,7 +14008,7 @@ main.Visible = true
 togBtn.Text = "✕"
 
 print(string.format(
-    "✅ Banana Cat Hub v4.38 — sẵn sàng! Đã nạp lại %d script + %d waypoint + %d tab tính năng từ bộ nhớ (chế độ: %s%s)",
+    "✅ Banana Cat Hub v4.39 — sẵn sàng! Đã nạp lại %d script + %d waypoint + %d tab tính năng từ bộ nhớ (chế độ: %s%s)",
     Store.loadedScripts, Store.loadedWp, #Store.loadedFeatures, Store.mode,
     Store.lastError and (" | ⚠️ " .. Store.lastError) or ""
 ))
