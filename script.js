@@ -1,6 +1,10 @@
 --[[
     🍌 Banana Cat Hub — FULL CODE  ·  giao diện "OBSIDIAN NOIR" + layout kiểu DELTA
-    📚 v4.39: DỌN SCRIPT HUB — bỏ thẻ trùng (kính/bay-tới/dừng), giữ 2 chế độ bay khác nhau.
+    ⚙ v4.40: KHUNG TUỲ CHỈNH trên 📚 Script Hub — gom 🚀 Bay · 💨 Tốc độ camera · 🦘 Nhảy cao · 👟 Di chuyển.
+      · Một khung HubTune_Panel (LayoutOrder -4): BẬT/TẮT + ô tốc độ từng tính năng, 👟 chạy / lực nhảy.
+      · Không xoá khung 🚀 / 💨 / 🦘 / ⚙ cũ — nút trong khung mới gọi đúng SetFly/SetSprint/SetHighJump.
+      · Test: tests/test-hub-tune.js (node tests/run.js).
+    📚 v4.39 (lịch sử): DỌN SCRIPT HUB — bỏ thẻ trùng (kính/bay-tới/dừng), giữ 2 chế độ bay khác nhau.
       · 🚀 Bay theo camera (tay lái) ≠ 🛡 Bay An Toàn (tự bay + né). Không xoá engine nào.
       · Thẻ lẻ Đặt/Xóa/Tự đặt kính, Bay tới kính/người, Dừng, Định vị lẻ, Tắt 📍/👣 đã có ở ⚙ / 👥.
       · Đổi tên 🧱 Đặt Kính → 🪩 Thảm Kính (không lẫn với đặt kính cố định). 👣 thẻ tự TẮT khi đang xem.
@@ -1392,7 +1396,7 @@ D.verPill = New("Frame", {
 Corner(D.verPill, UDim.new(1,0))
 Stroke(D.verPill, C.ACCENT2, 1)   -- v4.9: huy hiệu đen + viền đồng, chữ champagne
 New("TextLabel", {
-    Size=UDim2.new(1,0,1,0), Text="v4.39 · NOIR", BackgroundTransparency=1,
+    Size=UDim2.new(1,0,1,0), Text="v4.40 · NOIR", BackgroundTransparency=1,
     TextColor3=C.ACCENT3, Font=Enum.Font.GothamBold, TextSize=8, ZIndex=6,
 }, D.verPill)
 
@@ -4823,7 +4827,7 @@ function S.FitToTab(obj, nm)
 end
 
 _G.BananaCatHubAPI = {
-    Version = "4.39",
+    Version = "4.40",
     HubGui = gui,     -- v4.4e: sửa lỗi cũ — biến tên là `gui`, không phải `hubGui` (trước đây là nil)
     Main = main,
     -- gọi bằng dấu hai chấm: API:TabArea("Tên Tab")  ->  Vector2 khổ vùng nội dung của tab
@@ -7667,6 +7671,7 @@ function MV.SetFly(on)
     end
     MV._Watchdog()
     MV.SyncHud()
+    if S.SyncTunePanel then pcall(S.SyncTunePanel) end
     return MV.fly
 end
 function MV.SetFlySpeed(n)
@@ -7675,6 +7680,7 @@ function MV.SetFlySpeed(n)
     MV.flySpeed = mvClamp(n, 1, 2000, 50)
     MV.SyncHud()
     if S.RefreshMovePanel then S.RefreshMovePanel() end
+    if S.SyncTunePanel then pcall(S.SyncTunePanel) end
     return true, MV.flySpeed
 end
 function MV.SetFlyHud(on)
@@ -7956,6 +7962,7 @@ function MV.SetSprint(on)
     end
     MV._Watchdog()
     if S.SyncSpeedPanel then S.SyncSpeedPanel() end
+    if S.SyncTunePanel then pcall(S.SyncTunePanel) end
     return MV.sprint
 end
 function MV.SetSprintSpeed(n)
@@ -7963,6 +7970,7 @@ function MV.SetSprintSpeed(n)
     if not n or n ~= n or n == math.huge or n == -math.huge then return false, "nhập tốc độ 1–2000" end
     MV.sprintSpeed = mvClamp(n, 1, 2000, 50)
     if S.SyncSpeedPanel then S.SyncSpeedPanel() end
+    if S.SyncTunePanel then pcall(S.SyncTunePanel) end
     return true, MV.sprintSpeed
 end
 end -- 💨 TỐC ĐỘ THEO CAMERA
@@ -8060,6 +8068,7 @@ function MV.SetHighJump(on)
     end
     MV._Watchdog()
     if S.SyncHighJumpPanel then S.SyncHighJumpPanel() end
+    if S.SyncTunePanel then pcall(S.SyncTunePanel) end
     return MV.highJump
 end
 function MV.SetHighJumpSpeed(n)
@@ -8068,6 +8077,7 @@ function MV.SetHighJumpSpeed(n)
     MV.highJumpSpeed = mvClamp(n, 1, 500, 80)
     if MV.highJump then pcall(MV._HighJumpApplyPower) end
     if S.SyncHighJumpPanel then S.SyncHighJumpPanel() end
+    if S.SyncTunePanel then pcall(S.SyncTunePanel) end
     return true, MV.highJumpSpeed
 end
 end -- 🦘 NHẢY CAO
@@ -10789,6 +10799,7 @@ function S.RebuildHubList()
     if S.SyncFlyPanel then pcall(S.SyncFlyPanel) end          -- v4.36: Bay + xuyên tường độc lập
     if S.SyncSpeedPanel then pcall(S.SyncSpeedPanel) end      -- v4.37: 💨 tốc độ theo camera
     if S.SyncHighJumpPanel then pcall(S.SyncHighJumpPanel) end -- v4.38: 🦘 nhảy cao
+    if S.SyncTunePanel then pcall(S.SyncTunePanel) end         -- v4.40: ⚙ tuỳ chỉnh gom
     if S.RefreshMovePanel then pcall(S.RefreshMovePanel) end   -- v4.12: nhãn trạng thái di chuyển
     if S.SyncGlowPanel then pcall(S.SyncGlowPanel) end         -- v4.16: nhãn khung ✨ phát sáng
     if S.SyncSafePanel then pcall(S.SyncSafePanel) end         -- v4.17: nhãn khung 🛡 bay an toàn
@@ -10796,6 +10807,169 @@ function S.RebuildHubList()
         D.Say("🔍 không tìm thấy gì khớp '" .. tostring(S.hubSearch or "") .. "'", C.MUTED)
     end
 end
+
+
+-- ---------- v4.40: KHUNG ⚙ TUỲ CHỈNH (Bay · Tốc độ camera · Nhảy cao · Di chuyển) ----------
+do
+    local P = New("Frame", {
+        Name = "HubTune_Panel", Size = UDim2.new(1, 0, 0, 172), LayoutOrder = -4,
+        BackgroundColor3 = C.SURFACE, BackgroundTransparency = 0.12, BorderSizePixel = 0, ZIndex = 6,
+    }, D.hubList)
+    Corner(P, UDim.new(0, 10)); Stroke(P, C.HAIRLINE, 1)
+    D.Shade(P, Color3.fromRGB(255,255,255), Color3.fromRGB(188,192,205), 90)
+    New("TextLabel", {
+        Size = UDim2.new(1, -16, 0, 16), Position = UDim2.new(0, 8, 0, 4),
+        Text = "⚙ TUỲ CHỈNH — 🚀 Bay · 💨 Tốc độ camera · 🦘 Nhảy cao · 👟 Di chuyển",
+        BackgroundTransparency = 1, TextColor3 = C.ACCENT, Font = Enum.Font.GothamBold, TextSize = 10,
+        TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 7,
+    }, P)
+    local function button(name, text, x, y, w, color)
+        local b = New("TextButton", {
+            Name = name, Text = text, Size = UDim2.new(0, w, 0, 22), Position = UDim2.new(0, x, 0, y),
+            BackgroundColor3 = color, TextColor3 = D.BestText(color), BorderSizePixel = 0,
+            Font = Enum.Font.GothamBold, TextSize = 9, ZIndex = 8,
+        }, P)
+        Corner(b, UDim.new(0, 6)); D.Tactile(b, 0.08)
+        return b
+    end
+    local function box(name, x, y, val)
+        local b = New("TextBox", {
+            Name = name, Size = UDim2.new(0, 52, 0, 22), Position = UDim2.new(0, x, 0, y),
+            Text = tostring(val), ClearTextOnFocus = false, BackgroundColor3 = C.SURFACE2,
+            TextColor3 = C.DARK, Font = Enum.Font.GothamMedium, TextSize = 9, BorderSizePixel = 0, ZIndex = 8,
+        }, P)
+        Corner(b, UDim.new(0, 6))
+        return b
+    end
+    local function lab(txt, x, y, w)
+        New("TextLabel", {
+            Size = UDim2.new(0, w, 0, 22), Position = UDim2.new(0, x, 0, y),
+            Text = txt, BackgroundTransparency = 1, TextColor3 = C.MUTED,
+            Font = Enum.Font.GothamMedium, TextSize = 9, TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 7,
+        }, P)
+    end
+
+    local flyBtn = button("TuneFly", "🚀 Bay: TẮT", 8, 24, 110, C.GRAY)
+    local flyBox = box("TuneFlySpeed", 122, 24, MV.flySpeed)
+    local flyApply = button("TuneFlyApply", "✔", 178, 24, 32, C.GREEN)
+    local flyStop = button("TuneFlyStop", "⏹", 214, 24, 32, C.RED)
+
+    local spdBtn = button("TuneSprint", "💨 Tốc độ: TẮT", 8, 50, 110, C.GRAY)
+    local spdBox = box("TuneSprintSpeed", 122, 50, MV.sprintSpeed)
+    local spdApply = button("TuneSprintApply", "✔", 178, 50, 32, C.GREEN)
+    local spdStop = button("TuneSprintStop", "⏹", 214, 50, 32, C.RED)
+
+    local hjBtn = button("TuneHighJump", "🦘 Nhảy cao: TẮT", 8, 76, 110, C.GRAY)
+    local hjBox = box("TuneHighJumpSpeed", 122, 76, MV.highJumpSpeed)
+    local hjApply = button("TuneHighJumpApply", "✔", 178, 76, 32, C.GREEN)
+    local hjStop = button("TuneHighJumpStop", "⏹", 214, 76, 32, C.RED)
+
+    lab("👟 Chạy", 254, 24, 48)
+    local wsBox = box("TuneWalkSpeed", 304, 24, (MV.speedMode == "x") and ("x" .. tostring(MV.speedMul)) or tostring(MV.walkSpeed))
+    lab("🦘 Lực nhảy", 254, 50, 70)
+    local jpBox = box("TuneJumpPower", 324, 50, MV.jumpPower)
+    local mvApply = button("TuneMoveApply", "✔ Di chuyển", 254, 76, 122, C.GREEN)
+
+    local status = New("TextLabel", {
+        Name = "TuneStatus", Size = UDim2.new(1, -16, 0, 28), Position = UDim2.new(0, 8, 0, 102),
+        Text = "", BackgroundTransparency = 1, TextColor3 = C.MUTED, Font = Enum.Font.GothamMedium,
+        TextSize = 9, TextWrapped = true, TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 7,
+    }, P)
+    New("TextLabel", {
+        Size = UDim2.new(1, -16, 0, 32), Position = UDim2.new(0, 8, 0, 134),
+        Text = "💡 ✔ = áp tốc độ dòng đó. 👟 gõ x3 = theo game ×3, gõ số = cố định. Thảm/kính/bay-tới vẫn ở khung ⚙ bên dưới.",
+        BackgroundTransparency = 1, TextColor3 = C.MUTED, Font = Enum.Font.GothamMedium, TextSize = 8,
+        TextWrapped = true, TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 7,
+    }, P)
+
+    local function paintToggle(b, on, label)
+        b.Text = label .. (on and "BẬT" or "TẮT")
+        D.SetBg(b, on and C.GREEN or C.GRAY)
+    end
+    local function focused()
+        return UserInputService:GetFocusedTextBox()
+    end
+    function S.SyncTunePanel()
+        if not (P and P.Parent) then return end
+        paintToggle(flyBtn, MV.fly, "🚀 Bay: ")
+        paintToggle(spdBtn, MV.sprint, "💨 Tốc độ: ")
+        paintToggle(hjBtn, MV.highJump, "🦘 Nhảy cao: ")
+        local tb = focused()
+        if tb ~= flyBox then flyBox.Text = tostring(MV.flySpeed) end
+        if tb ~= spdBox then spdBox.Text = tostring(MV.sprintSpeed) end
+        if tb ~= hjBox then hjBox.Text = tostring(MV.highJumpSpeed) end
+        if tb ~= wsBox then
+            wsBox.Text = (MV.speedMode == "x") and ("x" .. tostring(MV.speedMul)) or tostring(MV.walkSpeed)
+        end
+        if tb ~= jpBox then jpBox.Text = tostring(MV.jumpPower) end
+        status.Text = (MV.Status and MV.Status()) or ""
+    end
+
+    flyBtn.Activated:Connect(function() ReleaseHubFocus(); D.Say(S.RunHubAction("fly"), C.YELLOW) end)
+    spdBtn.Activated:Connect(function() ReleaseHubFocus(); D.Say(S.RunHubAction("camspeed"), C.YELLOW) end)
+    hjBtn.Activated:Connect(function() ReleaseHubFocus(); D.Say(S.RunHubAction("highjump"), C.YELLOW) end)
+    flyStop.Activated:Connect(function()
+        ReleaseHubFocus(); MV.SetFly(false); S.Rebuild()
+        D.Say("🚀 Bay: TẮT", C.YELLOW)
+    end)
+    spdStop.Activated:Connect(function()
+        ReleaseHubFocus(); MV.SetSprint(false); S.Rebuild()
+        D.Say("💨 Tốc độ theo camera: TẮT", C.YELLOW)
+    end)
+    hjStop.Activated:Connect(function()
+        ReleaseHubFocus(); MV.SetHighJump(false); S.Rebuild()
+        D.Say("🦘 Nhảy cao: TẮT", C.YELLOW)
+    end)
+    local function applyFly()
+        ReleaseHubFocus()
+        local ok, result = MV.SetFlySpeed(flyBox.Text)
+        D.Say(ok and ("💨 Tốc độ bay: " .. tostring(result)) or ("⚠️ " .. tostring(result)), ok and C.GREEN or C.YELLOW)
+        S.SyncTunePanel()
+    end
+    local function applySprint()
+        ReleaseHubFocus()
+        local ok, result = MV.SetSprintSpeed(spdBox.Text)
+        D.Say(ok and ("💨 Tốc độ chạy camera: " .. tostring(result)) or ("⚠️ " .. tostring(result)), ok and C.GREEN or C.YELLOW)
+        S.SyncTunePanel()
+    end
+    local function applyHj()
+        ReleaseHubFocus()
+        local ok, result = MV.SetHighJumpSpeed(hjBox.Text)
+        D.Say(ok and ("💨 Tốc độ nhảy cao: " .. tostring(result)) or ("⚠️ " .. tostring(result)), ok and C.GREEN or C.YELLOW)
+        S.SyncTunePanel()
+    end
+    flyApply.Activated:Connect(applyFly)
+    spdApply.Activated:Connect(applySprint)
+    hjApply.Activated:Connect(applyHj)
+    flyBox.FocusLost:Connect(function(enter) if enter then applyFly() end end)
+    spdBox.FocusLost:Connect(function(enter) if enter then applySprint() end end)
+    hjBox.FocusLost:Connect(function(enter) if enter then applyHj() end end)
+    mvApply.Activated:Connect(function()
+        ReleaseHubFocus()
+        local wmul = tostring(wsBox.Text or ""):match("^[xX×]%s*([%d%.]+)")
+        if wmul then
+            MV.speedMode = "x"
+            MV.speedMul = mvClamp(tonumber(wmul), 1, 20)
+        else
+            local w = tonumber(wsBox.Text)
+            if w then
+                MV.speedMode = "num"
+                MV.walkSpeed = mvClamp(w, 0, 500, 16)
+            end
+        end
+        local j = tonumber(jpBox.Text)
+        if j then MV.jumpPower = mvClamp(j, 0, 500, 50) end
+        pcall(function() if MV.speed then MV.ApplyChar() end end)
+        if S.RefreshMovePanel then pcall(S.RefreshMovePanel) end
+        S.SyncTunePanel()
+        D.Say(string.format("⚙ di chuyển: chạy %s · lực nhảy %d",
+            (MV.speedMode == "x") and ("×" .. tostring(MV.speedMul)) or tostring(MV.walkSpeed),
+            MV.jumpPower), C.GREEN)
+    end)
+    S.tuneBtns = {panel = P, fly = flyBtn, sprint = spdBtn, highjump = hjBtn, flySpeed = flyBox, sprintSpeed = spdBox, highJumpSpeed = hjBox, walk = wsBox, jump = jpBox}
+    S.SyncTunePanel()
+end
+-- ---------- HẾT KHUNG ⚙ TUỲ CHỈNH ----------
 
 -- ---------- v4.36: KHUNG 🚀 BAY THEO CAMERA (công tắc 🧱 độc lập) ----------
 do
@@ -14008,7 +14182,7 @@ main.Visible = true
 togBtn.Text = "✕"
 
 print(string.format(
-    "✅ Banana Cat Hub v4.39 — sẵn sàng! Đã nạp lại %d script + %d waypoint + %d tab tính năng từ bộ nhớ (chế độ: %s%s)",
+    "✅ Banana Cat Hub v4.40 — sẵn sàng! Đã nạp lại %d script + %d waypoint + %d tab tính năng từ bộ nhớ (chế độ: %s%s)",
     Store.loadedScripts, Store.loadedWp, #Store.loadedFeatures, Store.mode,
     Store.lastError and (" | ⚠️ " .. Store.lastError) or ""
 ))
