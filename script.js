@@ -1,6 +1,10 @@
 --[[
     🍌 Banana Cat Hub — FULL CODE  ·  giao diện "OBSIDIAN NOIR" + layout kiểu DELTA
-    ⚙ v4.40: KHUNG TUỲ CHỈNH trên 📚 Script Hub — gom 🚀 Bay · 💨 Tốc độ camera · 🦘 Nhảy cao · 👟 Di chuyển.
+    📚 v4.41: CHIP LỌC Script Hub ẨN khung không thuộc nhóm (Admin không còn 🦘/✨/🚀).
+      · Khung ⚙/🚀/💨/🦘/🛡/Thảm chỉ hiện ở Tất cả + Di chuyển; ✨ Phát sáng ở Tất cả + Tiện ích.
+      · S.SyncHubPanels + Visible=false (UIListLayout không chiếm chỗ). Không xoá tính năng.
+      · Test: tests/test-hub-filter.js (node tests/run.js).
+    ⚙ v4.40 (lịch sử): KHUNG TUỲ CHỈNH trên 📚 Script Hub — gom 🚀 Bay · 💨 Tốc độ camera · 🦘 Nhảy cao · 👟 Di chuyển.
       · Một khung HubTune_Panel (LayoutOrder -4): BẬT/TẮT + ô tốc độ từng tính năng, 👟 chạy / lực nhảy.
       · Không xoá khung 🚀 / 💨 / 🦘 / ⚙ cũ — nút trong khung mới gọi đúng SetFly/SetSprint/SetHighJump.
       · Test: tests/test-hub-tune.js (node tests/run.js).
@@ -1396,7 +1400,7 @@ D.verPill = New("Frame", {
 Corner(D.verPill, UDim.new(1,0))
 Stroke(D.verPill, C.ACCENT2, 1)   -- v4.9: huy hiệu đen + viền đồng, chữ champagne
 New("TextLabel", {
-    Size=UDim2.new(1,0,1,0), Text="v4.40 · NOIR", BackgroundTransparency=1,
+    Size=UDim2.new(1,0,1,0), Text="v4.41 · NOIR", BackgroundTransparency=1,
     TextColor3=C.ACCENT3, Font=Enum.Font.GothamBold, TextSize=8, ZIndex=6,
 }, D.verPill)
 
@@ -4827,7 +4831,7 @@ function S.FitToTab(obj, nm)
 end
 
 _G.BananaCatHubAPI = {
-    Version = "4.40",
+    Version = "4.41",
     HubGui = gui,     -- v4.4e: sửa lỗi cũ — biến tên là `gui`, không phải `hubGui` (trước đây là nil)
     Main = main,
     -- gọi bằng dấu hai chấm: API:TabArea("Tên Tab")  ->  Vector2 khổ vùng nội dung của tab
@@ -10649,6 +10653,28 @@ function S.Rebuild()
     pcall(function() if S.RebuildHubList then S.RebuildHubList() end end)
 end
 
+-- v4.41: khung điều khiển (không phải HubCard_) chỉ hiện đúng nhóm chip.
+S.HubPanelCat = {
+    HubTune_Panel = "Di chuyển",
+    HubFly_Panel = "Di chuyển",
+    HubSpeed_Panel = "Di chuyển",
+    HubHighJump_Panel = "Di chuyển",
+    HubMove_Panel = "Di chuyển",
+    HubSafe_Panel = "Di chuyển",
+    HubGlow_Panel = "Tiện ích",
+}
+function S.SyncHubPanels()
+    local list = D.hubList
+    if not list or not list.Parent then return end
+    local cat = S.hubCat or "Tất cả"
+    for _, c in ipairs(list:GetChildren()) do
+        local want = S.HubPanelCat[c.Name]
+        if want then
+            c.Visible = (cat == "Tất cả") or (cat == want)
+        end
+    end
+end
+
 function S.RebuildHubList()
     local list = D.hubList
     if not list or not list.Parent then return end
@@ -10788,9 +10814,10 @@ function S.RebuildHubList()
     pcall(function()
         -- v4.16: cộng chiều cao MỌI khung điều khiển (⚙ di chuyển + ✨ phát sáng; sau này thêm
         -- khung nào cũng tự đúng), nếu không cuộn xuống sẽ thiếu đúng hàng thẻ cuối.
+        if S.SyncHubPanels then S.SyncHubPanels() end
         local panelH = 0
         for _, c in ipairs(list:GetChildren()) do
-            if c:IsA("Frame") and c.Name:sub(1, 8) ~= "HubCard_" then
+            if c:IsA("Frame") and c.Name:sub(1, 8) ~= "HubCard_" and c.Visible ~= false then
                 panelH = panelH + ((c.Size and c.Size.Y.Offset) or 0) + 6
             end
         end
@@ -14182,7 +14209,7 @@ main.Visible = true
 togBtn.Text = "✕"
 
 print(string.format(
-    "✅ Banana Cat Hub v4.40 — sẵn sàng! Đã nạp lại %d script + %d waypoint + %d tab tính năng từ bộ nhớ (chế độ: %s%s)",
+    "✅ Banana Cat Hub v4.41 — sẵn sàng! Đã nạp lại %d script + %d waypoint + %d tab tính năng từ bộ nhớ (chế độ: %s%s)",
     Store.loadedScripts, Store.loadedWp, #Store.loadedFeatures, Store.mode,
     Store.lastError and (" | ⚠️ " .. Store.lastError) or ""
 ))
