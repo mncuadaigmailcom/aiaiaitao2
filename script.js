@@ -1,5 +1,6 @@
 --[[
     🍌 Banana Cat Hub — FULL CODE  ·  OBSIDIAN NOIR + layout kiểu DELTA
+    v4.48: 👻 Toàn hình an toàn — chìm đất + noclip, camera khán giả không xuyên tường.
     v4.47: 👻 Toàn hình an toàn — Evade (LTM), bấm nút nhiều lần, 📐 chỉnh nút.
     v4.46: 👻 Toàn hình an toàn — ẩn + đi/nhảy, nút tròn bay-tới kiểu 🛡.
     v4.45: 👻 Toàn hình sửa — ẩn thật, chìm 1 nhịp rồi đứng mặt đất (không gãy rig).
@@ -565,7 +566,7 @@ D.verPill = New("Frame", {
 Corner(D.verPill, UDim.new(1,0))
 Stroke(D.verPill, C.ACCENT2, 1)   -- v4.9: huy hiệu đen + viền đồng, chữ champagne
 New("TextLabel", {
-    Size=UDim2.new(1,0,1,0), Text="v4.47 · NOIR", BackgroundTransparency=1,
+    Size=UDim2.new(1,0,1,0), Text="v4.48 · NOIR", BackgroundTransparency=1,
     TextColor3=C.ACCENT3, Font=Enum.Font.GothamBold, TextSize=8, ZIndex=6,
 }, D.verPill)
 
@@ -3639,7 +3640,7 @@ function S.FitToTab(obj, nm)
 end
 
 _G.BananaCatHubAPI = {
-    Version = "4.47",
+    Version = "4.48",
     HubGui = gui,     -- v4.4e: sửa lỗi cũ — biến tên là `gui`, không phải `hubGui` (trước đây là nil)
     Main = main,
     TabArea = function(self, nm) return S.TabArea(nm) end,
@@ -8525,7 +8526,7 @@ S.ScriptHubList = {
     {icon="🪩", name="Thảm Kính", cat="Di chuyển", ord=16, action="carpet",
      desc="Thảm kính BÁM THEO chân (chạy trên không). Đặt kính cố định / bay tới kính / bay tới người nằm ở khung ⚙ trên danh sách và tab 👥 Người Chơi — không lặp thẻ."},
     {icon="👻", name="Toàn Hình An Toàn", cat="Tiện ích", ord=21.5, action="safeinvis",
-     desc="Ẩn nhân vật, vẫn đi/nhảy bình thường. Nút TRÒN trên màn hình: tắt bằng BAY TỚI (cùng kiểu BodyVelocity 🛡 Bay An Toàn, chỉnh tốc độ). Tắt nút ảo: mở menu chính rồi tắt tính năng. Không bật 🚀/🛡 sẵn."},
+     desc="Ẩn + xuyên tường, nhân vật CHÌM XUỐNG ĐẤT. Camera khán giả ở trên mặt đất (Popper, không xuyên tường). Chạy/nhảy bình thường. Nút ✕ trên màn hình TẮT tính năng và TẮT 🧱 xuyên tường trên Script Hub."},
     {icon="✨", name="Phát Sáng", cat="Tiện ích", ord=22, action="glow",
      desc="CHÍNH BẠN phát sáng: nhuộm sáng cả nhân vật + đèn toả sáng thật quanh người. Chỉnh CHIỀU RỘNG + ĐỘ SÁNG + MÀU ở khung ✨ ngay đầu danh sách. 👁 xuyên tường (sáng xuyên vật cản) · 💡 đèn không bị vật cản chặn · bị game xoá hay respawn thì tự gắn lại."},
     {icon="🛡", name="Bay An Toàn", cat="Di chuyển", ord=23, action="safefly",
@@ -11123,11 +11124,12 @@ do
     end))
 end
 
--- ---------- 👻 TOÀN HÌNH AN TOÀN (v4.47) ----------
+-- ---------- 👻 TOÀN HÌNH AN TOÀN (v4.48) ----------
 S.SafeInvis = S.SafeInvis or {
-    on = false, flying = false, adjust = false, speed = 60,
+    on = false, flying = false, adjust = false, speed = 60, depth = 16,
     _bound = false, _flyBound = false, _orig = {}, _hud = nil, _sg = nil,
     _bv = nil, _bg = nil, _dest = nil, _ncPrev = nil, _hudBtn = nil,
+    _camPart = nil, _surfY = 0, _underY = 0, _jump = 0,
     hudPos = UDim2.new(1, -92, 1, -160),
 }
 local SI = S.SafeInvis
@@ -11175,6 +11177,7 @@ function S.SafeInvis.RestoreAll()
 end
 function S.SafeInvis.HideInst(inst)
     if not inst then return end
+    if inst.Name == "BC_SafeInvisCam" then return end
     S.SafeInvis.Remember(inst)
     pcall(function()
         if inst:IsA("BasePart") then
@@ -11197,10 +11200,92 @@ function S.SafeInvis.Apply()
     local hum = ch:FindFirstChildOfClass("Humanoid")
     if hum then
         pcall(function() hum.NameDisplayDistance = 0; hum.HealthDisplayDistance = 0 end)
-        if not SI.flying then
-            pcall(function() hum.PlatformStand = false; hum.AutoRotate = true end)
-        end
+        pcall(function() hum.PlatformStand = false; hum.AutoRotate = true end)
     end
+end
+function S.SafeInvis.ProbeSurf(x, z, hintY)
+    local y = tonumber(hintY) or 0
+    local surf = y
+    pcall(function()
+        local rp = RaycastParams.new()
+        rp.FilterDescendantsInstances = { S.SafeInvis.Char(), SI._camPart }
+        rp.FilterType = Enum.RaycastFilterType.Exclude
+        local hit = workspace:Raycast(Vector3.new(x, y + 80, z), Vector3.new(0, -160, 0), rp)
+        if hit then surf = hit.Position.Y end
+    end)
+    return surf
+end
+function S.SafeInvis.SinkNow()
+    local r = S.SafeInvis.Root()
+    if not r then return end
+    local d = mvClamp(SI.depth, 6, 40, 16)
+    local p = r.Position
+    SI._surfY = S.SafeInvis.ProbeSurf(p.X, p.Z, p.Y)
+    SI._underY = SI._surfY - d
+    SI._jump = 0
+    pcall(function()
+        r.CFrame = CFrame.new(p.X, SI._underY, p.Z) * (r.CFrame - r.Position)
+    end)
+end
+function S.SafeInvis.SetupCam()
+    S.SafeInvis.KillCam(true)
+    local part = New("Part", {
+        Name = "BC_SafeInvisCam", Size = Vector3.new(1, 1, 1), Transparency = 1,
+        Anchored = true, CanCollide = false, CastShadow = false, Massless = true,
+    }, workspace)
+    SI._camPart = part
+    local r = S.SafeInvis.Root()
+    if r then part.CFrame = CFrame.new(r.Position.X, SI._surfY + 2.5, r.Position.Z) end
+    pcall(function()
+        local cam = workspace.CurrentCamera
+        if cam then cam.CameraSubject = part end
+    end)
+end
+function S.SafeInvis.KillCam(keepType)
+    pcall(function()
+        local cam = workspace.CurrentCamera
+        local ch = S.SafeInvis.Char()
+        local hum = ch and ch:FindFirstChildOfClass("Humanoid")
+        if cam and hum then cam.CameraSubject = hum end
+    end)
+    pcall(function() if SI._camPart then SI._camPart:Destroy() end end)
+    SI._camPart = nil
+    keepType = keepType
+end
+function S.SafeInvis.Follow()
+    if not SI.on then return end
+    local r = S.SafeInvis.Root()
+    if not r then return end
+    local ch = S.SafeInvis.Char()
+    local hum = ch and ch:FindFirstChildOfClass("Humanoid")
+    local d = mvClamp(SI.depth, 6, 40, 16)
+    local p = r.Position
+    SI._surfY = S.SafeInvis.ProbeSurf(p.X, p.Z, SI._surfY ~= 0 and SI._surfY or p.Y)
+    SI._underY = SI._surfY - d
+    local space = false
+    pcall(function() space = UserInputService:IsKeyDown(Enum.KeyCode.Space) or UserInputService:IsKeyDown(Enum.KeyCode.ButtonA) end)
+    if hum then pcall(function() if hum.Jump then space = true end end) end
+    if space then SI._jump = math.min((SI._jump or 0) + 1.4, 12)
+    else SI._jump = math.max((SI._jump or 0) - 0.9, 0) end
+    pcall(function()
+        r.CFrame = CFrame.new(p.X, SI._underY + (SI._jump or 0), p.Z) * (r.CFrame - r.Position)
+    end)
+    local cp = SI._camPart
+    if not (cp and cp.Parent) then S.SafeInvis.SetupCam(); cp = SI._camPart end
+    if cp then
+        pcall(function() cp.CFrame = CFrame.new(p.X, SI._surfY + 2.5, p.Z) end)
+        pcall(function()
+            local cam = workspace.CurrentCamera
+            if cam and cam.CameraSubject ~= cp then cam.CameraSubject = cp end
+        end)
+    end
+end
+function S.SafeInvis.SurfaceNow()
+    local r = S.SafeInvis.Root()
+    if not r then return end
+    local p = r.Position
+    local y = (SI._surfY or p.Y) + 3
+    pcall(function() r.CFrame = CFrame.new(p.X, y, p.Z) * (r.CFrame - r.Position) end)
 end
 function S.SafeInvis.KillFly()
     SI.flying, SI._dest = false, nil
@@ -11209,107 +11294,15 @@ function S.SafeInvis.KillFly()
     pcall(function() if SI._bv then SI._bv:Destroy() end end)
     pcall(function() if SI._bg then SI._bg:Destroy() end end)
     SI._bv, SI._bg = nil, nil
-    local h = MV and MV.Hum and MV.Hum()
-    if h and not (MV.Safe and MV.Safe.on) and not MV.fly then
-        pcall(function() h.PlatformStand = false; h.AutoRotate = true end)
-    end
-    if SI._ncPrev ~= nil and not (MV.Safe and MV.Safe.on) then
-        local was = SI._ncPrev
-        SI._ncPrev = nil
-        pcall(function() MV.SetNoclip(was) end)
-    else
-        SI._ncPrev = nil
-    end
-end
-function S.SafeInvis.Land()
-    S.SafeInvis.KillFly()
-    S.SafeInvis.SyncHud()
-    if S.SyncSafeInvisPanel then pcall(S.SyncSafeInvisPanel) end
-end
-function S.SafeInvis.AimDest()
-    local cam = workspace.CurrentCamera
-    local hrp = S.SafeInvis.Root()
-    if not (cam and hrp) then return nil end
-    local look = cam.CFrame.LookVector
-    local origin = cam.CFrame.Position
-    local dest = origin + look * 80
-    pcall(function()
-        local rp = RaycastParams.new()
-        rp.FilterDescendantsInstances = { S.SafeInvis.Char() }
-        rp.FilterType = Enum.RaycastFilterType.Exclude
-        local hit = workspace:Raycast(origin, look * 400, rp)
-        if hit then dest = hit.Position + hit.Normal * 4 end
-    end)
-    return dest
-end
-function S.SafeInvis.EnsureBV()
-    local r = S.SafeInvis.Root()
-    if not r then return nil, nil end
-    if SI._bv and SI._bv.Parent == r and SI._bg and SI._bg.Parent == r then return SI._bv, SI._bg end
-    pcall(function() if SI._bv then SI._bv:Destroy() end end)
-    pcall(function() if SI._bg then SI._bg:Destroy() end end)
-    local bv = New("BodyVelocity", { Name = "BC_SafeInvisVel", MaxForce = Vector3.new(1e9, 1e9, 1e9), Velocity = Vector3.new(0,0,0) }, r)
-    local bg = New("BodyGyro", { Name = "BC_SafeInvisGyro", MaxTorque = Vector3.new(1e9, 1e9, 1e9), P = 1e4, D = 50 }, r)
-    SI._bv, SI._bg = bv, bg
-    local h = r.Parent and r.Parent:FindFirstChildOfClass("Humanoid")
-    if h then pcall(function() h.PlatformStand = true; h.AutoRotate = false end) end
-    return bv, bg
-end
-function S.SafeInvis.FlyStep(dt)
-    if not (SI.on and SI.flying) then return end
-    local r = S.SafeInvis.Root()
-    local dest = SI._dest
-    if not (r and dest) then return end
-    local bv, bg = S.SafeInvis.EnsureBV()
-    local pos = r.Position
-    local to = Vector3.new(dest.X - pos.X, dest.Y - pos.Y, dest.Z - pos.Z)
-    local dist = to.Magnitude
-    local spd = mvClamp(SI.speed, 1, 2000, 60)
-    if dist < 4 then
-        task.defer(S.SafeInvis.Land)
-        return
-    end
-    local vel = to.Unit * spd
-    if bv then bv.Velocity = vel
-    else
-        local step = spd * (tonumber(dt) or 0.016)
-        if step > dist then step = dist end
-        pcall(function() r.CFrame = CFrame.new(pos + to.Unit * step) end)
-    end
-    if bg then
-        local lookPos = pos + Vector3.new(to.X, 0, to.Z)
-        if (lookPos - pos).Magnitude > 0.1 then bg.CFrame = CFrame.new(pos, lookPos) end
-    end
-end
-function S.SafeInvis.FlyTo()
-    if not SI.on then return false end
-    if MV.Safe and MV.Safe.on then return false end
-    if MV.fly then pcall(function() MV.SetFly(false) end) end
-    local dest = S.SafeInvis.AimDest()
-    if not dest then return false end
-    SI._dest = dest
-    SI.flying = true
-    if SI._ncPrev == nil then SI._ncPrev = MV.noclip == true end
-    pcall(function() MV.SetNoclip(true) end)
-    S.SafeInvis.EnsureBV()
-    if not SI._flyBound then
-        SI._flyBound = true
-        pcall(function()
-            RunService:BindToRenderStep("BC_SafeInvisFly", 2, function(dt)
-                pcall(S.SafeInvis.FlyStep, dt)
-            end)
-        end)
-    end
-    pcall(function() if SI._hudBtn then SI._hudBtn.Text = "🛡" end end)
-    if S.SyncSafeInvisPanel then pcall(S.SyncSafeInvisPanel) end
-    return true
 end
 function S.SafeInvis.BindHide(on)
     if on and not SI._bound then
         SI._bound = true
         pcall(function()
             RunService:BindToRenderStep("BC_SafeInvis", Enum.RenderPriority.Last.Value, function()
-                if SI.on then pcall(S.SafeInvis.Apply) end
+                if not SI.on then return end
+                pcall(S.SafeInvis.Apply)
+                pcall(S.SafeInvis.Follow)
             end)
         end)
     elseif (not on) and SI._bound then
@@ -11338,7 +11331,7 @@ function S.SafeInvis.BuildHud()
     }, sg)
     local b = New("TextButton", {
         Name = "SafeInvisCircle", Size = UDim2.new(1, 0, 1, 0), Position = UDim2.new(0, 0, 0, 0),
-        Text = "👻", BackgroundColor3 = C.PURPLE, BackgroundTransparency = 0.15,
+        Text = "✕", BackgroundColor3 = C.RED, BackgroundTransparency = 0.12,
         TextColor3 = C.WHITE, Font = Enum.Font.GothamBold, TextSize = 26,
         BorderSizePixel = 0, ZIndex = 51, AutoButtonColor = false, Active = true,
     }, hud)
@@ -11370,8 +11363,8 @@ function S.SafeInvis.BuildHud()
     end))
     b.Activated:Connect(function()
         if SI.adjust or SI._dragMoved then SI._dragMoved = false return end
-        pcall(S.SafeInvis.FlyTo)
-        pcall(function() if D.Say then D.Say("👻 bay tới (🛡) — bấm lại để bay tiếp", C.ACCENT) end end)
+        pcall(function() S.SafeInvis.Set(false) end)
+        pcall(function() if D.Say then D.Say("👻 đã tắt toàn hình an toàn + 🧱 xuyên tường", C.YELLOW) end end)
     end)
     SI._sg, SI._hud, SI._hudBtn = sg, hud, b
     return hud
@@ -11385,8 +11378,8 @@ function S.SafeInvis.SyncHud()
         end
         if SI._sg then SI._sg.Enabled = (SI.on == true) end
         if SI._hudBtn then
-            SI._hudBtn.Text = SI.adjust and "📐" or (SI.flying and "🛡" or "👻")
-            D.SetBg(SI._hudBtn, SI.adjust and C.YELLOW or C.PURPLE)
+            SI._hudBtn.Text = SI.adjust and "📐" or "✕"
+            D.SetBg(SI._hudBtn, SI.adjust and C.YELLOW or C.RED)
         end
     end)
 end
@@ -11396,14 +11389,21 @@ function S.SafeInvis.Set(on)
         SI.adjust = false
         S.SafeInvis.KillFly()
         S.SafeInvis.BindHide(false)
+        S.SafeInvis.SurfaceNow()
+        S.SafeInvis.KillCam()
         S.SafeInvis.RestoreAll()
         SI.on = false
+        pcall(function() MV.SetNoclip(false) end)
         S.SafeInvis.SyncHud()
         if S.SyncSafeInvisPanel then pcall(S.SyncSafeInvisPanel) end
+        pcall(function() if S.Rebuild then S.Rebuild() end end)
         return false
     end
     SI.on = true
     SI.flying = false
+    pcall(function() MV.SetNoclip(true) end)
+    S.SafeInvis.SinkNow()
+    S.SafeInvis.SetupCam()
     S.SafeInvis.Apply()
     S.SafeInvis.BindHide(true)
     S.SafeInvis.SyncHud()
@@ -11415,19 +11415,24 @@ function S.SafeInvis.SetSpeed(n)
     if S.SyncSafeInvisPanel then pcall(S.SyncSafeInvisPanel) end
     return SI.speed
 end
+function S.SafeInvis.SetDepth(n)
+    SI.depth = mvClamp(n, 6, 40, SI.depth or 16)
+    if S.SyncSafeInvisPanel then pcall(S.SyncSafeInvisPanel) end
+    return SI.depth
+end
 function S.SafeInvis.Stop() return S.SafeInvis.Set(false) end
 function S.SafeInvis.Status()
     if not SI.on then return "👻 toàn hình an toàn: TẮT" end
-    local adj = SI.adjust and " · 📐 đang chỉnh nút" or " · 📐 tắt = không kéo nút"
-    if SI.flying then return "👻 đang BAY TỚI kiểu 🛡 · tốc độ " .. tostring(SI.speed) .. adj end
-    return "👻 toàn hình an toàn: BẬT · đi/nhảy · tốc độ " .. tostring(SI.speed) .. " · bấm nút nhiều lần" .. adj
+    return "👻 BẬT · xuyên tường + chìm đất · camera khán giả trên mặt đất (không xuyên tường) · chạy/nhảy · sâu " .. tostring(SI.depth)
 end
 do
     trackConn(player.CharacterAdded:Connect(function()
         if not SI.on then return end
-        task.delay(0.3, function()
+        task.delay(0.35, function()
             SI._orig = {}
-            if SI.flying then S.SafeInvis.KillFly() end
+            pcall(function() MV.SetNoclip(true) end)
+            S.SafeInvis.SinkNow()
+            S.SafeInvis.SetupCam()
             S.SafeInvis.Apply()
             S.SafeInvis.SyncHud()
         end)
@@ -11435,7 +11440,7 @@ do
 end
 -- ---------- HẾT 👻 TOÀN HÌNH AN TOÀN ----------
 
--- ---------- v4.47: KHUNG 👻 TOÀN HÌNH AN TOÀN ----------
+-- ---------- v4.48: KHUNG 👻 TOÀN HÌNH AN TOÀN ----------
 do
     local P = New("Frame", {
         Name = "HubSafeInvis_Panel", Size = UDim2.new(1, 0, 0, 118), LayoutOrder = 0,
@@ -11445,7 +11450,7 @@ do
     D.Shade(P, Color3.fromRGB(255,255,255), Color3.fromRGB(188,192,205), 90)
     New("TextLabel", {
         Size = UDim2.new(1, -16, 0, 16), Position = UDim2.new(0, 8, 0, 4),
-        Text = "👻 TOÀN HÌNH AN TOÀN — ẩn + đi/nhảy · nút tròn bay-tới 🛡",
+        Text = "👻 TOÀN HÌNH AN TOÀN — chìm đất · camera khán giả (không xuyên tường)",
         BackgroundTransparency = 1, TextColor3 = C.ACCENT, Font = Enum.Font.GothamBold, TextSize = 10,
         TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 7,
     }, P)
@@ -11460,17 +11465,17 @@ do
     end
     local onBtn = ibtn("SafeInvisOn", "👻 TẮT", 8, 24, 80, C.GRAY)
     New("TextLabel", {
-        Size = UDim2.new(0, 52, 0, 22), Position = UDim2.new(0, 92, 0, 24),
-        Text = "💨 tốc", BackgroundTransparency = 1, TextColor3 = C.MUTED,
+        Size = UDim2.new(0, 48, 0, 22), Position = UDim2.new(0, 92, 0, 24),
+        Text = "⬇ sâu", BackgroundTransparency = 1, TextColor3 = C.MUTED,
         Font = Enum.Font.GothamMedium, TextSize = 9, TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 7,
     }, P)
-    local spBox = New("TextBox", {
-        Name = "SafeInvisSpeed", Size = UDim2.new(0, 44, 0, 22), Position = UDim2.new(0, 140, 0, 24),
-        Text = tostring(S.SafeInvis.speed), ClearTextOnFocus = false, BackgroundColor3 = C.SURFACE2,
+    local dBox = New("TextBox", {
+        Name = "SafeInvisDepth", Size = UDim2.new(0, 44, 0, 22), Position = UDim2.new(0, 136, 0, 24),
+        Text = tostring(S.SafeInvis.depth), ClearTextOnFocus = false, BackgroundColor3 = C.SURFACE2,
         TextColor3 = C.DARK, Font = Enum.Font.GothamMedium, TextSize = 9, BorderSizePixel = 0, ZIndex = 8,
     }, P)
-    Corner(spBox, UDim.new(0, 6))
-    local flyBtn = ibtn("SafeInvisFly", "🛡 Bay tới", 190, 24, 72, C.PURPLE)
+    Corner(dBox, UDim.new(0, 6))
+    local offBtn = ibtn("SafeInvisOff", "✕ Tắt + 🧱", 186, 24, 88, C.RED)
     local adjBtn = ibtn("SafeInvisAdjust", "📐 Chỉnh nút: TẮT", 8, 50, 130, C.GRAY)
     local st = New("TextLabel", {
         Name = "SafeInvisStatus", Size = UDim2.new(1, -16, 0, 36), Position = UDim2.new(0, 8, 0, 76),
@@ -11483,8 +11488,8 @@ do
             D.SetBg(onBtn, S.SafeInvis.on and C.GREEN or C.GRAY)
             adjBtn.Text = S.SafeInvis.adjust and "📐 Chỉnh nút: BẬT" or "📐 Chỉnh nút: TẮT"
             D.SetBg(adjBtn, S.SafeInvis.adjust and C.YELLOW or C.GRAY)
-            if UserInputService:GetFocusedTextBox() ~= spBox then spBox.Text = tostring(S.SafeInvis.speed or 60) end
-            st.Text = S.SafeInvis.Status() .. " · 📐 BẬT = kéo nút. 📐 TẮT = không kéo, chỉ bấm bay."
+            if UserInputService:GetFocusedTextBox() ~= dBox then dBox.Text = tostring(S.SafeInvis.depth or 16) end
+            st.Text = S.SafeInvis.Status() .. " · nút ✕ trên màn hình tắt luôn 🧱 xuyên tường."
         end)
     end
     onBtn.Activated:Connect(function()
@@ -11492,12 +11497,9 @@ do
         S.RunHubAction("safeinvis")
         S.SyncSafeInvisPanel()
     end)
-    flyBtn.Activated:Connect(function()
+    offBtn.Activated:Connect(function()
         ReleaseHubFocus()
-        if not S.SafeInvis.on then S.SafeInvis.Set(true) end
-        local n = tonumber(spBox.Text)
-        if n then S.SafeInvis.SetSpeed(n) end
-        S.SafeInvis.FlyTo()
+        S.SafeInvis.Set(false)
         S.SyncSafeInvisPanel()
     end)
     adjBtn.Activated:Connect(function()
@@ -11506,9 +11508,9 @@ do
         S.SafeInvis.SetAdjust(not S.SafeInvis.adjust)
         S.SyncSafeInvisPanel()
     end)
-    spBox.FocusLost:Connect(function()
-        local n = tonumber(spBox.Text)
-        if n then S.SafeInvis.SetSpeed(n) end
+    dBox.FocusLost:Connect(function()
+        local n = tonumber(dBox.Text)
+        if n then S.SafeInvis.SetDepth(n) end
         S.SyncSafeInvisPanel()
     end)
     S.SyncSafeInvisPanel()
@@ -12817,7 +12819,7 @@ main.Visible = true
 togBtn.Text = "✕"
 
 print(string.format(
-    "✅ Banana Cat Hub v4.47 — sẵn sàng! Đã nạp lại %d script + %d waypoint + %d tab tính năng từ bộ nhớ (chế độ: %s%s)",
+    "✅ Banana Cat Hub v4.48 — sẵn sàng! Đã nạp lại %d script + %d waypoint + %d tab tính năng từ bộ nhớ (chế độ: %s%s)",
     Store.loadedScripts, Store.loadedWp, #Store.loadedFeatures, Store.mode,
     Store.lastError and (" | ⚠️ " .. Store.lastError) or ""
 ))
