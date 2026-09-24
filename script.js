@@ -1,5 +1,6 @@
 --[[
     🍌 Banana Cat Hub — FULL CODE  ·  OBSIDIAN NOIR + layout kiểu DELTA
+    v4.45: 👻 Toàn hình sửa — ẩn thật, chìm 1 nhịp rồi đứng mặt đất (không gãy rig).
     v4.44: 👻 Toàn hình — chìm xuống đất, camera/chạy/nhảy/nhặt đồ/cứu đồng đội giữ.
     v4.43: 🔐 Anti Ban — tự hop server khác khi bị kick/ban hoặc server nghi.
     v4.42: rút gọn comment/header — KHÔNG cắt hàm, khung, thẻ hay hành vi.
@@ -560,7 +561,7 @@ D.verPill = New("Frame", {
 Corner(D.verPill, UDim.new(1,0))
 Stroke(D.verPill, C.ACCENT2, 1)   -- v4.9: huy hiệu đen + viền đồng, chữ champagne
 New("TextLabel", {
-    Size=UDim2.new(1,0,1,0), Text="v4.44 · NOIR", BackgroundTransparency=1,
+    Size=UDim2.new(1,0,1,0), Text="v4.45 · NOIR", BackgroundTransparency=1,
     TextColor3=C.ACCENT3, Font=Enum.Font.GothamBold, TextSize=8, ZIndex=6,
 }, D.verPill)
 
@@ -3634,7 +3635,7 @@ function S.FitToTab(obj, nm)
 end
 
 _G.BananaCatHubAPI = {
-    Version = "4.44",
+    Version = "4.45",
     HubGui = gui,     -- v4.4e: sửa lỗi cũ — biến tên là `gui`, không phải `hubGui` (trước đây là nil)
     Main = main,
     TabArea = function(self, nm) return S.TabArea(nm) end,
@@ -8519,7 +8520,7 @@ S.ScriptHubList = {
     {icon="🪩", name="Thảm Kính", cat="Di chuyển", ord=16, action="carpet",
      desc="Thảm kính BÁM THEO chân (chạy trên không). Đặt kính cố định / bay tới kính / bay tới người nằm ở khung ⚙ trên danh sách và tab 👥 Người Chơi — không lặp thẻ."},
     {icon="👻", name="Toàn Hình", cat="Tiện ích", ord=21.5, action="invis",
-     desc="Nhân vật CHÌM XUỐNG ĐẤT để ẩn. HumanoidRootPart + camera giữ trên mặt đất nên vẫn chạy, nhảy, nhặt đồ, cứu đồng đội. 👁 Chỉ mình thấy / 👻 không ai thấy (kể cả mình). Không bật 🚀/🧱."},
+     desc="Ẩn THẬT (transparency). Bật là chìm xuống đất 1 nhịp rồi TRẢ nhân vật lên mặt đất — vẫn chạy, nhảy, nhặt đồ, cứu đồng đội, camera không bị cướp. 👁 Chỉ mình thấy / 👻 không ai thấy. Không bật 🚀/🧱, không tắt collide."},
     {icon="✨", name="Phát Sáng", cat="Tiện ích", ord=22, action="glow",
      desc="CHÍNH BẠN phát sáng: nhuộm sáng cả nhân vật + đèn toả sáng thật quanh người. Chỉnh CHIỀU RỘNG + ĐỘ SÁNG + MÀU ở khung ✨ ngay đầu danh sách. 👁 xuyên tường (sáng xuyên vật cản) · 💡 đèn không bị vật cản chặn · bị game xoá hay respawn thì tự gắn lại."},
     {icon="🛡", name="Bay An Toàn", cat="Di chuyển", ord=23, action="safefly",
@@ -11117,8 +11118,8 @@ do
     end))
 end
 
--- ---------- 👻 TOÀN HÌNH (v4.44) ----------
-S.Invis = S.Invis or { on = false, seeSelf = true, depth = 10, _bound = false, _orig = {}, _clone = nil, _acc = 0 }
+-- ---------- 👻 TOÀN HÌNH (v4.45) ----------
+S.Invis = S.Invis or { on = false, seeSelf = true, depth = 10, _bound = false, _orig = {}, _clone = nil, _map = {}, _didDive = false, _diving = false }
 local IV = S.Invis
 function S.Invis.Char() return player and player.Character or nil end
 function S.Invis.Root()
@@ -11129,9 +11130,10 @@ function S.Invis.Remember(inst)
     if IV._orig[inst] then return end
     local rec = {}
     pcall(function()
-        if inst:IsA("BasePart") then rec.t, rec.cc, rec.sh = inst.Transparency, inst.CanCollide, inst.CastShadow
+        if inst:IsA("BasePart") then rec.t, rec.sh = inst.Transparency, inst.CastShadow
         elseif inst:IsA("Decal") or inst:IsA("Texture") then rec.t = inst.Transparency
-        elseif inst:IsA("ParticleEmitter") or inst:IsA("Beam") or inst:IsA("Trail") then rec.en = inst.Enabled
+        elseif inst:IsA("ParticleEmitter") or inst:IsA("Beam") or inst:IsA("Trail") or inst:IsA("Fire") or inst:IsA("Smoke") then rec.en = inst.Enabled
+        elseif inst:IsA("BillboardGui") or inst:IsA("SurfaceGui") then rec.en = inst.Enabled
         elseif inst:IsA("Highlight") then rec.ft, rec.ot = inst.FillTransparency, inst.OutlineTransparency end
     end)
     IV._orig[inst] = rec
@@ -11142,10 +11144,10 @@ function S.Invis.RestoreAll()
             if not (inst and inst.Parent) then return end
             if inst:IsA("BasePart") then
                 inst.Transparency = rec.t or 0
-                if rec.cc ~= nil then inst.CanCollide = rec.cc end
                 if rec.sh ~= nil then inst.CastShadow = rec.sh end
             elseif inst:IsA("Decal") or inst:IsA("Texture") then inst.Transparency = rec.t or 0
-            elseif inst:IsA("ParticleEmitter") or inst:IsA("Beam") or inst:IsA("Trail") then inst.Enabled = rec.en
+            elseif inst:IsA("ParticleEmitter") or inst:IsA("Beam") or inst:IsA("Trail") or inst:IsA("Fire") or inst:IsA("Smoke") then inst.Enabled = rec.en
+            elseif inst:IsA("BillboardGui") or inst:IsA("SurfaceGui") then inst.Enabled = rec.en
             elseif inst:IsA("Highlight") then
                 inst.FillTransparency = rec.ft or 0
                 inst.OutlineTransparency = rec.ot or 0
@@ -11156,7 +11158,23 @@ function S.Invis.RestoreAll()
 end
 function S.Invis.KillClone()
     pcall(function() if IV._clone then IV._clone:Destroy() end end)
-    IV._clone = nil
+    IV._clone, IV._map = nil, {}
+end
+function S.Invis.EnsureClonePart(p)
+    if not (IV.seeSelf and IV._clone and p and p:IsA("BasePart")) then return end
+    if IV._map[p] and IV._map[p].Parent then return end
+    pcall(function()
+        local cp = p:Clone()
+        for _, d in ipairs(cp:GetChildren()) do
+            if d:IsA("Sound") or d:IsA("Script") or d:IsA("LocalScript") then d:Destroy() end
+        end
+        cp.Anchored = true
+        cp.CanCollide = false
+        cp.Massless = true
+        if p.Name ~= "HumanoidRootPart" and (tonumber(cp.Transparency) or 0) > 0.9 then cp.Transparency = 0 end
+        cp.Parent = IV._clone
+        IV._map[p] = cp
+    end)
 end
 function S.Invis.MakeClone()
     S.Invis.KillClone()
@@ -11164,31 +11182,35 @@ function S.Invis.MakeClone()
     local ch = S.Invis.Char()
     if not ch then return end
     pcall(function()
-        ch.Archivable = true
-        local cl = ch:Clone()
-        cl.Name = "BC_InvisClone"
-        for _, d in ipairs(cl:GetDescendants()) do
-            if d:IsA("BasePart") then d.Anchored = true; d.CanCollide = false; d.Massless = true
-            elseif d:IsA("Script") or d:IsA("LocalScript") or d:IsA("Sound") then d:Destroy()
-            elseif d:IsA("Humanoid") then
-                d.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.None
-                d.HealthDisplayType = Enum.HumanoidHealthDisplayType.AlwaysOff
-            end
-        end
+        local folder = Instance.new("Folder")
+        folder.Name = "BC_InvisClone"
         local cam = workspace.CurrentCamera
-        cl.Parent = cam or workspace
-        IV._clone = cl
+        folder.Parent = cam or workspace
+        IV._clone = folder
+        IV._map = {}
+        for _, p in ipairs(ch:GetDescendants()) do
+            if p:IsA("BasePart") then S.Invis.EnsureClonePart(p) end
+        end
     end)
 end
 function S.Invis.HideInst(inst)
-    if not inst or inst.Name == "HumanoidRootPart" then return end
-    if inst.Name == "BC_InvisClone" or (inst.Parent and inst.Parent.Name == "BC_InvisClone") then return end
+    if not inst then return end
+    local n = inst.Name
+    if n == "BC_InvisClone" then return end
+    local par = inst.Parent
+    while par do
+        if par.Name == "BC_InvisClone" then return end
+        par = par.Parent
+    end
     S.Invis.Remember(inst)
     pcall(function()
-        if inst:IsA("BasePart") then inst.Transparency = 1; inst.CanCollide = false; inst.CastShadow = false
+        if inst:IsA("BasePart") then
+            inst.Transparency = 1
+            inst.CastShadow = false
         elseif inst:IsA("Decal") or inst:IsA("Texture") then inst.Transparency = 1
-        elseif inst:IsA("ParticleEmitter") or inst:IsA("Beam") or inst:IsA("Trail") then inst.Enabled = false
-        elseif inst:IsA("Highlight") and inst.Name ~= "BC_GlowHL" then
+        elseif inst:IsA("ParticleEmitter") or inst:IsA("Beam") or inst:IsA("Trail") or inst:IsA("Fire") or inst:IsA("Smoke") then inst.Enabled = false
+        elseif inst:IsA("BillboardGui") or inst:IsA("SurfaceGui") then inst.Enabled = false
+        elseif inst:IsA("Highlight") and n ~= "BC_GlowHL" then
             inst.FillTransparency = 1; inst.OutlineTransparency = 1
         end
     end)
@@ -11204,33 +11226,39 @@ function S.Invis.Apply()
     end
 end
 function S.Invis.Sink()
-    if not IV.on then return end
+    if IV._diving or IV._didDive or not IV.on then return end
     local ch, hrp = S.Invis.Char(), S.Invis.Root()
     if not (ch and hrp) then return end
+    IV._diving = true
     local depth = tonumber(IV.depth) or 10
-    local base = hrp.CFrame * CFrame.new(0, -depth, 0)
+    local start = hrp.CFrame
+    local saved = {}
     for _, p in ipairs(ch:GetDescendants()) do
-        if p:IsA("BasePart") and p.Name ~= "HumanoidRootPart" then
-            local rel = hrp.CFrame:ToObjectSpace(p.CFrame)
-            p.CFrame = base * rel
-        end
+        if p:IsA("BasePart") then saved[p] = p.CanCollide; p.CanCollide = false end
     end
+    task.spawn(function()
+        for i = 1, 6 do
+            if not IV.on then break end
+            pcall(function() hrp.CFrame = start * CFrame.new(0, -depth * (i / 6), 0) end)
+            task.wait(0.05)
+        end
+        pcall(function() hrp.CFrame = start end)
+        for p, cc in pairs(saved) do
+            pcall(function() if p and p.Parent then p.CanCollide = cc end end)
+        end
+        IV._diving = false
+        IV._didDive = true
+    end)
 end
 function S.Invis.AlignClone()
-    local cl, ch, hrp = IV._clone, S.Invis.Char(), S.Invis.Root()
-    if not (IV.seeSelf and cl and ch and hrp) then return end
-    local depth = tonumber(IV.depth) or 10
-    local down = hrp.CFrame * CFrame.new(0, -depth, 0)
+    if not (IV.seeSelf and IV._clone) then return end
+    local ch = S.Invis.Char()
+    if not ch then return end
     for _, p in ipairs(ch:GetDescendants()) do
         if p:IsA("BasePart") then
-            local q = cl:FindFirstChild(p.Name, true)
-            if q and q:IsA("BasePart") then
-                if p.Name == "HumanoidRootPart" then q.CFrame = hrp.CFrame
-                else
-                    local rel = down:ToObjectSpace(p.CFrame)
-                    q.CFrame = hrp.CFrame * rel
-                end
-            end
+            S.Invis.EnsureClonePart(p)
+            local cp = IV._map[p]
+            if cp and cp.Parent then pcall(function() cp.CFrame = p.CFrame end) end
         end
     end
 end
@@ -11238,12 +11266,10 @@ function S.Invis.Bind(on)
     if on and not IV._bound then
         IV._bound = true
         pcall(function()
-            RunService:BindToRenderStep("BC_Invis", Enum.RenderPriority.Last.Value, function(dt)
+            RunService:BindToRenderStep("BC_Invis", Enum.RenderPriority.Character.Value + 2, function()
                 if not IV.on then return end
-                IV._acc = (IV._acc or 0) + (tonumber(dt) or 0.016)
-                pcall(S.Invis.Sink)
+                pcall(S.Invis.Apply)
                 pcall(S.Invis.AlignClone)
-                if IV._acc >= 0.4 then IV._acc = 0; pcall(S.Invis.Apply) end
             end)
         end)
     elseif (not on) and IV._bound then
@@ -11254,11 +11280,14 @@ end
 function S.Invis.Set(on)
     IV.on = (on == true)
     if IV.on then
+        IV._didDive = false
         if IV.seeSelf then S.Invis.MakeClone() end
-        S.Invis.Apply(); S.Invis.Bind(true)
+        S.Invis.Apply()
+        S.Invis.Sink()
+        S.Invis.Bind(true)
     else
         S.Invis.Bind(false); S.Invis.KillClone(); S.Invis.RestoreAll()
-        pcall(function() if MV.noclip and MV._NcStep then MV._NcStep() end end)
+        IV._didDive, IV._diving = false, false
     end
     if S.SyncInvisPanel then pcall(S.SyncInvisPanel) end
     return IV.on
@@ -11279,18 +11308,20 @@ end
 function S.Invis.Stop() return S.Invis.Set(false) end
 function S.Invis.Status()
     if not IV.on then return "👻 toàn hình: đang TẮT" end
-    return "👻 toàn hình: BẬT · chìm " .. tostring(IV.depth) .. " studs · "
+    return "👻 toàn hình: BẬT · chìm " .. tostring(IV.depth) .. " studs rồi đứng mặt đất · "
         .. (IV.seeSelf and "👁 chỉ mình thấy" or "👻 không ai thấy")
-        .. " · HRP/camera mặt đất · chạy nhảy nhặt đồ cứu đồng đội"
+        .. " · chạy nhảy nhặt đồ cứu đồng đội"
 end
 do
     trackConn(player.CharacterAdded:Connect(function()
         if not IV.on then return end
         task.delay(0.35, function()
             IV._orig = {}
+            IV._didDive = false
             S.Invis.KillClone()
             if IV.seeSelf then S.Invis.MakeClone() end
             S.Invis.Apply()
+            S.Invis.Sink()
         end)
     end))
 end
@@ -11307,7 +11338,7 @@ do
     D.Shade(P, Color3.fromRGB(255,255,255), Color3.fromRGB(188,192,205), 90)
     New("TextLabel", {
         Size = UDim2.new(1, -16, 0, 16), Position = UDim2.new(0, 8, 0, 4),
-        Text = "👻 TOÀN HÌNH — chìm xuống đất, camera + thao tác giữ",
+        Text = "👻 TOÀN HÌNH — ẩn thật, chìm 1 nhịp rồi đứng mặt đất",
         BackgroundTransparency = 1, TextColor3 = C.ACCENT, Font = Enum.Font.GothamBold, TextSize = 10,
         TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 7,
     }, P)
@@ -11345,7 +11376,7 @@ do
             seeBtn.Text = S.Invis.seeSelf and "👁 Chỉ mình thấy" or "👻 Không ai thấy"
             D.SetBg(seeBtn, S.Invis.seeSelf and C.GREEN or C.PURPLE)
             if UserInputService:GetFocusedTextBox() ~= dBox then dBox.Text = tostring(S.Invis.depth or 10) end
-            st.Text = S.Invis.Status() .. " · không cướp 🚀/🧱/camera."
+            st.Text = S.Invis.Status() .. " · không gãy rig · không cướp 🚀/🧱/camera."
         end)
     end
     onBtn.Activated:Connect(function()
@@ -12669,7 +12700,7 @@ main.Visible = true
 togBtn.Text = "✕"
 
 print(string.format(
-    "✅ Banana Cat Hub v4.44 — sẵn sàng! Đã nạp lại %d script + %d waypoint + %d tab tính năng từ bộ nhớ (chế độ: %s%s)",
+    "✅ Banana Cat Hub v4.45 — sẵn sàng! Đã nạp lại %d script + %d waypoint + %d tab tính năng từ bộ nhớ (chế độ: %s%s)",
     Store.loadedScripts, Store.loadedWp, #Store.loadedFeatures, Store.mode,
     Store.lastError and (" | ⚠️ " .. Store.lastError) or ""
 ))

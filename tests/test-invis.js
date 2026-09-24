@@ -1,10 +1,10 @@
 "use strict";
-/** v4.44 — 👻 Toàn hình: chìm xuống đất, HRP/camera giữ, vẫn chạy/nhảy/nhặt đồ */
+/** v4.45 — 👻 Toàn hình sửa: ẩn thật, chìm 1 nhịp rồi đứng mặt đất, không gãy rig */
 const fs = require("fs");
 const path = require("path");
 const src = fs.readFileSync(path.join(__dirname, "..", "script.js"), "utf8");
 
-const start = src.indexOf("-- ---------- 👻 TOÀN HÌNH (v4.44)");
+const start = src.indexOf("-- ---------- 👻 TOÀN HÌNH (v4.45)");
 const end = src.indexOf("-- ---------- HẾT 👻 TOÀN HÌNH ----------");
 if (start < 0 || end < 0) throw new Error("không tìm thấy engine 👻 Toàn hình");
 const eng = src.slice(start, end);
@@ -17,6 +17,14 @@ const panel = src.slice(pStart, pEnd);
 const m = src.match(/S\.ScriptHubList\s*=\s*\{([\s\S]*?)\nS\.hubFavs/);
 if (!m) throw new Error("không tìm thấy S.ScriptHubList");
 const list = m[1];
+
+function fnBody(name) {
+  const k = "function S.Invis." + name;
+  const i = eng.indexOf(k);
+  if (i < 0) return "";
+  const j = eng.indexOf("\nfunction S.Invis.", i + 1);
+  return eng.slice(i, j < 0 ? eng.length : j);
+}
 
 let pass = 0, fail = 0;
 function ok(name, cond, detail) {
@@ -38,11 +46,18 @@ ok("khung HubInvis_Panel", src.includes('Name = "HubInvis_Panel"') && panel.incl
 ok("HubPanelCat Invis = Tiện ích", src.includes('HubInvis_Panel = "Tiện ích"'));
 ok("RebuildHubList sync invis", src.includes("S.SyncInvisPanel"));
 
-console.log("== ẩn xuống đất nhưng HRP/camera/thao tác giữ ==");
-ok("chìm part theo depth, bỏ qua HumanoidRootPart",
-  eng.includes("CFrame.new(0, -depth, 0)") && eng.includes('p.Name ~= "HumanoidRootPart"'));
-ok("HideInst bỏ qua HumanoidRootPart (không tắt collide HRP)",
-  eng.includes('inst.Name == "HumanoidRootPart"'));
+console.log("== ẩn thật, không gãy rig, thao tác giữ ==");
+ok("HideInst ẩn Transparency, KHÔNG tắt CanCollide",
+  fnBody("HideInst").includes("Transparency = 1") && !fnBody("HideInst").includes("CanCollide"));
+ok("không dịch từng limb mỗi frame (không gãy rig)",
+  !/for _, p in ipairs\(ch:GetDescendants\(\)\) do\s+if p:IsA\("BasePart"\) and p\.Name ~= "HumanoidRootPart"/.test(eng));
+ok("Sink: chìm HRP 1 nhịp rồi trả start (mặt đất)",
+  fnBody("Sink").includes("CFrame.new(0, -depth") &&
+  fnBody("Sink").includes("hrp.CFrame = start") &&
+  fnBody("Sink").includes("_didDive"));
+ok("Bind Apply+AlignClone, không gọi Sink mỗi frame",
+  /BindToRenderStep\("BC_Invis"[\s\S]{0,280}S\.Invis\.Apply[\s\S]{0,80}S\.Invis\.AlignClone/.test(eng) &&
+  !/BindToRenderStep\("BC_Invis"[\s\S]{0,220}S\.Invis\.Sink/.test(eng));
 ok("không đổi CameraSubject / CameraType",
   !eng.includes("CameraSubject") && !eng.includes("CameraType") &&
   !panel.includes("CameraSubject"));
