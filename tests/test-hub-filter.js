@@ -31,12 +31,12 @@ const move = ["HubTune_Panel","HubFly_Panel","HubSpeed_Panel","HubHighJump_Panel
 ok("khung bay/nhảy/tốc độ/thảm/🛡 thuộc Di chuyển",
   map && move.every((k) => map[k] === "Di chuyển"), JSON.stringify(map));
 ok("✨ Glow thuộc Tiện ích", map && map.HubGlow_Panel === "Tiện ích");
-ok("👻 Toàn hình thuộc Tiện ích", map && map.HubInvis_Panel === "Tiện ích");
+ok("👻 Toàn hình an toàn thuộc Tiện ích", map && map.HubSafeInvis_Panel === "Tiện ích");
 ok("🔐 Anti Ban thuộc Server", map && map.HubAntiBan_Panel === "Server");
 ok("Admin/Explorer/Spy/Định vị không có khung 🦘/✨/🚀/👻",
-  map && ![...move, "HubGlow_Panel", "HubInvis_Panel"].some((k) => ["Admin","Explorer","Spy","Định vị"].includes(map[k])));
+  map && ![...move, "HubGlow_Panel", "HubSafeInvis_Panel"].some((k) => ["Admin","Explorer","Spy","Định vị"].includes(map[k])));
 ok("khung 🦘/✨/🚀/👻 không thuộc Server",
-  map && ![...move, "HubGlow_Panel", "HubInvis_Panel"].some((k) => map[k] === "Server"));
+  map && ![...move, "HubGlow_Panel", "HubSafeInvis_Panel"].some((k) => map[k] === "Server"));
 
 function vis(cat, panel) {
   const want = map[panel];
@@ -49,14 +49,14 @@ ok("chip Định vị ẩn nhảy cao + bay + phát sáng",
 ok("chip Di chuyển hiện tune/fly/speed/highjump/safe, ẩn glow/invis",
   vis("Di chuyển","HubTune_Panel") && vis("Di chuyển","HubFly_Panel") &&
   vis("Di chuyển","HubHighJump_Panel") && vis("Di chuyển","HubSafe_Panel") &&
-  !vis("Di chuyển","HubGlow_Panel") && !vis("Di chuyển","HubInvis_Panel"));
-ok("chip Tiện ích hiện glow + toàn hình, ẩn bay/nhảy",
-  vis("Tiện ích","HubGlow_Panel") && vis("Tiện ích","HubInvis_Panel") &&
+  !vis("Di chuyển","HubGlow_Panel") && !vis("Di chuyển","HubSafeInvis_Panel"));
+ok("chip Tiện ích hiện glow + toàn hình an toàn, ẩn bay/nhảy",
+  vis("Tiện ích","HubGlow_Panel") && vis("Tiện ích","HubSafeInvis_Panel") &&
   !vis("Tiện ích","HubFly_Panel") && !vis("Tiện ích","HubHighJump_Panel"));
 ok("chip Server hiện antiban, ẩn bay/nhảy/glow/invis",
   vis("Server","HubAntiBan_Panel") && !vis("Server","HubFly_Panel") &&
   !vis("Server","HubHighJump_Panel") && !vis("Server","HubGlow_Panel") &&
-  !vis("Server","HubInvis_Panel"));
+  !vis("Server","HubSafeInvis_Panel"));
 ok("chip Admin/Di chuyển ẩn antiban",
   !vis("Admin","HubAntiBan_Panel") && !vis("Di chuyển","HubAntiBan_Panel"));
 ok("Tất cả hiện cả glow và tune", vis("Tất cả","HubGlow_Panel") && vis("Tất cả","HubTune_Panel"));
