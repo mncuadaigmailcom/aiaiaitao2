@@ -5,3 +5,4 @@ require("./test-hub-dedupe.js");
 require("./test-hub-tune.js");
 require("./test-hub-filter.js");
 require("./test-antiban.js");
+require("./test-invis.js");
