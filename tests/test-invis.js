@@ -44,6 +44,9 @@ ok("camera part BC_SafeInvisCam + CameraSubject, KHÔNG CameraType (Popper vẫn
   !eng.includes("CameraType"));
 ok("Follow giữ nhân vật dưới đất, cam part trên mặt đất",
   fnBody("Follow").includes("_underY") && fnBody("Follow").includes("_surfY + 2.5"));
+ok("dưới đất vẫn đi được: MoveDir + WalkSpeed + WASD (không cần sàn Humanoid)",
+  src.includes("function S.SafeInvis.MoveDir") && src.includes("GetMoveVector") &&
+  fnBody("Follow").includes("WalkSpeed") && fnBody("Follow").includes("dir.X * spd * dt"));
 ok("PlatformStand = false (chạy/nhảy)",
   eng.includes("hum.PlatformStand = false") && eng.includes("hum.AutoRotate = true"));
 ok("LTM + RenderPriority.Last (Evade)",

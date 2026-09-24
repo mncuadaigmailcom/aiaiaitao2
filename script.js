@@ -1,5 +1,6 @@
 --[[
     🍌 Banana Cat Hub — FULL CODE  ·  OBSIDIAN NOIR + layout kiểu DELTA
+    v4.49: 👻 Toàn hình an toàn — đi được dưới đất (WASD/joystick, không cần sàn).
     v4.48: 👻 Toàn hình an toàn — chìm đất + noclip, camera khán giả không xuyên tường.
     v4.47: 👻 Toàn hình an toàn — Evade (LTM), bấm nút nhiều lần, 📐 chỉnh nút.
     v4.46: 👻 Toàn hình an toàn — ẩn + đi/nhảy, nút tròn bay-tới kiểu 🛡.
@@ -566,7 +567,7 @@ D.verPill = New("Frame", {
 Corner(D.verPill, UDim.new(1,0))
 Stroke(D.verPill, C.ACCENT2, 1)   -- v4.9: huy hiệu đen + viền đồng, chữ champagne
 New("TextLabel", {
-    Size=UDim2.new(1,0,1,0), Text="v4.48 · NOIR", BackgroundTransparency=1,
+    Size=UDim2.new(1,0,1,0), Text="v4.49 · NOIR", BackgroundTransparency=1,
     TextColor3=C.ACCENT3, Font=Enum.Font.GothamBold, TextSize=8, ZIndex=6,
 }, D.verPill)
 
@@ -3640,7 +3641,7 @@ function S.FitToTab(obj, nm)
 end
 
 _G.BananaCatHubAPI = {
-    Version = "4.48",
+    Version = "4.49",
     HubGui = gui,     -- v4.4e: sửa lỗi cũ — biến tên là `gui`, không phải `hubGui` (trước đây là nil)
     Main = main,
     TabArea = function(self, nm) return S.TabArea(nm) end,
@@ -11252,8 +11253,56 @@ function S.SafeInvis.KillCam(keepType)
     SI._camPart = nil
     keepType = keepType
 end
-function S.SafeInvis.Follow()
+function S.SafeInvis.MoveDir(dt)
+    local dir = Vector3.new(0, 0, 0)
+    local ch = S.SafeInvis.Char()
+    local hum = ch and ch:FindFirstChildOfClass("Humanoid")
+    pcall(function()
+        if hum and hum.MoveDirection.Magnitude > 0.05 then
+            dir = Vector3.new(hum.MoveDirection.X, 0, hum.MoveDirection.Z)
+        end
+    end)
+    if dir.Magnitude < 0.05 then
+        pcall(function()
+            if not SI._ctrls then
+                local ps = player:FindFirstChild("PlayerScripts")
+                local pm = ps and ps:FindFirstChild("PlayerModule")
+                if pm then SI._ctrls = require(pm):GetControls() end
+            end
+            local mv = SI._ctrls and SI._ctrls:GetMoveVector()
+            local cam = workspace.CurrentCamera
+            if cam and mv and mv.Magnitude > 0.05 then
+                local f = Vector3.new(cam.CFrame.LookVector.X, 0, cam.CFrame.LookVector.Z)
+                local rt = Vector3.new(cam.CFrame.RightVector.X, 0, cam.CFrame.RightVector.Z)
+                if f.Magnitude > 1e-3 then f = f.Unit end
+                if rt.Magnitude > 1e-3 then rt = rt.Unit end
+                dir = rt * mv.X + f * (-mv.Z)
+            end
+        end)
+    end
+    if dir.Magnitude < 0.05 then
+        pcall(function()
+            local cam = workspace.CurrentCamera
+            if not cam then return end
+            local f = Vector3.new(cam.CFrame.LookVector.X, 0, cam.CFrame.LookVector.Z)
+            local rt = Vector3.new(cam.CFrame.RightVector.X, 0, cam.CFrame.RightVector.Z)
+            if f.Magnitude > 1e-3 then f = f.Unit end
+            if rt.Magnitude > 1e-3 then rt = rt.Unit end
+            local d = Vector3.new(0, 0, 0)
+            if UserInputService:IsKeyDown(Enum.KeyCode.W) or UserInputService:IsKeyDown(Enum.KeyCode.Up) then d = d + f end
+            if UserInputService:IsKeyDown(Enum.KeyCode.S) or UserInputService:IsKeyDown(Enum.KeyCode.Down) then d = d - f end
+            if UserInputService:IsKeyDown(Enum.KeyCode.A) or UserInputService:IsKeyDown(Enum.KeyCode.Left) then d = d - rt end
+            if UserInputService:IsKeyDown(Enum.KeyCode.D) or UserInputService:IsKeyDown(Enum.KeyCode.Right) then d = d + rt end
+            dir = d
+        end)
+    end
+    if dir.Magnitude > 1e-3 then dir = dir.Unit end
+    return dir
+end
+function S.SafeInvis.Follow(dt)
     if not SI.on then return end
+    dt = tonumber(dt) or 0.016
+    if dt > 0.05 then dt = 0.05 end
     local r = S.SafeInvis.Root()
     if not r then return end
     local ch = S.SafeInvis.Char()
@@ -11267,8 +11316,21 @@ function S.SafeInvis.Follow()
     if hum then pcall(function() if hum.Jump then space = true end end) end
     if space then SI._jump = math.min((SI._jump or 0) + 1.4, 12)
     else SI._jump = math.max((SI._jump or 0) - 0.9, 0) end
+    local dir = S.SafeInvis.MoveDir(dt)
+    local spd = 16
+    pcall(function() if hum then spd = tonumber(hum.WalkSpeed) or 16 end end)
+    local nx, nz = p.X, p.Z
+    if dir.Magnitude > 0.05 then
+        nx = p.X + dir.X * spd * dt
+        nz = p.Z + dir.Z * spd * dt
+    end
+    local rot = r.CFrame - r.Position
+    if dir.Magnitude > 0.05 then
+        pcall(function() rot = CFrame.lookAt(Vector3.new(0, 0, 0), Vector3.new(dir.X, 0, dir.Z)) end)
+    end
     pcall(function()
-        r.CFrame = CFrame.new(p.X, SI._underY + (SI._jump or 0), p.Z) * (r.CFrame - r.Position)
+        r.CFrame = CFrame.new(nx, SI._underY + (SI._jump or 0), nz) * rot
+        r.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
     end)
     local cp = SI._camPart
     if not (cp and cp.Parent) then S.SafeInvis.SetupCam(); cp = SI._camPart end
@@ -11299,10 +11361,10 @@ function S.SafeInvis.BindHide(on)
     if on and not SI._bound then
         SI._bound = true
         pcall(function()
-            RunService:BindToRenderStep("BC_SafeInvis", Enum.RenderPriority.Last.Value, function()
+            RunService:BindToRenderStep("BC_SafeInvis", Enum.RenderPriority.Last.Value, function(dt)
                 if not SI.on then return end
                 pcall(S.SafeInvis.Apply)
-                pcall(S.SafeInvis.Follow)
+                pcall(S.SafeInvis.Follow, dt)
             end)
         end)
     elseif (not on) and SI._bound then
@@ -11423,7 +11485,7 @@ end
 function S.SafeInvis.Stop() return S.SafeInvis.Set(false) end
 function S.SafeInvis.Status()
     if not SI.on then return "👻 toàn hình an toàn: TẮT" end
-    return "👻 BẬT · xuyên tường + chìm đất · camera khán giả trên mặt đất (không xuyên tường) · chạy/nhảy · sâu " .. tostring(SI.depth)
+    return "👻 BẬT · xuyên tường + chìm đất · camera khán giả (không xuyên tường) · WASD/joystick đi được dưới đất · sâu " .. tostring(SI.depth)
 end
 do
     trackConn(player.CharacterAdded:Connect(function()
@@ -12819,7 +12881,7 @@ main.Visible = true
 togBtn.Text = "✕"
 
 print(string.format(
-    "✅ Banana Cat Hub v4.48 — sẵn sàng! Đã nạp lại %d script + %d waypoint + %d tab tính năng từ bộ nhớ (chế độ: %s%s)",
+    "✅ Banana Cat Hub v4.49 — sẵn sàng! Đã nạp lại %d script + %d waypoint + %d tab tính năng từ bộ nhớ (chế độ: %s%s)",
     Store.loadedScripts, Store.loadedWp, #Store.loadedFeatures, Store.mode,
     Store.lastError and (" | ⚠️ " .. Store.lastError) or ""
 ))
