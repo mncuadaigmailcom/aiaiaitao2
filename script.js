@@ -1,5 +1,6 @@
 --[[
     🍌 Banana Cat Hub — FULL CODE  ·  OBSIDIAN NOIR + layout kiểu DELTA
+    v4.43: 🔐 Anti Ban — tự hop server khác khi bị kick/ban hoặc server nghi.
     v4.42: rút gọn comment/header — KHÔNG cắt hàm, khung, thẻ hay hành vi.
     v4.41: chip Script Hub ẩn khung sai nhóm (Admin không còn 🦘/✨/🚀).
     v4.40: khung ⚙ TUỲ CHỈNH — 🚀 Bay · 💨 Tốc độ camera · 🦘 Nhảy cao · 👟 Di chuyển.
@@ -557,7 +558,7 @@ D.verPill = New("Frame", {
 Corner(D.verPill, UDim.new(1,0))
 Stroke(D.verPill, C.ACCENT2, 1)   -- v4.9: huy hiệu đen + viền đồng, chữ champagne
 New("TextLabel", {
-    Size=UDim2.new(1,0,1,0), Text="v4.42 · NOIR", BackgroundTransparency=1,
+    Size=UDim2.new(1,0,1,0), Text="v4.43 · NOIR", BackgroundTransparency=1,
     TextColor3=C.ACCENT3, Font=Enum.Font.GothamBold, TextSize=8, ZIndex=6,
 }, D.verPill)
 
@@ -3631,7 +3632,7 @@ function S.FitToTab(obj, nm)
 end
 
 _G.BananaCatHubAPI = {
-    Version = "4.42",
+    Version = "4.43",
     HubGui = gui,     -- v4.4e: sửa lỗi cũ — biến tên là `gui`, không phải `hubGui` (trước đây là nil)
     Main = main,
     TabArea = function(self, nm) return S.TabArea(nm) end,
@@ -8336,6 +8337,139 @@ function S.HopServer()
         .. " người) · tìm được " .. #cand .. " server khác để chọn, đã bỏ qua server hiện tại"
 end
 
+-- ---------- 🔐 ANTI BAN (v4.43) ----------
+S.AntiBan = S.AntiBan or {
+    on = (_G.BananaCatHub_AntiBan == true),
+    busy = false, lastHop = 0, cooldown = 10, hops = 0,
+    lastReason = "", armed = false, snaps = 0, snapAt = 0,
+}
+
+function S.AntiBanIsMsg(msg)
+    local s = string.lower(tostring(msg or ""))
+    if s == "" then return false end
+    local keys = {
+        "you have been banned", "you have been kicked", "you've been banned", "you've been kicked",
+        "banned from this", "kicked from this", "exploit detected", "cheat detected",
+        "cheats detected", "anti-cheat", "anticheat", "kicked by", "banned by",
+        "you are banned", "account banned", "game banned", "server banned", "client kicked",
+    }
+    for i = 1, #keys do
+        if string.find(s, keys[i], 1, true) then return true end
+    end
+    return false
+end
+
+function S.AntiBanStatus()
+    local a = S.AntiBan
+    if not a.on then return "🔐 Anti Ban: TẮT" end
+    local extra = (a.lastReason ~= "" and (" · lần cuối: " .. a.lastReason)) or ""
+    return "🔐 Anti Ban: BẬT · đã hop " .. tostring(a.hops) .. " lần · chờ " .. tostring(a.cooldown) .. "s" .. extra
+end
+
+function S.AntiBanHop(reason)
+    local a = S.AntiBan
+    if not a or not a.on then return false, "off" end
+    if a.busy then return false, "busy" end
+    local now = 0
+    pcall(function() now = tick() end)
+    local cd = tonumber(a.cooldown) or 10
+    if now > 0 and a.lastHop > 0 and (now - a.lastHop) < cd then return false, "cooldown" end
+    a.busy = true
+    a.lastHop = now
+    a.lastReason = tostring(reason or "suspect")
+    a.hops = (tonumber(a.hops) or 0) + 1
+    pcall(function() _G.BananaCatHub_AntiBan = true end)
+    local msg = "⚠️ chưa hop"
+    local ok = pcall(function() msg = S.HopServer() end)
+    if not ok then
+        pcall(function() TeleportService:Teleport(game.PlaceId, player) end)
+        msg = "🔐 không lấy danh sách được → rời PlaceId (không reset đúng server cũ)"
+    end
+    a.busy = false
+    pcall(function() if S.SyncAntiBanPanel then S.SyncAntiBanPanel() end end)
+    pcall(function() if D.Say then D.Say("🔐 " .. tostring(msg), C.ACCENT) end end)
+    return true, msg
+end
+
+function S.AntiBanSet(on)
+    S.AntiBan.on = on and true or false
+    pcall(function() _G.BananaCatHub_AntiBan = S.AntiBan.on end)
+    if S.AntiBan.on then S.AntiBanArm() end
+    if S.SyncAntiBanPanel then pcall(S.SyncAntiBanPanel) end
+    return S.AntiBan.on
+end
+
+function S.AntiBanArm()
+    if S.AntiBan.armed then return end
+    S.AntiBan.armed = true
+    pcall(function()
+        if type(hookfunction) == "function" then
+            local old
+            old = hookfunction(player.Kick, function(...)
+                if S.AntiBan.on then S.AntiBanHop("kick") return end
+                if old then return old(...) end
+            end)
+        end
+    end)
+    pcall(function()
+        trackConn(Players.PlayerRemoving:Connect(function(p)
+            if p == player and S.AntiBan.on then S.AntiBanHop("player_removing") end
+        end))
+    end)
+    pcall(function()
+        local gs = game:GetService("GuiService")
+        trackConn(gs.ErrorMessageChanged:Connect(function()
+            if not S.AntiBan.on then return end
+            local msg = ""
+            pcall(function() msg = tostring(gs.ErrorMessage or "") end)
+            if msg == "" then pcall(function() msg = tostring(gs:GetErrorMessage()) end) end
+            if S.AntiBanIsMsg(msg) then S.AntiBanHop("gui_error") end
+        end))
+    end)
+    pcall(function()
+        trackConn(TeleportService.TeleportInitFailed:Connect(function()
+            if not S.AntiBan.on then return end
+            task.delay(1.2, function()
+                S.AntiBan.busy = false
+                S.AntiBanHop("teleport_fail")
+            end)
+        end))
+    end)
+    pcall(function()
+        trackConn(game:GetService("LogService").MessageOut:Connect(function(msg)
+            if S.AntiBan.on and S.AntiBanIsMsg(msg) then S.AntiBanHop("log") end
+        end))
+    end)
+    local function watchHum(hum)
+        if not hum then return end
+        pcall(function()
+            trackConn(hum:GetPropertyChangedSignal("WalkSpeed"):Connect(function()
+                if not S.AntiBan.on then return end
+                local m = S.Move
+                local hot = m and (m.fly or m.noclip or m.sprint or m.infJump or m.highJump or (m.Safe and m.Safe.on))
+                if not hot then return end
+                local now = tick()
+                if now - (S.AntiBan.snapAt or 0) > 4 then S.AntiBan.snaps = 0 end
+                S.AntiBan.snapAt = now
+                S.AntiBan.snaps = (S.AntiBan.snaps or 0) + 1
+                if S.AntiBan.snaps >= 3 then
+                    S.AntiBan.snaps = 0
+                    S.AntiBanHop("speed_reset")
+                end
+            end))
+        end)
+    end
+    pcall(function()
+        if player.Character then watchHum(player.Character:FindFirstChildOfClass("Humanoid")) end
+        trackConn(player.CharacterAdded:Connect(function(ch)
+            task.wait(0.25)
+            watchHum(ch:FindFirstChildOfClass("Humanoid"))
+        end))
+    end)
+end
+if S.AntiBan.on then pcall(S.AntiBanArm) end
+-- ---------- HẾT 🔐 ANTI BAN ----------
+
 S.ScriptHubList = {
     {icon="🛡", name="Infinite Yield", cat="Admin", ord=1,
      desc="Admin commands: kill, speed, jump, noclip, teleport, bring, prefix tùy chỉnh...",
@@ -8363,6 +8497,8 @@ S.ScriptHubList = {
      desc="Vào lại ĐÚNG server đang chơi (giữ nguyên bạn bè/người chơi cùng server). Studio thì nạp lại game."},
     {icon="🔀", name="Hop Server", cat="Server", ord=10, action="hopserver",
      desc="Tự đi lấy mã server: đọc danh sách server công khai, bỏ server hiện tại + server đầy, nhảy sang 1 server khác."},
+    {icon="🔐", name="Anti Ban", cat="Server", ord=10.5, action="antiban",
+     desc="Tự hop SANG SERVER KHÁC (cùng game) khi bị kick/ban hoặc server nghi hành động (bay/xuyên/tốc độ bị reset). Đánh lạc hướng chủ server. Bấm lại để TẮT."},
     {icon="🌐", name="Lấy mã server (JobId)", cat="Server", ord=11, action="getjobid",
      desc="Đọc mã server hiện tại, copy ra clipboard và điền sẵn vào ô 🎟 để gửi cho bạn bè vào cùng."},
     {icon="🚀", name="Bay theo camera", cat="Di chuyển", ord=12, action="fly",
@@ -8439,6 +8575,12 @@ function S.RunHubAction(id)
                 .. " — vẫn dùng được ô 🎟 dán mã server bên dưới để vào thủ công"
         end
         return tostring(msg)
+    elseif id == "antiban" then
+        local wanted = not S.AntiBan.on
+        local okAb = pcall(function() S.AntiBanSet(wanted) end)
+        if not okAb then return "⚠️ chưa bật được Anti Ban" end
+        S.Rebuild()
+        return S.AntiBanStatus()
     elseif id == "getjobid" then
         local jid = S.GetJobId()
         if not jid then return "⚠️ Không đọc được mã server (đang ở Studio / server đơn)" end
@@ -8814,6 +8956,7 @@ S.HubPanelCat = {
     HubMove_Panel = "Di chuyển",
     HubSafe_Panel = "Di chuyển",
     HubGlow_Panel = "Tiện ích",
+    HubAntiBan_Panel = "Server",
 }
 function S.SyncHubPanels()
     local list = D.hubList
@@ -8972,6 +9115,7 @@ function S.RebuildHubList()
     if S.RefreshMovePanel then pcall(S.RefreshMovePanel) end   -- v4.12: nhãn trạng thái di chuyển
     if S.SyncGlowPanel then pcall(S.SyncGlowPanel) end         -- v4.16: nhãn khung ✨ phát sáng
     if S.SyncSafePanel then pcall(S.SyncSafePanel) end         -- v4.17: nhãn khung 🛡 bay an toàn
+    if S.SyncAntiBanPanel then pcall(S.SyncAntiBanPanel) end   -- v4.43: 🔐 anti ban
     if #items == 0 and D.hubStatus then
         D.Say("🔍 không tìm thấy gì khớp '" .. tostring(S.hubSearch or "") .. "'", C.MUTED)
     end
@@ -9138,6 +9282,79 @@ do
     S.SyncTunePanel()
 end
 -- ---------- HẾT KHUNG ⚙ TUỲ CHỈNH ----------
+
+-- ---------- v4.43: KHUNG 🔐 ANTI BAN ----------
+do
+    local P = New("Frame", {
+        Name = "HubAntiBan_Panel", Size = UDim2.new(1, 0, 0, 88), LayoutOrder = 3,
+        BackgroundColor3 = C.SURFACE, BackgroundTransparency = 0.12, BorderSizePixel = 0, ZIndex = 6,
+    }, D.hubList)
+    Corner(P, UDim.new(0, 10)); Stroke(P, C.HAIRLINE, 1)
+    D.Shade(P, Color3.fromRGB(255,255,255), Color3.fromRGB(188,192,205), 90)
+    New("TextLabel", {
+        Size = UDim2.new(1, -16, 0, 16), Position = UDim2.new(0, 8, 0, 4),
+        Text = "🔐 ANTI BAN — tự hop server khác khi bị nghi / định ban",
+        BackgroundTransparency = 1, TextColor3 = C.ACCENT, Font = Enum.Font.GothamBold, TextSize = 10,
+        TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 7,
+    }, P)
+    local function abtn(name, text, x, y, w, color)
+        local b = New("TextButton", {
+            Name = name, Text = text, Size = UDim2.new(0, w, 0, 22), Position = UDim2.new(0, x, 0, y),
+            BackgroundColor3 = color, TextColor3 = D.BestText(color), BorderSizePixel = 0,
+            Font = Enum.Font.GothamBold, TextSize = 9, ZIndex = 8,
+        }, P)
+        Corner(b, UDim.new(0, 6)); D.Tactile(b, 0.08)
+        return b
+    end
+    local onBtn = abtn("AntiBanOn", "🔐 TẮT", 8, 24, 88, C.GRAY)
+    local hopBtn = abtn("AntiBanHopNow", "🔀 Hop ngay", 100, 24, 88, C.PURPLE)
+    New("TextLabel", {
+        Size = UDim2.new(0, 52, 0, 22), Position = UDim2.new(0, 194, 0, 24),
+        Text = "⏳ chờ s", BackgroundTransparency = 1, TextColor3 = C.MUTED,
+        Font = Enum.Font.GothamMedium, TextSize = 9, TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 7,
+    }, P)
+    local cdBox = New("TextBox", {
+        Name = "AntiBanCooldown", Size = UDim2.new(0, 44, 0, 22), Position = UDim2.new(0, 246, 0, 24),
+        Text = tostring(S.AntiBan.cooldown), ClearTextOnFocus = false, BackgroundColor3 = C.SURFACE2,
+        TextColor3 = C.DARK, Font = Enum.Font.GothamMedium, TextSize = 9, BorderSizePixel = 0, ZIndex = 8,
+    }, P)
+    Corner(cdBox, UDim.new(0, 6))
+    local st = New("TextLabel", {
+        Name = "AntiBanStatus", Size = UDim2.new(1, -16, 0, 32), Position = UDim2.new(0, 8, 0, 50),
+        Text = "", BackgroundTransparency = 1, TextColor3 = C.MUTED, Font = Enum.Font.GothamMedium,
+        TextSize = 9, TextWrapped = true, TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 7,
+    }, P)
+    function S.SyncAntiBanPanel()
+        pcall(function()
+            onBtn.Text = S.AntiBan.on and "🔐 BẬT" or "🔐 TẮT"
+            D.SetBg(onBtn, S.AntiBan.on and C.GREEN or C.GRAY)
+            if UserInputService:GetFocusedTextBox() ~= cdBox then
+                cdBox.Text = tostring(S.AntiBan.cooldown or 10)
+            end
+            st.Text = S.AntiBanStatus() .. " · kick/ban/error → hop. Bay/xuyên bị reset tốc độ 3 lần/4s → hop. Không vào lại đúng server cũ."
+        end)
+    end
+    onBtn.Activated:Connect(function()
+        ReleaseHubFocus()
+        S.RunHubAction("antiban")
+        S.SyncAntiBanPanel()
+    end)
+    hopBtn.Activated:Connect(function()
+        ReleaseHubFocus()
+        if not S.AntiBan.on then S.AntiBanSet(true) end
+        local n = tonumber(cdBox.Text)
+        if n then S.AntiBan.cooldown = math.clamp(n, 3, 60) end
+        S.AntiBanHop("manual")
+        S.SyncAntiBanPanel()
+    end)
+    cdBox.FocusLost:Connect(function()
+        local n = tonumber(cdBox.Text)
+        if n then S.AntiBan.cooldown = math.clamp(n, 3, 60) end
+        S.SyncAntiBanPanel()
+    end)
+    S.SyncAntiBanPanel()
+end
+-- ---------- HẾT KHUNG 🔐 ANTI BAN ----------
 
 -- ---------- v4.36: KHUNG 🚀 BAY THEO CAMERA (công tắc 🧱 độc lập) ----------
 do
@@ -12190,7 +12407,7 @@ main.Visible = true
 togBtn.Text = "✕"
 
 print(string.format(
-    "✅ Banana Cat Hub v4.42 — sẵn sàng! Đã nạp lại %d script + %d waypoint + %d tab tính năng từ bộ nhớ (chế độ: %s%s)",
+    "✅ Banana Cat Hub v4.43 — sẵn sàng! Đã nạp lại %d script + %d waypoint + %d tab tính năng từ bộ nhớ (chế độ: %s%s)",
     Store.loadedScripts, Store.loadedWp, #Store.loadedFeatures, Store.mode,
     Store.lastError and (" | ⚠️ " .. Store.lastError) or ""
 ))

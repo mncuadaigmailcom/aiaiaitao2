@@ -31,8 +31,11 @@ const move = ["HubTune_Panel","HubFly_Panel","HubSpeed_Panel","HubHighJump_Panel
 ok("khung bay/nhảy/tốc độ/thảm/🛡 thuộc Di chuyển",
   map && move.every((k) => map[k] === "Di chuyển"), JSON.stringify(map));
 ok("✨ Glow thuộc Tiện ích", map && map.HubGlow_Panel === "Tiện ích");
-ok("Admin/Explorer/Spy/Server/Định vị không có khung 🦘/✨/🚀",
-  map && !Object.values(map).some((v) => ["Admin","Explorer","Spy","Server","Định vị"].includes(v)));
+ok("🔐 Anti Ban thuộc Server", map && map.HubAntiBan_Panel === "Server");
+ok("Admin/Explorer/Spy/Định vị không có khung 🦘/✨/🚀",
+  map && ![...move, "HubGlow_Panel"].some((k) => ["Admin","Explorer","Spy","Định vị"].includes(map[k])));
+ok("khung 🦘/✨/🚀 không thuộc Server",
+  map && ![...move, "HubGlow_Panel"].some((k) => map[k] === "Server"));
 
 function vis(cat, panel) {
   const want = map[panel];
@@ -48,6 +51,11 @@ ok("chip Di chuyển hiện tune/fly/speed/highjump/safe, ẩn glow",
   !vis("Di chuyển","HubGlow_Panel"));
 ok("chip Tiện ích hiện glow, ẩn bay/nhảy",
   vis("Tiện ích","HubGlow_Panel") && !vis("Tiện ích","HubFly_Panel") && !vis("Tiện ích","HubHighJump_Panel"));
+ok("chip Server hiện antiban, ẩn bay/nhảy/glow",
+  vis("Server","HubAntiBan_Panel") && !vis("Server","HubFly_Panel") &&
+  !vis("Server","HubHighJump_Panel") && !vis("Server","HubGlow_Panel"));
+ok("chip Admin/Di chuyển ẩn antiban",
+  !vis("Admin","HubAntiBan_Panel") && !vis("Di chuyển","HubAntiBan_Panel"));
 ok("Tất cả hiện cả glow và tune", vis("Tất cả","HubGlow_Panel") && vis("Tất cả","HubTune_Panel"));
 
 console.log("== không mất tính năng ==");
