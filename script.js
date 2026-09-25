@@ -1,5 +1,6 @@
 --[[
     🍌 Banana Cat Hub — FULL CODE  ·  OBSIDIAN NOIR + layout kiểu DELTA
+    v4.50: 👻 Toàn hình an toàn — camera trên mặt đất chạy/nhảy, nhân vật chìm đất, nút ✕ bấm nhiều lần.
     v4.49: 👻 Toàn hình an toàn — đi được dưới đất (WASD/joystick, không cần sàn).
     v4.48: 👻 Toàn hình an toàn — chìm đất + noclip, camera khán giả không xuyên tường.
     v4.47: 👻 Toàn hình an toàn — Evade (LTM), bấm nút nhiều lần, 📐 chỉnh nút.
@@ -567,7 +568,7 @@ D.verPill = New("Frame", {
 Corner(D.verPill, UDim.new(1,0))
 Stroke(D.verPill, C.ACCENT2, 1)   -- v4.9: huy hiệu đen + viền đồng, chữ champagne
 New("TextLabel", {
-    Size=UDim2.new(1,0,1,0), Text="v4.49 · NOIR", BackgroundTransparency=1,
+    Size=UDim2.new(1,0,1,0), Text="v4.50 · NOIR", BackgroundTransparency=1,
     TextColor3=C.ACCENT3, Font=Enum.Font.GothamBold, TextSize=8, ZIndex=6,
 }, D.verPill)
 
@@ -3641,7 +3642,7 @@ function S.FitToTab(obj, nm)
 end
 
 _G.BananaCatHubAPI = {
-    Version = "4.49",
+    Version = "4.50",
     HubGui = gui,     -- v4.4e: sửa lỗi cũ — biến tên là `gui`, không phải `hubGui` (trước đây là nil)
     Main = main,
     TabArea = function(self, nm) return S.TabArea(nm) end,
@@ -11125,7 +11126,7 @@ do
     end))
 end
 
--- ---------- 👻 TOÀN HÌNH AN TOÀN (v4.48) ----------
+-- ---------- 👻 TOÀN HÌNH AN TOÀN (v4.50) ----------
 S.SafeInvis = S.SafeInvis or {
     on = false, flying = false, adjust = false, speed = 60, depth = 16,
     _bound = false, _flyBound = false, _orig = {}, _hud = nil, _sg = nil,
@@ -11221,8 +11222,12 @@ function S.SafeInvis.SinkNow()
     if not r then return end
     local d = mvClamp(SI.depth, 6, 40, 16)
     local p = r.Position
+    SI._cx, SI._cz = p.X, p.Z
     SI._surfY = S.SafeInvis.ProbeSurf(p.X, p.Z, p.Y)
     SI._underY = SI._surfY - d
+    SI._camY = SI._surfY + 2.5
+    SI._camVelY = 0
+    SI._grounded = true
     SI._jump = 0
     pcall(function()
         r.CFrame = CFrame.new(p.X, SI._underY, p.Z) * (r.CFrame - r.Position)
@@ -11307,35 +11312,57 @@ function S.SafeInvis.Follow(dt)
     if not r then return end
     local ch = S.SafeInvis.Char()
     local hum = ch and ch:FindFirstChildOfClass("Humanoid")
-    local d = mvClamp(SI.depth, 6, 40, 16)
-    local p = r.Position
-    SI._surfY = S.SafeInvis.ProbeSurf(p.X, p.Z, SI._surfY ~= 0 and SI._surfY or p.Y)
-    SI._underY = SI._surfY - d
-    local space = false
-    pcall(function() space = UserInputService:IsKeyDown(Enum.KeyCode.Space) or UserInputService:IsKeyDown(Enum.KeyCode.ButtonA) end)
-    if hum then pcall(function() if hum.Jump then space = true end end) end
-    if space then SI._jump = math.min((SI._jump or 0) + 1.4, 12)
-    else SI._jump = math.max((SI._jump or 0) - 0.9, 0) end
+    local dpth = mvClamp(SI.depth, 6, 40, 16)
+    if SI._cx == nil then
+        local p0 = r.Position
+        SI._cx, SI._cz = p0.X, p0.Z
+        SI._camY = (SI._surfY or p0.Y) + 2.5
+        SI._camVelY = 0
+        SI._grounded = true
+    end
     local dir = S.SafeInvis.MoveDir(dt)
     local spd = 16
     pcall(function() if hum then spd = tonumber(hum.WalkSpeed) or 16 end end)
-    local nx, nz = p.X, p.Z
     if dir.Magnitude > 0.05 then
-        nx = p.X + dir.X * spd * dt
-        nz = p.Z + dir.Z * spd * dt
+        SI._cx = SI._cx + dir.X * spd * dt
+        SI._cz = SI._cz + dir.Z * spd * dt
+    end
+    SI._surfY = S.SafeInvis.ProbeSurf(SI._cx, SI._cz, SI._surfY ~= 0 and SI._surfY or r.Position.Y)
+    SI._underY = SI._surfY - dpth
+    local space = false
+    pcall(function() space = UserInputService:IsKeyDown(Enum.KeyCode.Space) or UserInputService:IsKeyDown(Enum.KeyCode.ButtonA) end)
+    if hum then pcall(function() if hum.Jump then space = true end end) end
+    local floor = SI._surfY + 2.5
+    if SI._grounded ~= false and space then
+        local jp = 50
+        pcall(function() if hum then jp = tonumber(hum.JumpPower) or tonumber(hum.JumpHeight and hum.JumpHeight * 8) or 50 end end)
+        SI._camVelY = jp
+        SI._grounded = false
+    end
+    if SI._grounded == false then
+        SI._camVelY = (SI._camVelY or 0) - 90 * dt
+        SI._camY = (SI._camY or floor) + (SI._camVelY or 0) * dt
+        if SI._camY <= floor then
+            SI._camY = floor
+            SI._camVelY = 0
+            SI._grounded = true
+        end
+    else
+        SI._camY = floor
+        SI._camVelY = 0
     end
     local rot = r.CFrame - r.Position
     if dir.Magnitude > 0.05 then
         pcall(function() rot = CFrame.lookAt(Vector3.new(0, 0, 0), Vector3.new(dir.X, 0, dir.Z)) end)
     end
     pcall(function()
-        r.CFrame = CFrame.new(nx, SI._underY + (SI._jump or 0), nz) * rot
+        r.CFrame = CFrame.new(SI._cx, SI._underY, SI._cz) * rot
         r.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
     end)
     local cp = SI._camPart
     if not (cp and cp.Parent) then S.SafeInvis.SetupCam(); cp = SI._camPart end
     if cp then
-        pcall(function() cp.CFrame = CFrame.new(p.X, SI._surfY + 2.5, p.Z) end)
+        pcall(function() cp.CFrame = CFrame.new(SI._cx, SI._camY or floor, SI._cz) end)
         pcall(function()
             local cam = workspace.CurrentCamera
             if cam and cam.CameraSubject ~= cp then cam.CameraSubject = cp end
@@ -11345,9 +11372,10 @@ end
 function S.SafeInvis.SurfaceNow()
     local r = S.SafeInvis.Root()
     if not r then return end
-    local p = r.Position
-    local y = (SI._surfY or p.Y) + 3
-    pcall(function() r.CFrame = CFrame.new(p.X, y, p.Z) * (r.CFrame - r.Position) end)
+    local x = SI._cx or r.Position.X
+    local z = SI._cz or r.Position.Z
+    local y = (SI._surfY or r.Position.Y) + 3
+    pcall(function() r.CFrame = CFrame.new(x, y, z) * (r.CFrame - r.Position) end)
 end
 function S.SafeInvis.KillFly()
     SI.flying, SI._dest = false, nil
@@ -11423,29 +11451,42 @@ function S.SafeInvis.BuildHud()
             SI._dragging = false
         end
     end))
-    b.Activated:Connect(function()
+    local function pressHud()
         if SI.adjust or SI._dragMoved then SI._dragMoved = false return end
-        pcall(function() S.SafeInvis.Set(false) end)
-        pcall(function() if D.Say then D.Say("👻 đã tắt toàn hình an toàn + 🧱 xuyên tường", C.YELLOW) end end)
-    end)
+        local now = 0
+        pcall(function() now = tick() end)
+        if SI._pressAt and now > 0 and (now - SI._pressAt) < 0.15 then return end
+        SI._pressAt = now
+        SI._dragMoved = false
+        local want = not SI.on
+        pcall(function() S.SafeInvis.Set(want, true) end)
+        pcall(function()
+            if D.Say then
+                D.Say(SI.on and "👻 toàn hình an toàn: BẬT" or "👻 đã tắt toàn hình an toàn + 🧱 xuyên tường", SI.on and C.GREEN or C.YELLOW)
+            end
+        end)
+    end
+    b.Activated:Connect(pressHud)
     SI._sg, SI._hud, SI._hudBtn = sg, hud, b
     return hud
 end
 function S.SafeInvis.SyncHud()
     pcall(function()
         local hud = S.SafeInvis.BuildHud()
+        local show = (SI.on == true) or (SI._showHud == true)
         if hud then
-            hud.Visible = (SI.on == true)
+            hud.Visible = show
             hud.Position = SI.hudPos or hud.Position
         end
-        if SI._sg then SI._sg.Enabled = (SI.on == true) end
+        if SI._sg then SI._sg.Enabled = show end
         if SI._hudBtn then
-            SI._hudBtn.Text = SI.adjust and "📐" or "✕"
-            D.SetBg(SI._hudBtn, SI.adjust and C.YELLOW or C.RED)
+            if SI.adjust then SI._hudBtn.Text = "📐"; D.SetBg(SI._hudBtn, C.YELLOW)
+            elseif SI.on then SI._hudBtn.Text = "✕"; D.SetBg(SI._hudBtn, C.RED)
+            else SI._hudBtn.Text = "👻"; D.SetBg(SI._hudBtn, C.PURPLE) end
         end
     end)
 end
-function S.SafeInvis.Set(on)
+function S.SafeInvis.Set(on, keepHud)
     local want = (on == true)
     if not want then
         SI.adjust = false
@@ -11455,6 +11496,7 @@ function S.SafeInvis.Set(on)
         S.SafeInvis.KillCam()
         S.SafeInvis.RestoreAll()
         SI.on = false
+        SI._showHud = (keepHud == true)
         pcall(function() MV.SetNoclip(false) end)
         S.SafeInvis.SyncHud()
         if S.SyncSafeInvisPanel then pcall(S.SyncSafeInvisPanel) end
@@ -11462,6 +11504,7 @@ function S.SafeInvis.Set(on)
         return false
     end
     SI.on = true
+    SI._showHud = true
     SI.flying = false
     pcall(function() MV.SetNoclip(true) end)
     S.SafeInvis.SinkNow()
@@ -11485,7 +11528,7 @@ end
 function S.SafeInvis.Stop() return S.SafeInvis.Set(false) end
 function S.SafeInvis.Status()
     if not SI.on then return "👻 toàn hình an toàn: TẮT" end
-    return "👻 BẬT · xuyên tường + chìm đất · camera khán giả (không xuyên tường) · WASD/joystick đi được dưới đất · sâu " .. tostring(SI.depth)
+    return "👻 BẬT · nhân vật chìm đất + xuyên tường · camera trên mặt đất chạy/nhảy · nút ✕ tắt (bấm lại để bật) · sâu " .. tostring(SI.depth)
 end
 do
     trackConn(player.CharacterAdded:Connect(function()
@@ -11502,7 +11545,7 @@ do
 end
 -- ---------- HẾT 👻 TOÀN HÌNH AN TOÀN ----------
 
--- ---------- v4.48: KHUNG 👻 TOÀN HÌNH AN TOÀN ----------
+-- ---------- v4.50: KHUNG 👻 TOÀN HÌNH AN TOÀN ----------
 do
     local P = New("Frame", {
         Name = "HubSafeInvis_Panel", Size = UDim2.new(1, 0, 0, 118), LayoutOrder = 0,
@@ -12881,7 +12924,7 @@ main.Visible = true
 togBtn.Text = "✕"
 
 print(string.format(
-    "✅ Banana Cat Hub v4.49 — sẵn sàng! Đã nạp lại %d script + %d waypoint + %d tab tính năng từ bộ nhớ (chế độ: %s%s)",
+    "✅ Banana Cat Hub v4.50 — sẵn sàng! Đã nạp lại %d script + %d waypoint + %d tab tính năng từ bộ nhớ (chế độ: %s%s)",
     Store.loadedScripts, Store.loadedWp, #Store.loadedFeatures, Store.mode,
     Store.lastError and (" | ⚠️ " .. Store.lastError) or ""
 ))

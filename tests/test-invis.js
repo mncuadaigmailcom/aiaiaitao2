@@ -1,15 +1,15 @@
 "use strict";
-/** v4.48 — 👻 chìm đất + noclip, camera khán giả không xuyên tường, nút ✕ tắt cả 🧱 */
+/** v4.50 — 👻 camera trên mặt đất chạy/nhảy, nhân vật chìm đất, nút bấm nhiều lần */
 const fs = require("fs");
 const path = require("path");
 const src = fs.readFileSync(path.join(__dirname, "..", "script.js"), "utf8");
 
-const start = src.indexOf("-- ---------- 👻 TOÀN HÌNH AN TOÀN (v4.48)");
+const start = src.indexOf("-- ---------- 👻 TOÀN HÌNH AN TOÀN (v4.50)");
 const end = src.indexOf("-- ---------- HẾT 👻 TOÀN HÌNH AN TOÀN ----------");
 if (start < 0 || end < 0) throw new Error("không tìm thấy engine 👻 Toàn hình an toàn");
 const eng = src.slice(start, end);
 
-const pStart = src.indexOf("-- ---------- v4.48: KHUNG 👻 TOÀN HÌNH AN TOÀN");
+const pStart = src.indexOf("-- ---------- v4.50: KHUNG 👻 TOÀN HÌNH AN TOÀN");
 const pEnd = src.indexOf("-- ---------- HẾT KHUNG 👻 TOÀN HÌNH AN TOÀN ----------");
 if (pStart < 0 || pEnd < 0) throw new Error("không tìm thấy HubSafeInvis_Panel");
 const panel = src.slice(pStart, pEnd);
@@ -42,11 +42,13 @@ ok("bật: SetNoclip(true) + SinkNow xuống dưới đất",
 ok("camera part BC_SafeInvisCam + CameraSubject, KHÔNG CameraType (Popper vẫn chặn tường)",
   eng.includes("BC_SafeInvisCam") && eng.includes("cam.CameraSubject") &&
   !eng.includes("CameraType"));
-ok("Follow giữ nhân vật dưới đất, cam part trên mặt đất",
-  fnBody("Follow").includes("_underY") && fnBody("Follow").includes("_surfY + 2.5"));
-ok("dưới đất vẫn đi được: MoveDir + WalkSpeed + WASD (không cần sàn Humanoid)",
+ok("Follow: camera chạy trên mặt đất, nhân vật theo XZ dưới đất",
+  fnBody("Follow").includes("_underY") && fnBody("Follow").includes("_surfY + 2.5") &&
+  fnBody("Follow").includes("SI._cx") && fnBody("Follow").includes("cp.CFrame"));
+ok("camera chạy/nhảy bình thường (WalkSpeed + JumpPower + gravity)",
   src.includes("function S.SafeInvis.MoveDir") && src.includes("GetMoveVector") &&
-  fnBody("Follow").includes("WalkSpeed") && fnBody("Follow").includes("dir.X * spd * dt"));
+  fnBody("Follow").includes("WalkSpeed") && fnBody("Follow").includes("dir.X * spd * dt") &&
+  fnBody("Follow").includes("JumpPower") && fnBody("Follow").includes("_camVelY"));
 ok("PlatformStand = false (chạy/nhảy)",
   eng.includes("hum.PlatformStand = false") && eng.includes("hum.AutoRotate = true"));
 ok("LTM + RenderPriority.Last (Evade)",
@@ -54,9 +56,9 @@ ok("LTM + RenderPriority.Last (Evade)",
   eng.includes("Enum.RenderPriority.Last.Value"));
 
 console.log("== nút màn hình tắt cả 🧱 ==");
-ok("nút tròn Activated gọi Set(false)",
-  /SafeInvisCircle[\s\S]{0,900}S\.SafeInvis\.Set\(false\)/.test(eng) ||
-  /b\.Activated:Connect[\s\S]{0,400}Set\(false\)/.test(eng));
+ok("nút HUD bấm nhiều lần (toggle Set(want, true))",
+  eng.includes("function pressHud") && eng.includes("S.SafeInvis.Set(want, true)") &&
+  eng.includes("not SI.on"));
 ok("Set(false) luôn SetNoclip(false) (tắt xuyên tường trên Script Hub)",
   fnBody("Set").includes("SetNoclip(false)"));
 ok("tắt: SurfaceNow + KillCam trả camera Humanoid",
