@@ -1,5 +1,6 @@
 --[[
     🍌 Banana Cat Hub — FULL CODE  ·  OBSIDIAN NOIR + layout kiểu DELTA
+    v4.64: 🎥 Khán giả — camera bay khắp nơi (giống 🚀), nhân vật đứng yên. Xóa 👻 toàn hình.
     v4.63: 👻 Toàn hình — nhảy: ảo không bám Away, không trượt XZ, camera không nghiêng.
     v4.62: 👻 Toàn hình — nhảy không làm nhân vật ảo trượt một hướng.
     v4.61: 👻 Toàn hình — tắt/trận mới: camera bám Humanoid nhân vật hiện tại.
@@ -109,6 +110,7 @@ end
 pcall(function() RunService:UnbindFromRenderStep("Fly") end)
 pcall(function() RunService:UnbindFromRenderStep("Carpet") end)
 pcall(function() RunService:UnbindFromRenderStep("BC_Speed") end)
+pcall(function() RunService:UnbindFromRenderStep("BC_FreeCam") end)
 pcall(function() RunService:UnbindFromRenderStep("BC_Invis") end)
 pcall(function() RunService:UnbindFromRenderStep("BC_InvisNet") end)
 pcall(function() RunService:UnbindFromRenderStep("BC_SafeInvis") end)
@@ -575,7 +577,7 @@ D.verPill = New("Frame", {
 Corner(D.verPill, UDim.new(1,0))
 Stroke(D.verPill, C.ACCENT2, 1)   -- v4.9: huy hiệu đen + viền đồng, chữ champagne
 New("TextLabel", {
-    Size=UDim2.new(1,0,1,0), Text="v4.63 · NOIR", BackgroundTransparency=1,
+    Size=UDim2.new(1,0,1,0), Text="v4.64 · NOIR", BackgroundTransparency=1,
     TextColor3=C.ACCENT3, Font=Enum.Font.GothamBold, TextSize=8, ZIndex=6,
 }, D.verPill)
 
@@ -8216,7 +8218,7 @@ S.MoveActionState = {
     loc_solo = function() return S.Loc and S.Loc.solo end,
     spec_on  = function() return S.Spec and S.Spec.on   end,
     glow     = function() return S.Glow and S.Glow.on   end,
-    invis    = function() return S.Invis and S.Invis.on end,
+    freecam  = function() return S.Free and S.Free.on end,
     safefly  = function() return S.Move.Safe and S.Move.Safe.on end,
 }
 
@@ -8533,8 +8535,8 @@ S.ScriptHubList = {
      desc="Y HỆT '🕹️ Bay chạy bộ' của aiaiaitao3: thảm kính dưới chân + ẨN MENU + cụm nút tròn ⬆🪩⬇✕ nổi góc phải màn hình (⬆⬇ đưa cả thảm lẫn bạn lên/xuống). Thêm 2 cái tốt hơn bản gốc: KHÔNG rơi xuyên thảm và tốc độ THEO GAME ×3."},
     {icon="🪩", name="Thảm Kính", cat="Di chuyển", ord=16, action="carpet",
      desc="Thảm kính BÁM THEO chân (chạy trên không). Đặt kính cố định / bay tới kính / bay tới người nằm ở khung ⚙ trên danh sách và tab 👥 Người Chơi — không lặp thẻ."},
-    {icon="👻", name="Toàn Hình", cat="Tiện ích", ord=21.5, action="invis",
-     desc="Mình thấy nhân vật TRONG SUỐT. Người chơi khác KHÔNG thấy (ngụy CFrame vật lý tới mọi client — Transparency client không replicate). KHÔNG FireServer / không remote. Không chìm đất, không cướp 🚀💨🦘🛡✨🔐."},
+    {icon="🎥", name="Khán giả", cat="Tiện ích", ord=21.5, action="freecam",
+     desc="Camera BAY khắp nơi giống 🚀 (WASD · Space/Shift · nhìn chuột). Nhân vật MÌNH đứng yên tại chỗ. Tắt thì trả camera. Không FireServer. Không cướp 🚀💨🦘🛡✨🔐."},
     {icon="✨", name="Phát Sáng", cat="Tiện ích", ord=22, action="glow",
      desc="CHÍNH BẠN phát sáng: nhuộm sáng cả nhân vật + đèn toả sáng thật quanh người. Chỉnh CHIỀU RỘNG + ĐỘ SÁNG + MÀU ở khung ✨ ngay đầu danh sách. 👁 xuyên tường (sáng xuyên vật cản) · 💡 đèn không bị vật cản chặn · bị game xoá hay respawn thì tự gắn lại."},
     {icon="🛡", name="Bay An Toàn", cat="Di chuyển", ord=23, action="safefly",
@@ -8792,17 +8794,17 @@ function S.RunHubAction(id)
         S.Rebuild()
         return "🚫 " .. S.Glow.Status()
 
-    -- ---------- v4.52: 👻 TOÀN HÌNH ----------
-    elseif id == "invis" then
-        pcall(function() S.Invis.Set(not S.Invis.on) end)
-        pcall(function() if S.SyncInvisPanel then S.SyncInvisPanel() end end)
+    -- ---------- v4.64: 🎥 KHÁN GIẢ ----------
+    elseif id == "freecam" then
+        pcall(function() S.Free.Set(not S.Free.on) end)
+        pcall(function() if S.SyncFreePanel then S.SyncFreePanel() end end)
         S.Rebuild()
-        return S.Invis.Status()
-    elseif id == "invis_off" then
-        pcall(function() S.Invis.Stop() end)
-        pcall(function() if S.SyncInvisPanel then S.SyncInvisPanel() end end)
+        return S.Free.Status()
+    elseif id == "freecam_off" then
+        pcall(function() S.Free.Stop() end)
+        pcall(function() if S.SyncFreePanel then S.SyncFreePanel() end end)
         S.Rebuild()
-        return "🚫 " .. S.Invis.Status()
+        return "🚫 " .. S.Free.Status()
 
     -- ---------- v4.14: 👣 XEM NGƯỜI CHƠI ----------
     elseif id == "spec_on" then
@@ -8988,7 +8990,7 @@ S.HubPanelCat = {
     HubMove_Panel = "Di chuyển",
     HubSafe_Panel = "Di chuyển",
     HubGlow_Panel = "Tiện ích",
-    HubInvis_Panel = "Tiện ích",
+    HubFree_Panel = "Tiện ích",
     HubAntiBan_Panel = "Server",
 }
 function S.SyncHubPanels()
@@ -9147,7 +9149,7 @@ function S.RebuildHubList()
     if S.SyncTunePanel then pcall(S.SyncTunePanel) end         -- v4.40: ⚙ tuỳ chỉnh gom
     if S.RefreshMovePanel then pcall(S.RefreshMovePanel) end   -- v4.12: nhãn trạng thái di chuyển
     if S.SyncGlowPanel then pcall(S.SyncGlowPanel) end         -- v4.16: nhãn khung ✨ phát sáng
-    if S.SyncInvisPanel then pcall(S.SyncInvisPanel) end       -- v4.52: 👻 toàn hình
+    if S.SyncFreePanel then pcall(S.SyncFreePanel) end         -- v4.64: 🎥 khán giả
     if S.SyncSafePanel then pcall(S.SyncSafePanel) end         -- v4.17: nhãn khung 🛡 bay an toàn
     if S.SyncAntiBanPanel then pcall(S.SyncAntiBanPanel) end   -- v4.43: 🔐 anti ban
     if #items == 0 and D.hubStatus then
@@ -11005,425 +11007,179 @@ function S.Spec.Sync()
     end)
 end
 
--- ---------- 👻 TOÀN HÌNH (v4.52) ----------
-S.Invis = {
-    on = false, _ghost = nil, _gchar = nil, _char = nil,
-    _saved = {}, _hum = nil, _humDisp = nil, _bound = false, _acc = 0, _others = 0,
-    _cf = nil, _vel = nil, _ang = nil, _step = nil, _hb = nil, _evade = nil,
-    _camSub = nil, _hold = nil, _jmp = nil,
+-- ---------- 🎥 KHÁN GIẢ (v4.64) ----------
+S.Free = {
+    on = false, speed = 50,
+    _bound = false, _cf = nil, _wasAnchored = nil, _hrp = nil,
+    _camType = nil, _camSub = nil, _yaw = 0, _pitch = 0,
+    _mdx = 0, _mdy = 0, _step = nil, _mouse = nil,
 }
-local IV = S.Invis
--- Lỗi: Transparency client KHÔNG replicate → người khác vẫn thấy.
--- Lỗi Evade v4.58: tắt NetHide → người chơi khác vẫn thấy.
--- Sửa: ngụy CFrame tới mọi client (Last, không FireServer). Evade: LTM 0.45 mỗi frame.
--- LocalShow Stepped + hum:Move — không ghi Velocity, không Camera CFrame.
-IV.Away = Vector3.new(24000, 40, 24000)
-function S.Invis.IsEvade()
-    if IV._evade ~= nil then return IV._evade end
-    IV._evade = false
-    pcall(function()
-        local gid = tonumber(game.GameId) or 0
-        local pid = tonumber(game.PlaceId) or 0
-        if gid == 3647333358 or pid == 9872472334 then IV._evade = true return end
-        local n = string.lower(tostring(game.Name or ""))
-        if string.find(n, "evade", 1, true) then IV._evade = true end
-    end)
-    return IV._evade
-end
-function S.Invis.IsFirstPerson()
-    local cam = workspace.CurrentCamera
-    local hrp = S.Invis.HRP()
-    if not (cam and hrp) then return false end
-    return (cam.CFrame.Position - hrp.Position).Magnitude < 3
-end
-function S.Invis.Char() return player and player.Character or nil end
-function S.Invis.HRP(ch)
-    ch = ch or S.Invis.Char()
+local FR = S.Free
+function S.Free.Char() return player and player.Character or nil end
+function S.Free.HRP(ch)
+    ch = ch or S.Free.Char()
     return ch and ch:FindFirstChild("HumanoidRootPart")
 end
-function S.Invis.RootCF()
-    -- Lỗi: Follow copy HRP lúc Away → ảo bay một hướng khi nhảy.
-    local hrp = S.Invis.HRP()
-    local saved = IV._cf
-    if not hrp then return saved end
-    if saved then
-        local d = hrp.Position - saved.Position
-        if d.Magnitude > 500 then return saved end
-    end
-    return hrp.CFrame
-end
-function S.Invis.SpoofAll()
-    -- Gửi điều kiện (CFrame vật lý) tới MỌI người chơi qua replicate Roblox. Không FireServer.
-    local n = 0
-    for _, p in ipairs(Players:GetPlayers()) do
-        if p ~= player then n = n + 1 end
-    end
-    IV._others = n
-    return n
-end
-function S.Invis.SpoofToPlayers()
-    S.Invis.SpoofAll()
-    S.Invis.NetHide()
-end
-function S.Invis.KillGhost()
-    pcall(function() if IV._ghost then IV._ghost:Destroy() end end)
-    pcall(function() if IV._hold then IV._hold:Destroy() end end)
-    IV._ghost, IV._gchar, IV._hold = nil, nil, nil
-end
-function S.Invis.Hold()
-    local h = IV._hold
-    if h and h.Parent then return h end
-    h = Instance.new("Folder")
-    h.Name = "BC_InvisHold"
-    h.Parent = workspace
-    IV._hold = h
-    return h
-end
-function S.Invis.LiveSubject()
-    local ch = S.Invis.Char()
-    if not ch then return nil end
-    return ch:FindFirstChildOfClass("Humanoid") or ch:FindFirstChild("HumanoidRootPart")
-end
-function S.Invis.AimCam()
-    -- Camera bám nhân vật ảo. Không đổi kiểu camera (giữ Popper/Custom của game).
-    local cam = workspace.CurrentCamera
-    local g = IV._ghost
-    if not (cam and g) then return end
-    local hrp = g:FindFirstChild("HumanoidRootPart") or g.PrimaryPart
+function S.Free.HoldChar()
+    -- Nhân vật ĐỨNG YÊN. Không cướp bay / đứng nền / xuyên tường.
+    if not FR.on then return end
+    local hrp = S.Free.HRP()
     if not hrp then return end
-    cam.CameraSubject = hrp
+    if FR._hrp ~= hrp then
+        FR._hrp = hrp
+        FR._wasAnchored = hrp.Anchored
+        FR._cf = hrp.CFrame
+    end
+    if not FR._cf then FR._cf = hrp.CFrame end
+    hrp.Anchored = true
+    hrp.CFrame = FR._cf
 end
-function S.Invis.RestoreCam()
-    -- Lỗi: trả CameraSubject Humanoid/ghost cũ sau trận mới → đi được nhưng camera đứng.
-    -- Sửa: luôn bám Humanoid nhân vật HIỆN TẠI.
+function S.Free.ReleaseChar()
+    local hrp = FR._hrp or S.Free.HRP()
+    if hrp and hrp.Parent then
+        pcall(function()
+            hrp.Anchored = (FR._wasAnchored == true)
+            if FR._cf then hrp.CFrame = FR._cf end
+        end)
+    end
+    FR._hrp, FR._wasAnchored, FR._cf = nil, nil, nil
+end
+function S.Free.AimCam()
     local cam = workspace.CurrentCamera
-    IV._camSub = nil
     if not cam then return end
-    local sub = S.Invis.LiveSubject()
-    if sub then
-        pcall(function() cam.CameraSubject = sub end)
-    end
+    if FR._camType == nil then FR._camType = cam.CameraType end
+    if FR._camSub == nil then FR._camSub = cam.CameraSubject end
+    cam.CameraType = Enum.CameraType.Scriptable
 end
-function S.Invis.Restore()
-    local saved = IV._saved
-    if saved then
-        for inst, rec in pairs(saved) do
-            pcall(function()
-                if inst and inst.Parent then
-                    if rec.t ~= nil then inst.Transparency = rec.t end
-                    if rec.ltm ~= nil then inst.LocalTransparencyModifier = rec.ltm end
-                    if rec.e ~= nil then inst.Enabled = rec.e end
-                end
-            end)
-        end
-    end
-    IV._saved = {}
-    if IV._hum and IV._humDisp ~= nil then
-        pcall(function() IV._hum.DisplayDistanceType = IV._humDisp end)
-    end
-    IV._hum, IV._humDisp = nil, nil
-    local hrp = S.Invis.HRP()
-    if hrp and IV._cf then
-        pcall(function()
-            hrp.CFrame = IV._cf
-            if IV._vel then hrp.AssemblyLinearVelocity = IV._vel end
-            if IV._ang then hrp.AssemblyAngularVelocity = IV._ang end
-        end)
-    end
-    IV._cf, IV._vel, IV._ang = nil, nil, nil
-    S.Invis.RestoreCam()
-end
-function S.Invis.LocalShow()
-    if not IV.on then return end
-    local hrp = S.Invis.HRP()
-    if not (hrp and IV._cf) then return end
-    -- Trả chỗ thật trước physics. Không ghi Velocity. hum:Move giữ WASD (Evade).
-    hrp.CFrame = IV._cf
-    local ch = S.Invis.Char()
-    local hum = ch and ch:FindFirstChildOfClass("Humanoid")
-    if hum then
-        local md = hum.MoveDirection
-        if md.Magnitude > 0.05 then
-            pcall(function() hum:Move(md, false) end)
-        end
-    end
-end
-function S.Invis.NetHide()
-    if not IV.on then return end
-    local hrp = S.Invis.HRP()
-    if not hrp then return end
-    S.Invis.SpoofAll()
-    IV._cf = hrp.CFrame
-    hrp.CFrame = IV._cf + IV.Away
-end
-function S.Invis.GhostSelf(ch)
-    -- Evade: mình thấy trong suốt (LTM). Không Transparency=1, không kéo HRP, không clone.
-    ch = ch or S.Invis.Char()
-    if not ch then return end
-    local saved = IV._saved
-    if not saved then saved = {}; IV._saved = saved end
-    for _, d in ipairs(ch:GetDescendants()) do
-        if d:IsA("BasePart") and d.Name ~= "HumanoidRootPart" then
-            if saved[d] == nil then saved[d] = { ltm = d.LocalTransparencyModifier } end
-            d.LocalTransparencyModifier = 0.45
-        end
-    end
-end
-function S.Invis.HideReal(ch)
-    ch = ch or S.Invis.Char()
-    if not ch then return end
-    if S.Invis.IsEvade() then
-        S.Invis.SpoofAll()
-        S.Invis.GhostSelf(ch)
-        return
-    end
-    local saved = IV._saved
-    if not saved then saved = {}; IV._saved = saved end
-    for _, d in ipairs(ch:GetDescendants()) do
-        if d:IsA("BasePart") then
-            if saved[d] == nil then saved[d] = { t = d.Transparency } end
-            if d.Transparency < 1 then d.Transparency = 1 end
-        elseif d:IsA("Decal") or d:IsA("Texture") then
-            if saved[d] == nil then saved[d] = { t = d.Transparency } end
-            if d.Transparency < 1 then d.Transparency = 1 end
-        elseif d:IsA("ParticleEmitter") or d:IsA("Trail") or d:IsA("Beam")
-            or d:IsA("Fire") or d:IsA("Smoke") or d:IsA("Sparkles") then
-            if saved[d] == nil then saved[d] = { e = d.Enabled } end
-            d.Enabled = false
-        elseif d:IsA("BillboardGui") then
-            if saved[d] == nil then saved[d] = { e = d.Enabled } end
-            d.Enabled = false
-        end
-    end
-    local hum = ch:FindFirstChildOfClass("Humanoid")
-    if hum then
-        if IV._hum ~= hum then
-            IV._hum = hum
-            IV._humDisp = hum.DisplayDistanceType
-        end
-        hum.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.None
-        hum.HealthDisplayType = Enum.HumanoidHealthDisplayType.AlwaysOff
-    end
-end
-function S.Invis.IsMover(d)
-    return d:IsA("BodyVelocity") or d:IsA("BodyGyro") or d:IsA("BodyPosition")
-        or d:IsA("BodyForce") or d:IsA("BodyAngularVelocity") or d:IsA("BodyThrust")
-        or d:IsA("AlignPosition") or d:IsA("AlignOrientation")
-        or d:IsA("VectorForce") or d:IsA("LinearVelocity") or d:IsA("AngularVelocity")
-        or d:IsA("Torque") or d:IsA("LineForce") or d:IsA("RocketPropulsion")
-end
-function S.Invis.EnsureGhost(ch)
-    ch = ch or S.Invis.Char()
-    if not ch then return end
-    if IV._ghost and IV._ghost.Parent and IV._gchar == ch and IV._ghost ~= ch then
-        S.Invis.AimCam()
-        return
-    end
-    S.Invis.KillGhost()
-    IV._gchar = ch
-    local ok, g = pcall(function()
-        local a = ch.Archivable
-        ch.Archivable = true
-        local c = ch:Clone()
-        ch.Archivable = a
-        return c
-    end)
-    if not (ok and g) or g == ch then return end
-    g.Name = "BC_InvisGhost"
-    g.Parent = nil
-    for _, d in ipairs(g:GetDescendants()) do
-        if d:IsA("Humanoid") or d:IsA("Animator") or d:IsA("Script")
-            or d:IsA("LocalScript") or d:IsA("ModuleScript")
-            or d:IsA("Highlight") or d:IsA("ForceField") or d:IsA("Tool") then
-            pcall(function() d:Destroy() end)
-        elseif S.Invis.IsMover(d) then
-            pcall(function() d:Destroy() end)
-        end
-    end
-    for _, d in ipairs(g:GetDescendants()) do
-        if d:IsA("BasePart") then
-            d.Anchored = true
-            d.CanCollide = false
-            d.CanTouch = false
-            d.CanQuery = false
-            pcall(function() d.EnableFluidForces = false end)
-            pcall(function() d.AssemblyLinearVelocity = Vector3.zero end)
-            pcall(function() d.AssemblyAngularVelocity = Vector3.zero end)
-            d.Transparency = 0.45
-        elseif d:IsA("Decal") or d:IsA("Texture") then
-            d.Transparency = 0.45
-        end
-    end
-    local hold = S.Invis.Hold()
-    if not hold then return end
-    g.Parent = hold
-    if g == ch then pcall(function() g:Destroy() end); return end
-    IV._ghost = g
-    pcall(function() g:PivotTo(ch:GetPivot()) end)
-    S.Invis.AimCam()
-end
-function S.Invis.Follow()
-    -- Lỗi: copy CFrame lúc HRP Away / HRP nghiêng lúc nhảy → ảo trượt 1 hướng.
-    -- Sửa: RootCF (chỗ thật), copy relative; HRP ảo đứng thẳng (camera không nghiêng).
-    local ch, g = S.Invis.Char(), IV._ghost
-    if not (ch and g and g.Parent) then return end
-    if g == ch or g.Name ~= "BC_InvisGhost" then return end
-    local hold = S.Invis.Hold()
-    if hold and g.Parent ~= hold then g.Parent = hold end
-    local hrp = S.Invis.HRP(ch)
-    local root = S.Invis.RootCF()
-    if not (hrp and root) then return end
+function S.Free.RestoreCam()
+    local cam = workspace.CurrentCamera
+    FR._yaw, FR._pitch, FR._mdx, FR._mdy = 0, 0, 0, 0
+    if not cam then FR._camType, FR._camSub = nil, nil return end
+    local t = FR._camType
     pcall(function()
-        local inv = hrp.CFrame:Inverse()
-        local function sync(real, fake)
-            for _, rc in ipairs(real:GetChildren()) do
-                local fc = fake:FindFirstChild(rc.Name)
-                if fc then
-                    if rc:IsA("BasePart") and fc:IsA("BasePart") then
-                        if (rc.Position - hrp.Position).Magnitude <= 40 then
-                            fc.CFrame = root * inv * rc.CFrame
-                        end
-                    end
-                    sync(rc, fc)
-                end
-            end
-        end
-        sync(ch, g)
-        local ghrp = g:FindFirstChild("HumanoidRootPart")
-        if ghrp then
-            local p = root.Position
-            local lv = root.LookVector
-            local flat = Vector3.new(lv.X, 0, lv.Z)
-            if flat.Magnitude < 0.05 then
-                ghrp.CFrame = CFrame.new(p)
-            else
-                ghrp.CFrame = CFrame.new(p, p + flat)
-            end
+        if t and t ~= Enum.CameraType.Scriptable then
+            cam.CameraType = t
+        else
+            cam.CameraType = Enum.CameraType.Custom
         end
     end)
-    S.Invis.AimCam()
-end
-function S.Invis.AirStick()
-    -- Lỗi: nhảy tại chỗ còn XZ từ ngụy CFrame → trượt 1 hướng. Giữ Y (nhảy/rơi).
-    -- WASD (MoveDirection) thì không đụng — Evade vẫn đi trên không. Không cướp 🦘.
-    if not IV.on then return end
-    local hrp = S.Invis.HRP()
-    local ch = S.Invis.Char()
+    local ch = S.Free.Char()
     local hum = ch and ch:FindFirstChildOfClass("Humanoid")
-    if not (hrp and hum) then return end
-    local md = hum.MoveDirection
-    if md.Magnitude > 0.05 then return end
-    local st = hum:GetState()
-    if st ~= Enum.HumanoidStateType.Jumping and st ~= Enum.HumanoidStateType.Freefall then return end
-    local v = hrp.AssemblyLinearVelocity
-    hrp.AssemblyLinearVelocity = Vector3.new(0, v.Y, 0)
+    local sub = hum or FR._camSub
+    if sub then pcall(function() cam.CameraSubject = sub end) end
+    FR._camType, FR._camSub = nil, nil
 end
-function S.Invis.BindNet(on)
-    if on then
-        if not IV._step then
-            IV._step = RunService.Stepped:Connect(function()
-                pcall(S.Invis.LocalShow)
-                pcall(S.Invis.AirStick)
+function S.Free.Look()
+    local yaw = FR._yaw or 0
+    local pitch = FR._pitch or 0
+    yaw = yaw - (FR._mdx or 0) * 0.004
+    pitch = pitch - (FR._mdy or 0) * 0.004
+    if pitch > 1.4 then pitch = 1.4 elseif pitch < -1.4 then pitch = -1.4 end
+    FR._mdx, FR._mdy = 0, 0
+    FR._yaw, FR._pitch = yaw, pitch
+    return CFrame.Angles(0, yaw, 0) * CFrame.Angles(pitch, 0, 0)
+end
+function S.Free.Step(dt)
+    if not FR.on then return end
+    S.Free.HoldChar()
+    local cam = workspace.CurrentCamera
+    if not cam then return end
+    S.Free.AimCam()
+    dt = tonumber(dt) or 0.016
+    if dt < 0 then dt = 0 end
+    if dt > 0.1 then dt = 0.1 end
+    local look = S.Free.Look()
+    local pos = cam.CFrame.Position
+    local ch = S.Free.Char()
+    local hum = ch and ch:FindFirstChildOfClass("Humanoid")
+    local input = Vector3.zero
+    pcall(function()
+        input = MV._ReadFlyInput(cam.CFrame, hum)
+    end)
+    local vel = MV.FlyVelocity(CFrame.new(pos) * look, input, FR.speed)
+    pos = pos + vel * dt
+    cam.CFrame = CFrame.new(pos) * look
+end
+function S.Free.Bind(on)
+    if on and not FR._bound then
+        FR._bound = true
+        if not FR._mouse then
+            FR._mouse = UserInputService.InputChanged:Connect(function(i)
+                if not FR.on then return end
+                if i.UserInputType ~= Enum.UserInputType.MouseMovement then return end
+                if UserInputService:GetFocusedTextBox() then return end
+                local d = i.Delta
+                FR._mdx = (FR._mdx or 0) + (d and d.X or 0)
+                FR._mdy = (FR._mdy or 0) + (d and d.Y or 0)
             end)
         end
-    else
-        pcall(function() if IV._step then IV._step:Disconnect() end end)
-        pcall(function() if IV._hb then IV._hb:Disconnect() end end)
-        IV._step, IV._hb = nil, nil
-    end
-end
-function S.Invis.BindJump(on)
-    -- Lỗi: nhảy khi HRP còn Away (sau Last, trước Stepped) → ảo/người trượt 1 hướng.
-    -- Sửa: LocalShow ngay JumpRequest. Không cướp 🦘 (HighJump vẫn nhận JumpRequest).
-    if on then
-        if not IV._jmp then
-            IV._jmp = UserInputService.JumpRequest:Connect(function()
-                if not IV.on then return end
-                pcall(S.Invis.LocalShow)
-                pcall(S.Invis.AirStick)
+        pcall(function()
+            RunService:BindToRenderStep("BC_FreeCam", Enum.RenderPriority.Camera.Value + 1, function(dt)
+                pcall(S.Free.Step, dt)
+            end)
+        end)
+        if not FR._step then
+            FR._step = RunService.Stepped:Connect(function()
+                if FR.on then pcall(S.Free.HoldChar) end
             end)
         end
+    elseif (not on) and FR._bound then
+        FR._bound = false
+        pcall(function() RunService:UnbindFromRenderStep("BC_FreeCam") end)
+        pcall(function() if FR._step then FR._step:Disconnect() end end)
+        pcall(function() if FR._mouse then FR._mouse:Disconnect() end end)
+        FR._step, FR._mouse = nil, nil
+    end
+end
+function S.Free.Set(on)
+    on = (on == true)
+    if on then
+        if S.Spec and S.Spec.on then pcall(function() S.Spec.Stop() end) end
+        local cam = workspace.CurrentCamera
+        if cam then
+            local look = cam.CFrame.LookVector
+            local y = look.Y
+            if y > 1 then y = 1 elseif y < -1 then y = -1 end
+            FR._yaw = math.atan2(-look.X, -look.Z)
+            FR._pitch = math.asin(y)
+            FR._mdx, FR._mdy = 0, 0
+        end
+        FR.on = true
+        S.Free.HoldChar()
+        S.Free.AimCam()
+        S.Free.Bind(true)
+        S.Free.Step(0)
     else
-        pcall(function() if IV._jmp then IV._jmp:Disconnect() end end)
-        IV._jmp = nil
+        FR.on = false
+        S.Free.Bind(false)
+        S.Free.ReleaseChar()
+        S.Free.RestoreCam()
     end
+    if S.SyncFreePanel then pcall(S.SyncFreePanel) end
+    return FR.on
 end
-function S.Invis.Bind(on)
-    if on and not IV._bound then
-        IV._bound = true
-        S.Invis.BindNet(true)
-        S.Invis.BindJump(true)
-        pcall(function()
-            -- Camera-1: KHÔNG LocalShow (CFrame lúc này đè bước đi). Chỉ ghost + ẩn mesh.
-            RunService:BindToRenderStep("BC_Invis", Enum.RenderPriority.Camera.Value - 1, function(dt)
-                pcall(S.Invis.Follow)
-                if S.Invis.IsEvade() then
-                    pcall(S.Invis.GhostSelf)
-                end
-                IV._acc = (IV._acc or 0) + (tonumber(dt) or 0.016)
-                if IV._acc < 0.45 then return end
-                IV._acc = 0
-                pcall(S.Invis.HideReal)
-            end)
-        end)
-        pcall(function()
-            RunService:BindToRenderStep("BC_InvisNet", Enum.RenderPriority.Last.Value, function()
-                pcall(S.Invis.SpoofToPlayers)
-            end)
-        end)
-    elseif (not on) and IV._bound then
-        IV._bound = false
-        S.Invis.BindNet(false)
-        S.Invis.BindJump(false)
-        pcall(function() RunService:UnbindFromRenderStep("BC_Invis") end)
-        pcall(function() RunService:UnbindFromRenderStep("BC_InvisNet") end)
-    end
+function S.Free.Stop() return S.Free.Set(false) end
+function S.Free.SetSpeed(n)
+    n = tonumber(n)
+    if not n or n ~= n or n == math.huge or n == -math.huge then return false, FR.speed end
+    FR.speed = mvClamp(n, 1, 2000, 50)
+    if S.SyncFreePanel then pcall(S.SyncFreePanel) end
+    return true, FR.speed
 end
-function S.Invis.Set(on)
-    IV.on = (on == true)
-    if IV.on then
-        local ch = S.Invis.Char()
-        S.Invis.SpoofAll()
-        S.Invis.HideReal(ch)
-        S.Invis.EnsureGhost(ch)
-        S.Invis.Bind(true)
-        S.Invis.Follow()
-        S.Invis.AimCam()
-    else
-        S.Invis.Bind(false)
-        S.Invis.RestoreCam()
-        S.Invis.KillGhost()
-        S.Invis.Restore()
-    end
-    return IV.on
-end
-function S.Invis.Stop() return S.Invis.Set(false) end
-function S.Invis.Status()
-    if not IV.on then return "👻 toàn hình: đang TẮT" end
-    local ev = S.Invis.IsEvade() and " · Evade LTM" or ""
-    return string.format("👻 toàn hình: BẬT · mình trong suốt · ngụy CFrame tới %d người chơi · không remote%s", IV._others or 0, ev)
+function S.Free.Status()
+    if not FR.on then return "🎥 khán giả: đang TẮT · nhân vật đi bình thường" end
+    return string.format("🎥 khán giả: BẬT · camera bay (WASD · Space/Shift) · nhân vật đứng yên · 💨 %g", FR.speed)
 end
 do
     trackConn(player.CharacterAdded:Connect(function()
-        IV._saved = {}
-        IV._hum, IV._humDisp = nil, nil
-        IV._cf, IV._vel, IV._ang = nil, nil, nil
-        S.Invis.KillGhost()
-        S.Invis.RestoreCam()
-        if not IV.on then return end
+        FR._hrp, FR._wasAnchored, FR._cf = nil, nil, nil
+        if not FR.on then return end
         task.defer(function()
-            if not IV.on then
-                S.Invis.RestoreCam()
-                return
-            end
-            S.Invis.HideReal()
-            S.Invis.EnsureGhost()
-            S.Invis.Follow()
-            S.Invis.AimCam()
+            if FR.on then S.Free.HoldChar() end
         end)
     end))
 end
--- ---------- HẾT 👻 TOÀN HÌNH ----------
+-- ---------- HẾT 🎥 KHÁN GIẢ ----------
 
 S.Glow = {
     on = false, width = 18, bright = 3,
@@ -11711,11 +11467,11 @@ do
 end
 
 
--- ---------- v4.52: KHUNG 👻 TOÀN HÌNH ----------
+-- ---------- v4.64: KHUNG 🎥 KHÁN GIẢ ----------
 do
-    local PH = 88
+    local PH = 108
     local P = New("Frame", {
-        Name = "HubInvis_Panel",
+        Name = "HubFree_Panel",
         Size = UDim2.new(1, 0, 0, PH), LayoutOrder = 2,
         BackgroundColor3 = C.SURFACE, BackgroundTransparency = 0.12, BorderSizePixel = 0, ZIndex = 6,
     }, D.hubList)
@@ -11724,16 +11480,16 @@ do
     D.Shade(P, Color3.fromRGB(255, 255, 255), Color3.fromRGB(188, 192, 205), 90)
 
     New("TextLabel", {
-        Name = "InvisTitle",
+        Name = "FreeTitle",
         Size = UDim2.new(1, -16, 0, 14), Position = UDim2.new(0, 8, 0, 4),
-        Text = "👻 TOÀN HÌNH (mình trong suốt · người khác không thấy)", BackgroundTransparency = 1,
+        Text = "🎥 KHÁN GIẢ (camera bay khắp nơi · nhân vật đứng yên)", BackgroundTransparency = 1,
         TextColor3 = C.ACCENT, Font = Enum.Font.GothamBold, TextSize = 10,
         TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 7,
     }, P)
 
     local function act(txt, x, y, w, color, name)
         local b = New("TextButton", {
-            Name = name or "InvisBtn",
+            Name = name or "FreeBtn",
             Size = UDim2.new(0, w, 0, 20), Position = UDim2.new(0, x, 0, y),
             Text = txt, BackgroundColor3 = color, TextColor3 = D.BestText(color),
             Font = Enum.Font.GothamBold, TextSize = 9, BorderSizePixel = 0, ZIndex = 8,
@@ -11744,10 +11500,10 @@ do
         return b
     end
 
-    local onBtn = act("👻 BẬT", 8, 22, 92, C.GRAY, "InvisOn")
-    local stopBtn = act("🚫 Tắt", 106, 22, 70, C.RED, "InvisStop")
+    local onBtn = act("🎥 BẬT", 8, 22, 92, C.GRAY, "FreeOn")
+    local stopBtn = act("🚫 Tắt", 106, 22, 70, C.RED, "FreeStop")
     local statusLbl = New("TextLabel", {
-        Name = "InvisStatus",
+        Name = "FreeStatus",
         Size = UDim2.new(1, -192, 0, 20), Position = UDim2.new(0, 182, 0, 22),
         Text = "", BackgroundTransparency = 1, TextColor3 = C.MUTED,
         Font = Enum.Font.GothamMedium, TextSize = 8, TextXAlignment = Enum.TextXAlignment.Left,
@@ -11755,40 +11511,64 @@ do
     }, P)
 
     New("TextLabel", {
-        Size = UDim2.new(1, -16, 0, 36), Position = UDim2.new(0, 8, 0, 46),
-        Text = "Nhân vật ảo trong suốt đi theo mình; camera bám ghost. "
-             .. "Không FireServer. Không parent ghost vào camera. Không cướp bay/nhảy/🛡/✨.",
+        Size = UDim2.new(0, 36, 0, 20), Position = UDim2.new(0, 8, 0, 46),
+        Text = "💨", BackgroundTransparency = 1, TextColor3 = C.MUTED,
+        Font = Enum.Font.GothamMedium, TextSize = 9, TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 7,
+    }, P)
+    local spdIn = New("TextBox", {
+        Size = UDim2.new(0, 52, 0, 20), Position = UDim2.new(0, 36, 0, 46),
+        Text = tostring(FR.speed), ClearTextOnFocus = false,
+        BackgroundColor3 = C.SURFACE2, BackgroundTransparency = 0.1, TextColor3 = C.DARK,
+        PlaceholderColor3 = C.GRAY, Font = Enum.Font.GothamMedium, TextSize = 9,
+        TextXAlignment = Enum.TextXAlignment.Center, BorderSizePixel = 0, ZIndex = 7,
+    }, P)
+    Corner(spdIn, UDim.new(0, 6))
+    local applyBtn = act("✔ Áp dụng", 94, 46, 84, C.SURFACE3, "FreeApply")
+
+    New("TextLabel", {
+        Size = UDim2.new(1, -16, 0, 32), Position = UDim2.new(0, 8, 0, 70),
+        Text = "WASD + Space/Shift bay camera giống 🚀. Chuột xoay nhìn. Nhân vật đứng yên. Không FireServer. Không cướp bay/nhảy/🛡.",
         TextWrapped = true, BackgroundTransparency = 1, TextColor3 = C.MUTED,
         Font = Enum.Font.GothamMedium, TextSize = 8, TextXAlignment = Enum.TextXAlignment.Left,
         TextYAlignment = Enum.TextYAlignment.Top, ZIndex = 7,
     }, P)
 
     local function paint()
-        onBtn.Text = IV.on and "👻 TẮT" or "👻 BẬT"
-        onBtn.BackgroundColor3 = IV.on and C.GREEN or C.GRAY
+        onBtn.Text = FR.on and "🎥 TẮT" or "🎥 BẬT"
+        onBtn.BackgroundColor3 = FR.on and C.GREEN or C.GRAY
         onBtn.TextColor3 = D.BestText(onBtn.BackgroundColor3)
-        statusLbl.Text = S.Invis.Status()
+        spdIn.Text = tostring(FR.speed)
+        statusLbl.Text = S.Free.Status()
     end
-    S.SyncInvisPanel = paint
-    S.Invis.RefreshPanel = paint
+    S.SyncFreePanel = paint
+    S.Free.RefreshPanel = paint
 
     onBtn.Activated:Connect(function()
         ReleaseHubFocus()
-        S.Invis.Set(not IV.on)
+        S.Free.Set(not FR.on)
         paint()
-        if D.hubStatus then flash(D.hubStatus, S.Invis.Status(), 2, C.ACCENT) end
+        if D.hubStatus then flash(D.hubStatus, S.Free.Status(), 2, C.ACCENT) end
         pcall(S.Rebuild)
     end)
     stopBtn.Activated:Connect(function()
         ReleaseHubFocus()
-        S.Invis.Stop()
+        S.Free.Stop()
         paint()
-        if D.hubStatus then flash(D.hubStatus, "🚫 " .. S.Invis.Status(), 1.8, C.ACCENT) end
+        if D.hubStatus then flash(D.hubStatus, "🚫 " .. S.Free.Status(), 1.8, C.ACCENT) end
+        pcall(S.Rebuild)
+    end)
+    applyBtn.Activated:Connect(function()
+        ReleaseHubFocus()
+        local n = tonumber(tostring(spdIn.Text or ""):match("%-?%d+%.?%d*"))
+        if n then S.Free.SetSpeed(n) end
+        if not FR.on then S.Free.Set(true) end
+        paint()
+        if D.hubStatus then flash(D.hubStatus, S.Free.Status(), 2, C.ACCENT) end
         pcall(S.Rebuild)
     end)
     paint()
 end
--- ---------- HẾT KHUNG 👻 TOÀN HÌNH ----------
+-- ---------- HẾT KHUNG 🎥 KHÁN GIẢ ----------
 
 -- ---------- KHUNG 🛡 BAY AN TOÀN (trên cùng danh sách thẻ, dưới ⚙ và ✨) ----------
 do
