@@ -57,7 +57,7 @@ ok("💨 sprint + 🦘 highJump + infJump còn",
 ok("👣 spec_on bấm lại thì Stop",
   /elseif id == "spec_on" then[\s\S]*S\.Spec\.Stop\(/.test(src));
 ok("tên action còn lại là duy nhất từng tính năng lõi",
-  ["fly","safefly","camspeed","highjump","infjump","noclip","carpet","runmode","glow","loc_all","spec_on"]
+  ["fly","safefly","camspeed","highjump","infjump","noclip","carpet","runmode","glow","invis","loc_all","spec_on"]
     .every((a) => actions.includes(a)));
 
 console.log("\n" + pass + " PASS · " + fail + " FAIL");
