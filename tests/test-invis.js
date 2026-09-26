@@ -1,5 +1,5 @@
 "use strict";
-/** v4.60 — 👻 nhân vật ảo trong suốt đi theo mình + camera bám ghost */
+/** v4.61 — 👻 tắt/trận mới: camera bám Humanoid hiện tại */
 const fs = require("fs");
 const path = require("path");
 const src = fs.readFileSync(path.join(__dirname, "..", "script.js"), "utf8");
@@ -131,6 +131,12 @@ ok("AimCam CameraSubject = ghost HRP, RestoreCam khi tắt, không đổi kiểu
   src.includes("function S.Invis.AimCam") && src.includes("function S.Invis.RestoreCam") &&
   eng.includes("cam.CameraSubject = hrp") && setFn.includes("S.Invis.AimCam()") &&
   setFn.includes("S.Invis.RestoreCam()") && !eng.includes("CameraType"));
+ok("BUG: trận mới/tắt — RestoreCam bám LiveSubject Humanoid hiện tại (không Humanoid cũ)",
+  src.includes("function S.Invis.LiveSubject") &&
+  eng.includes('FindFirstChildOfClass("Humanoid")') &&
+  /function S\.Invis\.RestoreCam\([\s\S]*?LiveSubject\(/.test(eng));
+ok("BUG: CharacterAdded RestoreCam + AimCam (không kẹt camera sau trận mới)",
+  /CharacterAdded:Connect\([\s\S]*?RestoreCam\([\s\S]*?AimCam\(/.test(eng));
 ok("nhân vật thật Transparency = 1 (local) + ghost 0.45",
   hide.includes("d.Transparency = 1") && ghost.includes("d.Transparency = 0.45"));
 ok("không chìm đất / không HUD / không CameraType",

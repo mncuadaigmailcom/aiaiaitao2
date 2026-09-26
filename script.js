@@ -1,5 +1,6 @@
 --[[
     🍌 Banana Cat Hub — FULL CODE  ·  OBSIDIAN NOIR + layout kiểu DELTA
+    v4.61: 👻 Toàn hình — tắt/trận mới: camera bám Humanoid nhân vật hiện tại.
     v4.60: 👻 Toàn hình — nhân vật ảo trong suốt đi theo mình, camera bám theo ghost.
     v4.59: 👻 Toàn hình — ngụy CFrame tới người chơi (không FireServer); Evade vẫn LTM + đi được.
     v4.58: 👻 Toàn hình Evade — mình trong suốt (LTM) và đi được (không kéo CFrame).
@@ -572,7 +573,7 @@ D.verPill = New("Frame", {
 Corner(D.verPill, UDim.new(1,0))
 Stroke(D.verPill, C.ACCENT2, 1)   -- v4.9: huy hiệu đen + viền đồng, chữ champagne
 New("TextLabel", {
-    Size=UDim2.new(1,0,1,0), Text="v4.60 · NOIR", BackgroundTransparency=1,
+    Size=UDim2.new(1,0,1,0), Text="v4.61 · NOIR", BackgroundTransparency=1,
     TextColor3=C.ACCENT3, Font=Enum.Font.GothamBold, TextSize=8, ZIndex=6,
 }, D.verPill)
 
@@ -3646,7 +3647,7 @@ function S.FitToTab(obj, nm)
 end
 
 _G.BananaCatHubAPI = {
-    Version = "4.60",
+    Version = "4.61",
     HubGui = gui,     -- v4.4e: sửa lỗi cũ — biến tên là `gui`, không phải `hubGui` (trước đây là nil)
     Main = main,
     TabArea = function(self, nm) return S.TabArea(nm) end,
@@ -11065,6 +11066,11 @@ function S.Invis.Hold()
     IV._hold = h
     return h
 end
+function S.Invis.LiveSubject()
+    local ch = S.Invis.Char()
+    if not ch then return nil end
+    return ch:FindFirstChildOfClass("Humanoid") or ch:FindFirstChild("HumanoidRootPart")
+end
 function S.Invis.AimCam()
     -- Camera bám nhân vật ảo. Không đổi kiểu camera (giữ Popper/Custom của game).
     local cam = workspace.CurrentCamera
@@ -11072,15 +11078,18 @@ function S.Invis.AimCam()
     if not (cam and g) then return end
     local hrp = g:FindFirstChild("HumanoidRootPart") or g.PrimaryPart
     if not hrp then return end
-    if IV._camSub == nil then IV._camSub = cam.CameraSubject end
     cam.CameraSubject = hrp
 end
 function S.Invis.RestoreCam()
+    -- Lỗi: trả CameraSubject Humanoid/ghost cũ sau trận mới → đi được nhưng camera đứng.
+    -- Sửa: luôn bám Humanoid nhân vật HIỆN TẠI.
     local cam = workspace.CurrentCamera
-    if cam and IV._camSub ~= nil then
-        pcall(function() cam.CameraSubject = IV._camSub end)
-    end
     IV._camSub = nil
+    if not cam then return end
+    local sub = S.Invis.LiveSubject()
+    if sub then
+        pcall(function() cam.CameraSubject = sub end)
+    end
 end
 function S.Invis.Restore()
     local saved = IV._saved
@@ -11318,15 +11327,21 @@ function S.Invis.Status()
 end
 do
     trackConn(player.CharacterAdded:Connect(function()
-        if not IV.on then return end
         IV._saved = {}
         IV._hum, IV._humDisp = nil, nil
         IV._cf, IV._vel, IV._ang = nil, nil, nil
         S.Invis.KillGhost()
+        S.Invis.RestoreCam()
+        if not IV.on then return end
         task.defer(function()
-            if not IV.on then return end
+            if not IV.on then
+                S.Invis.RestoreCam()
+                return
+            end
             S.Invis.HideReal()
             S.Invis.EnsureGhost()
+            S.Invis.Follow()
+            S.Invis.AimCam()
         end)
     end))
 end
@@ -12848,7 +12863,7 @@ main.Visible = true
 togBtn.Text = "✕"
 
 print(string.format(
-    "✅ Banana Cat Hub v4.60 — sẵn sàng! Đã nạp lại %d script + %d waypoint + %d tab tính năng từ bộ nhớ (chế độ: %s%s)",
+    "✅ Banana Cat Hub v4.61 — sẵn sàng! Đã nạp lại %d script + %d waypoint + %d tab tính năng từ bộ nhớ (chế độ: %s%s)",
     Store.loadedScripts, Store.loadedWp, #Store.loadedFeatures, Store.mode,
     Store.lastError and (" | ⚠️ " .. Store.lastError) or ""
 ))
