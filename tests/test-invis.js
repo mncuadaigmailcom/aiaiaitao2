@@ -1,5 +1,5 @@
 "use strict";
-/** v4.61 — 👻 tắt/trận mới: camera bám Humanoid hiện tại */
+/** v4.62 — 👻 nhảy: nhân vật ảo không trượt một hướng */
 const fs = require("fs");
 const path = require("path");
 const src = fs.readFileSync(path.join(__dirname, "..", "script.js"), "utf8");
@@ -121,9 +121,10 @@ console.log("== nhân vật ảo trong suốt đi theo mình + camera ==");
 ok("BUG: EnsureGhost không bỏ Evade/FP (phải thấy nhân vật ảo)",
   !ghost.includes("IsEvade() or S.Invis.IsFirstPerson()") &&
   ghost.includes('g.Name = "BC_InvisGhost"') && ghost.includes("d.Transparency = 0.45"));
-ok("BUG: Follow luôn PivotTo(ch:GetPivot()) — đi thì ảo đi theo, không IV._cf cũ",
-  follow.includes("g:PivotTo(ch:GetPivot())") && !follow.includes("IV._cf") &&
-  !follow.includes("IsEvade() or S.Invis.IsFirstPerson()"));
+ok("BUG: Follow không PivotTo GetPivot (anim nhảy/WorldPivot làm ảo trượt 1 hướng)",
+  !follow.includes("GetPivot") && !follow.includes("IV._cf") &&
+  !follow.includes("IsEvade() or S.Invis.IsFirstPerson()") &&
+  (follow.includes("fc.CFrame = rc.CFrame") || follow.includes("gp.CFrame")));
 ok("BUG: ghost parent Folder BC_InvisHold, KHÔNG parent camera",
   eng.includes('h.Name = "BC_InvisHold"') &&
   !eng.includes("g.Parent = cam") && !follow.includes("g.Parent = cam"));
@@ -137,6 +138,12 @@ ok("BUG: trận mới/tắt — RestoreCam bám LiveSubject Humanoid hiện tạ
   /function S\.Invis\.RestoreCam\([\s\S]*?LiveSubject\(/.test(eng));
 ok("BUG: CharacterAdded RestoreCam + AimCam (không kẹt camera sau trận mới)",
   /CharacterAdded:Connect\([\s\S]*?RestoreCam\([\s\S]*?AimCam\(/.test(eng));
+ok("BUG nhảy: JumpRequest LocalShow trước khi nhảy (HRP đang Away → ảo trượt 1 hướng)",
+  eng.includes("JumpRequest") && /JumpRequest[\s\S]{0,280}LocalShow/.test(eng) &&
+  bind.includes("BindJump") && bind.includes('UnbindFromRenderStep("BC_InvisNet")'));
+ok("BUG nhảy: Follow copy CFrame từng BasePart theo cây tên (không IV._cf / GetPivot)",
+  follow.includes("FindFirstChild") && follow.includes("BasePart") &&
+  follow.includes("CFrame") && !follow.includes("IV._cf") && !follow.includes("GetPivot"));
 ok("nhân vật thật Transparency = 1 (local) + ghost 0.45",
   hide.includes("d.Transparency = 1") && ghost.includes("d.Transparency = 0.45"));
 ok("không chìm đất / không HUD / không CameraType",
@@ -151,9 +158,9 @@ ok("HideReal không đụng Anchored / CanCollide / Massless / PivotTo",
 ok("ghost hủy Humanoid + mover trước khi parent",
   ghost.includes('d:IsA("Humanoid")') && ghost.includes("S.Invis.IsMover(d)") &&
   ghost.indexOf('d:IsA("Humanoid")') < ghost.indexOf("g.Parent = hold"));
-ok("Follow chỉ PivotTo ghost, bỏ qua nếu g == nhân vật thật",
-  (follow.includes("g:PivotTo(cf)") || follow.includes("g:PivotTo(ch:GetPivot())")) &&
-  !follow.includes("ch:PivotTo") && follow.includes("g == ch"));
+ok("Follow copy CFrame part ghost, bỏ qua nếu g == nhân vật thật, không PivotTo người thật",
+  follow.includes("g == ch") && !follow.includes("ch:PivotTo") &&
+  (follow.includes("fc.CFrame = rc.CFrame") || follow.includes("gp.CFrame")));
 
 console.log("== không mất tính năng ==");
 ok("🚀/💨/🦘/🛡/✨/🔐 còn",

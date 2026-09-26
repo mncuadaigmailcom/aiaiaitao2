@@ -1,5 +1,6 @@
 --[[
     🍌 Banana Cat Hub — FULL CODE  ·  OBSIDIAN NOIR + layout kiểu DELTA
+    v4.62: 👻 Toàn hình — nhảy không làm nhân vật ảo trượt một hướng.
     v4.61: 👻 Toàn hình — tắt/trận mới: camera bám Humanoid nhân vật hiện tại.
     v4.60: 👻 Toàn hình — nhân vật ảo trong suốt đi theo mình, camera bám theo ghost.
     v4.59: 👻 Toàn hình — ngụy CFrame tới người chơi (không FireServer); Evade vẫn LTM + đi được.
@@ -573,7 +574,7 @@ D.verPill = New("Frame", {
 Corner(D.verPill, UDim.new(1,0))
 Stroke(D.verPill, C.ACCENT2, 1)   -- v4.9: huy hiệu đen + viền đồng, chữ champagne
 New("TextLabel", {
-    Size=UDim2.new(1,0,1,0), Text="v4.61 · NOIR", BackgroundTransparency=1,
+    Size=UDim2.new(1,0,1,0), Text="v4.62 · NOIR", BackgroundTransparency=1,
     TextColor3=C.ACCENT3, Font=Enum.Font.GothamBold, TextSize=8, ZIndex=6,
 }, D.verPill)
 
@@ -11008,7 +11009,7 @@ S.Invis = {
     on = false, _ghost = nil, _gchar = nil, _char = nil,
     _saved = {}, _hum = nil, _humDisp = nil, _bound = false, _acc = 0, _others = 0,
     _cf = nil, _vel = nil, _ang = nil, _step = nil, _hb = nil, _evade = nil,
-    _camSub = nil, _hold = nil,
+    _camSub = nil, _hold = nil, _jmp = nil,
 }
 local IV = S.Invis
 -- Lỗi: Transparency client KHÔNG replicate → người khác vẫn thấy.
@@ -11250,13 +11251,27 @@ function S.Invis.EnsureGhost(ch)
     S.Invis.AimCam()
 end
 function S.Invis.Follow()
-    -- Lỗi: parent camera + pivot CFrame cũ + bỏ Evade → không thấy ảo / không đi theo.
+    -- Lỗi: pivot cả model lúc nhảy → ảo trượt 1 hướng (anim/WorldPivot lệch HRP).
+    -- Sửa: copy CFrame từng BasePart theo cây tên (không CFrame spoof cũ).
     local ch, g = S.Invis.Char(), IV._ghost
     if not (ch and g and g.Parent) then return end
     if g == ch or g.Name ~= "BC_InvisGhost" then return end
     local hold = S.Invis.Hold()
     if hold and g.Parent ~= hold then g.Parent = hold end
-    pcall(function() g:PivotTo(ch:GetPivot()) end)
+    pcall(function()
+        local function sync(real, fake)
+            for _, rc in ipairs(real:GetChildren()) do
+                local fc = fake:FindFirstChild(rc.Name)
+                if fc then
+                    if rc:IsA("BasePart") and fc:IsA("BasePart") then
+                        fc.CFrame = rc.CFrame
+                    end
+                    sync(rc, fc)
+                end
+            end
+        end
+        sync(ch, g)
+    end)
     S.Invis.AimCam()
 end
 function S.Invis.BindNet(on)
@@ -11272,10 +11287,26 @@ function S.Invis.BindNet(on)
         IV._step, IV._hb = nil, nil
     end
 end
+function S.Invis.BindJump(on)
+    -- Lỗi: nhảy khi HRP còn Away (sau Last, trước Stepped) → ảo/người trượt 1 hướng.
+    -- Sửa: LocalShow ngay JumpRequest. Không cướp 🦘 (HighJump vẫn nhận JumpRequest).
+    if on then
+        if not IV._jmp then
+            IV._jmp = UserInputService.JumpRequest:Connect(function()
+                if not IV.on then return end
+                pcall(S.Invis.LocalShow)
+            end)
+        end
+    else
+        pcall(function() if IV._jmp then IV._jmp:Disconnect() end end)
+        IV._jmp = nil
+    end
+end
 function S.Invis.Bind(on)
     if on and not IV._bound then
         IV._bound = true
         S.Invis.BindNet(true)
+        S.Invis.BindJump(true)
         pcall(function()
             -- Camera-1: KHÔNG LocalShow (CFrame lúc này đè bước đi). Chỉ ghost + ẩn mesh.
             RunService:BindToRenderStep("BC_Invis", Enum.RenderPriority.Camera.Value - 1, function(dt)
@@ -11297,6 +11328,7 @@ function S.Invis.Bind(on)
     elseif (not on) and IV._bound then
         IV._bound = false
         S.Invis.BindNet(false)
+        S.Invis.BindJump(false)
         pcall(function() RunService:UnbindFromRenderStep("BC_Invis") end)
         pcall(function() RunService:UnbindFromRenderStep("BC_InvisNet") end)
     end
