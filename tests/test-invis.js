@@ -1,5 +1,5 @@
 "use strict";
-/** v4.55 — 👻 Evade không giật; ngụy CFrame game khác, không FireServer */
+/** v4.56 — 👻 người khác không thấy (cả Evade): NetHide CFrame, không tắt trên Evade */
 const fs = require("fs");
 const path = require("path");
 const src = fs.readFileSync(path.join(__dirname, "..", "script.js"), "utf8");
@@ -54,8 +54,8 @@ ok("RebuildHubList sync invis", src.includes("S.SyncInvisPanel"));
 
 console.log("== lỗi người khác vẫn thấy (Transparency không replicate) ==");
 ok("ghi nhận Transparency client không replicate",
-  eng.includes("Transparency trên client KHÔNG replicate") ||
-  eng.includes("Transparency client không"));
+  eng.includes("Transparency client KHÔNG replicate") ||
+  eng.includes("Transparency trên client KHÔNG replicate"));
 ok("NetHide ngụy CFrame HRP (replicate vật lý tới mọi client)",
   net.includes("HumanoidRootPart") || eng.includes("function S.Invis.HRP"));
 ok("NetHide cộng IV.Away, không FireServer",
@@ -76,25 +76,40 @@ ok("SpoofAll duyệt Players:GetPlayers, không đụng Character người khác
   eng.includes("Players:GetPlayers()") && !eng.includes("p.Character") &&
   !eng.includes("RemoteEvent") && !eng.includes("RemoteFunction"));
 
-console.log("== Evade không giật / lạ ==");
+console.log("== lỗi người khác vẫn thấy khi Evade tắt NetHide ==");
+ok("BUG: NetHide KHÔNG return sớm trên Evade (người khác phải không thấy)",
+  !/function S\.Invis\.NetHide\([\s\S]*?IsEvade\(\) then[\s\S]*?return end/.test(net) &&
+  net.includes("IV._cf + IV.Away"));
+ok("BUG: BindNet KHÔNG bỏ Heartbeat trên Evade",
+  !bindNet.includes("if S.Invis.IsEvade() then return end") &&
+  bindNet.includes("RunService.Heartbeat:Connect"));
+ok("BUG: LocalShow KHÔNG bỏ restore trên Evade (camera vẫn tại chỗ)",
+  !/function S\.Invis\.LocalShow\([\s\S]*?IsEvade\(\) then return end/.test(show) &&
+  show.includes("hrp.CFrame = IV._cf"));
+ok("NetHide thêm lần Last sau camera (gói replicate ra xa)",
+  bind.includes('BindToRenderStep("BC_InvisNet"') &&
+  bind.includes("Enum.RenderPriority.Last.Value") &&
+  bind.includes("pcall(S.Invis.NetHide)"));
+ok("tắt thì Unbind BC_InvisNet",
+  bind.includes('UnbindFromRenderStep("BC_InvisNet")') &&
+  src.includes('UnbindFromRenderStep("BC_InvisNet")'));
+
+console.log("== Evade không giật clone / tay ==");
 ok("IsEvade theo GameId 3647333358 / PlaceId 9872472334 / tên evade",
   src.includes("function S.Invis.IsEvade") && eng.includes("3647333358") &&
   eng.includes("9872472334") && eng.includes('"evade"'));
 ok("LocalShow TRƯỚC Camera (không Camera+2)",
   bind.includes("Enum.RenderPriority.Camera.Value - 1") &&
   !eng.includes("Camera.Value + 2") && !eng.includes("Character.Value"));
-ok("Evade: NetHide không kéo CFrame",
-  net.includes("S.Invis.IsEvade()") && net.includes("return"));
-ok("Evade: BindNet không Heartbeat CFrame",
-  bindNet.includes("if S.Invis.IsEvade() then return end"));
 ok("Evade / first person: không clone ghost lên camera",
   ghost.includes("S.Invis.IsEvade()") && ghost.includes("S.Invis.IsFirstPerson()") &&
   ghost.includes("S.Invis.KillGhost()") && src.includes("function S.Invis.IsFirstPerson"));
 ok("Evade: HideReal không Transparency=1 cả body (mất tay FP)",
   hide.includes("S.Invis.IsEvade()") && hide.includes("return") &&
   hide.includes("d.Transparency = 1"));
-ok("Status có nhánh Evade",
-  eng.includes("Evade: không kéo CFrame/clone camera"));
+ok("Status Evade không clone, vẫn ngụy CFrame",
+  eng.includes("Evade không clone camera") &&
+  !eng.includes("Evade: không kéo CFrame/clone camera"));
 
 console.log("== mình trong suốt · không bay · không remote ==");
 ok("nhân vật thật Transparency = 1 (local) + ghost 0.45",
