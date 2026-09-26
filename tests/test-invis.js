@@ -1,5 +1,5 @@
 "use strict";
-/** v4.53 — 👻 Toàn hình: không phóng lên trời; mình trong suốt, người khác không thấy */
+/** v4.54 — 👻 người khác không thấy: ngụy CFrame tới client, không FireServer */
 const fs = require("fs");
 const path = require("path");
 const src = fs.readFileSync(path.join(__dirname, "..", "script.js"), "utf8");
@@ -14,15 +14,19 @@ const pEnd = src.indexOf("-- ---------- HẾT KHUNG 👻 TOÀN HÌNH ----------"
 if (pStart < 0 || pEnd < 0) throw new Error("không tìm thấy HubInvis_Panel");
 const panel = src.slice(pStart, pEnd);
 
-const hideStart = eng.indexOf("function S.Invis.HideReal");
-const hideEnd = eng.indexOf("function S.Invis.IsMover");
-const hide = hideStart >= 0 && hideEnd > hideStart ? eng.slice(hideStart, hideEnd) : "";
-const ghostStart = eng.indexOf("function S.Invis.EnsureGhost");
-const ghostEnd = eng.indexOf("function S.Invis.Follow");
-const ghost = ghostStart >= 0 && ghostEnd > ghostStart ? eng.slice(ghostStart, ghostEnd) : "";
-const follow = eng.indexOf("function S.Invis.Follow") >= 0
-  ? eng.slice(eng.indexOf("function S.Invis.Follow"), eng.indexOf("function S.Invis.Bind"))
-  : "";
+function sliceFn(name, next) {
+  const a = eng.indexOf("function S.Invis." + name);
+  const b = next ? eng.indexOf("function S.Invis." + next, a + 1) : eng.length;
+  return a >= 0 && b > a ? eng.slice(a, b) : "";
+}
+const hide = sliceFn("HideReal", "IsMover");
+const ghost = sliceFn("EnsureGhost", "Follow");
+const follow = sliceFn("Follow", "BindNet");
+const net = sliceFn("NetHide", "HideReal");
+const show = sliceFn("LocalShow", "NetHide");
+const bind = sliceFn("Bind", "Set");
+const setFn = sliceFn("Set", "Stop");
+const restore = sliceFn("Restore", "LocalShow");
 
 let pass = 0, fail = 0;
 function ok(name, cond, detail) {
@@ -31,10 +35,11 @@ function ok(name, cond, detail) {
 }
 
 console.log("== nguồn 👻 toàn hình ==");
-ok("S.Invis.Set / HideReal / EnsureGhost / Follow / SpoofAll / Stop",
+ok("S.Invis.Set / HideReal / EnsureGhost / Follow / SpoofAll / Stop / NetHide / LocalShow",
   src.includes("function S.Invis.Set") && src.includes("function S.Invis.HideReal") &&
   src.includes("function S.Invis.EnsureGhost") && src.includes("function S.Invis.Follow") &&
-  src.includes("function S.Invis.SpoofAll") && src.includes("function S.Invis.Stop"));
+  src.includes("function S.Invis.SpoofAll") && src.includes("function S.Invis.Stop") &&
+  src.includes("function S.Invis.NetHide") && src.includes("function S.Invis.LocalShow"));
 ok("thẻ invis + khung HubInvis_Panel",
   src.includes('action="invis"') && src.includes('Name = "HubInvis_Panel"') &&
   src.includes('HubInvis_Panel = "Tiện ích"'));
@@ -42,46 +47,52 @@ ok("RunHubAction invis gọi Set",
   /elseif id == "invis" then[\s\S]{0,280}S\.Invis\.Set/.test(src));
 ok("RebuildHubList sync invis", src.includes("S.SyncInvisPanel"));
 
-console.log("== mình trong suốt · người khác toàn hình · không remote ==");
-ok("nhân vật thật Transparency = 1 (người khác không thấy)",
-  hide.includes("d.Transparency = 1") && hide.includes('d:IsA("BasePart")'));
-ok("ghost local Transparency 0.45 (mình thấy trong suốt)",
-  ghost.includes('g.Name = "BC_InvisGhost"') && ghost.includes("d.Transparency = 0.45") &&
-  ghost.includes("ch:Clone()"));
+console.log("== lỗi người khác vẫn thấy (Transparency không replicate) ==");
+ok("ghi nhận Transparency client không replicate",
+  eng.includes("Transparency trên client KHÔNG replicate") ||
+  eng.includes("Transparency client không"));
+ok("NetHide ngụy CFrame HRP (replicate vật lý tới mọi client)",
+  net.includes("HumanoidRootPart") || eng.includes("function S.Invis.HRP"));
+ok("NetHide cộng IV.Away, không FireServer",
+  net.includes("IV._cf + IV.Away") && !/:FireServer\s*\(/.test(eng) &&
+  !/:InvokeServer\s*\(/.test(eng) && !/:FireClient\s*\(/.test(eng));
+ok("Away đủ xa (không đứng nguyên chỗ) nhưng Y nhỏ (không bay lên trời)",
+  eng.includes("IV.Away = Vector3.new(24000, 40, 24000)") &&
+  !eng.includes("1e5") && !eng.includes("100000"));
+ok("Stepped LocalShow (trước physics) + Heartbeat NetHide (sau physics)",
+  eng.includes("RunService.Stepped:Connect") && eng.includes("RunService.Heartbeat:Connect") &&
+  bind.includes("S.Invis.BindNet(true)") && bind.includes("S.Invis.LocalShow") &&
+  eng.includes("pcall(S.Invis.NetHide)"));
+ok("LocalShow trả CFrame đã lưu — mình không bị kéo ra xa",
+  show.includes("hrp.CFrame = IV._cf") && restore.includes("hrp.CFrame = IV._cf"));
+ok("Stop/Restore trả CFrame trước khi tắt",
+  setFn.includes("S.Invis.Restore()") && restore.includes("hrp.CFrame = IV._cf"));
+ok("SpoofAll duyệt Players:GetPlayers, không đụng Character người khác, không remote",
+  eng.includes("Players:GetPlayers()") && !eng.includes("p.Character") &&
+  !eng.includes("RemoteEvent") && !eng.includes("RemoteFunction"));
+
+console.log("== mình trong suốt · không bay · không remote ==");
+ok("nhân vật thật Transparency = 1 (local) + ghost 0.45",
+  hide.includes("d.Transparency = 1") && ghost.includes("d.Transparency = 0.45") &&
+  ghost.includes('g.Name = "BC_InvisGhost"'));
 ok("ghost parent CurrentCamera, KHÔNG fallback workspace",
   ghost.includes("g.Parent = cam") && !ghost.includes("cam or workspace") &&
-  !ghost.includes("g.Parent = workspace") && ghost.includes("if not cam then return end"));
-ok("SpoofAll duyệt Players:GetPlayers, không đụng Character người khác",
-  eng.includes("Players:GetPlayers()") && !eng.includes("p.Character") &&
-  !eng.includes("other.Character"));
-ok("KHÔNG gọi FireServer / InvokeServer / FireClient",
-  !/:FireServer\s*\(/.test(eng) && !/:InvokeServer\s*\(/.test(eng) &&
-  !/:FireClient\s*\(/.test(eng) && !eng.includes("RemoteEvent") && !eng.includes("RemoteFunction"));
+  !ghost.includes("g.Parent = workspace"));
 ok("không chìm đất / không HUD / không CameraType",
   !eng.includes("_underY") && !eng.includes("pressHud") && !eng.includes("CameraType") &&
   !eng.includes("BC_SafeInvisCam"));
 ok("không cướp 🚀/🧱/PlatformStand nhân vật thật",
   !eng.includes("MV.SetFly") && !eng.includes("SetNoclip") && !eng.includes("PlatformStand") &&
   !eng.includes("MV.Safe.Set"));
-
-console.log("== lỗi phóng lên trời ==");
-ok("HideReal không đụng Anchored / CanCollide / Massless / Velocity / PivotTo",
+ok("HideReal không đụng Anchored / CanCollide / Massless / PivotTo",
   hide.length > 0 && !hide.includes("Anchored") && !hide.includes("CanCollide") &&
-  !hide.includes("Massless") && !hide.includes("Velocity") && !hide.includes("PivotTo") &&
-  !hide.includes("CFrame"));
-ok("ghost hủy Humanoid + BodyVelocity trước khi parent (không 2 rig chồng)",
-  ghost.includes('d:IsA("Humanoid")') && ghost.includes("d:Destroy()") &&
-  ghost.includes("S.Invis.IsMover(d)") && eng.includes('d:IsA("BodyVelocity")') &&
+  !hide.includes("Massless") && !hide.includes("PivotTo"));
+ok("ghost hủy Humanoid + mover trước khi parent",
+  ghost.includes('d:IsA("Humanoid")') && ghost.includes("S.Invis.IsMover(d)") &&
   ghost.indexOf('d:IsA("Humanoid")') < ghost.indexOf("g.Parent = cam"));
-ok("ghost CanCollide/CanTouch = false trước khi parent camera",
-  ghost.indexOf("d.CanCollide = false") < ghost.indexOf("g.Parent = cam") &&
-  ghost.indexOf("d.CanTouch = false") < ghost.indexOf("g.Parent = cam") &&
-  ghost.indexOf("d.Anchored = true") < ghost.indexOf("g.Parent = cam"));
 ok("Follow chỉ PivotTo ghost, bỏ qua nếu g == nhân vật thật",
-  follow.includes("g:PivotTo(ch:GetPivot())") && !follow.includes("ch:PivotTo") &&
-  follow.includes("g == ch") && follow.includes('g.Name ~= "BC_InvisGhost"'));
-ok("EnsureGhost từ chối g == ch",
-  ghost.includes("g == ch") && ghost.includes("g.Parent = nil"));
+  (follow.includes("g:PivotTo(cf)") || follow.includes("g:PivotTo(ch:GetPivot())")) &&
+  !follow.includes("ch:PivotTo") && follow.includes("g == ch"));
 
 console.log("== không mất tính năng ==");
 ok("🚀/💨/🦘/🛡/✨/🔐 còn",

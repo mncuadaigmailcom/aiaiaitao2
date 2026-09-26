@@ -1,5 +1,6 @@
 --[[
     🍌 Banana Cat Hub — FULL CODE  ·  OBSIDIAN NOIR + layout kiểu DELTA
+    v4.54: 👻 Toàn hình — người khác không thấy (ngụy CFrame tới mọi client, không FireServer).
     v4.53: 👻 Toàn hình — sửa phóng lên trời (ghost không Humanoid/vật lý, không parent workspace).
     v4.52: 👻 Toàn hình — mình thấy trong suốt, người khác không thấy; không FireServer.
     v4.51: xóa 👻 toàn hình an toàn · tối ưu mượt (bỏ vòng RenderStep Last mỗi frame).
@@ -564,7 +565,7 @@ D.verPill = New("Frame", {
 Corner(D.verPill, UDim.new(1,0))
 Stroke(D.verPill, C.ACCENT2, 1)   -- v4.9: huy hiệu đen + viền đồng, chữ champagne
 New("TextLabel", {
-    Size=UDim2.new(1,0,1,0), Text="v4.53 · NOIR", BackgroundTransparency=1,
+    Size=UDim2.new(1,0,1,0), Text="v4.54 · NOIR", BackgroundTransparency=1,
     TextColor3=C.ACCENT3, Font=Enum.Font.GothamBold, TextSize=8, ZIndex=6,
 }, D.verPill)
 
@@ -3638,7 +3639,7 @@ function S.FitToTab(obj, nm)
 end
 
 _G.BananaCatHubAPI = {
-    Version = "4.53",
+    Version = "4.54",
     HubGui = gui,     -- v4.4e: sửa lỗi cũ — biến tên là `gui`, không phải `hubGui` (trước đây là nil)
     Main = main,
     TabArea = function(self, nm) return S.TabArea(nm) end,
@@ -8523,7 +8524,7 @@ S.ScriptHubList = {
     {icon="🪩", name="Thảm Kính", cat="Di chuyển", ord=16, action="carpet",
      desc="Thảm kính BÁM THEO chân (chạy trên không). Đặt kính cố định / bay tới kính / bay tới người nằm ở khung ⚙ trên danh sách và tab 👥 Người Chơi — không lặp thẻ."},
     {icon="👻", name="Toàn Hình", cat="Tiện ích", ord=21.5, action="invis",
-     desc="Mình thấy nhân vật TRONG SUỐT; người khác trong server thấy mình BIẾN MẤT. Ngụy appearance tới mọi người qua Transparency trên nhân vật MÌNH — KHÔNG FireServer / không gửi remote. Không chìm đất, không cướp 🚀💨🦘🛡✨🔐."},
+     desc="Mình thấy nhân vật TRONG SUỐT. Người chơi khác KHÔNG thấy (ngụy CFrame vật lý tới mọi client — Transparency client không replicate). KHÔNG FireServer / không remote. Không chìm đất, không cướp 🚀💨🦘🛡✨🔐."},
     {icon="✨", name="Phát Sáng", cat="Tiện ích", ord=22, action="glow",
      desc="CHÍNH BẠN phát sáng: nhuộm sáng cả nhân vật + đèn toả sáng thật quanh người. Chỉnh CHIỀU RỘNG + ĐỘ SÁNG + MÀU ở khung ✨ ngay đầu danh sách. 👁 xuyên tường (sáng xuyên vật cản) · 💡 đèn không bị vật cản chặn · bị game xoá hay respawn thì tự gắn lại."},
     {icon="🛡", name="Bay An Toàn", cat="Di chuyển", ord=23, action="safefly",
@@ -10998,12 +10999,20 @@ end
 S.Invis = {
     on = false, _ghost = nil, _gchar = nil, _char = nil,
     _saved = {}, _hum = nil, _humDisp = nil, _bound = false, _acc = 0, _others = 0,
+    _cf = nil, _vel = nil, _ang = nil, _step = nil, _hb = nil,
 }
 local IV = S.Invis
+-- Lỗi: Transparency trên client KHÔNG replicate → người khác vẫn thấy.
+-- Sửa: sau physics đưa HRP ra xa (Roblox replicate CFrame tới mọi client, không remote),
+-- trước physics + lúc render trả CFrame lại → mình không bay lên trời.
+IV.Away = Vector3.new(24000, 40, 24000)
 function S.Invis.Char() return player and player.Character or nil end
+function S.Invis.HRP(ch)
+    ch = ch or S.Invis.Char()
+    return ch and ch:FindFirstChild("HumanoidRootPart")
+end
 function S.Invis.SpoofAll()
-    -- Duyệt mọi người trong server; KHÔNG FireServer / InvokeServer / FireClient.
-    -- Transparency trên nhân vật MÌNH tự replicate appearance tới client họ.
+    -- Điều khiển appearance/vị trí tới MỌI người chơi qua replicate vật lý. Không FireServer.
     local n = 0
     for _, p in ipairs(Players:GetPlayers()) do
         if p ~= player then n = n + 1 end
@@ -11032,11 +11041,42 @@ function S.Invis.Restore()
         pcall(function() IV._hum.DisplayDistanceType = IV._humDisp end)
     end
     IV._hum, IV._humDisp = nil, nil
+    local hrp = S.Invis.HRP()
+    if hrp and IV._cf then
+        pcall(function()
+            hrp.CFrame = IV._cf
+            if IV._vel then hrp.AssemblyLinearVelocity = IV._vel end
+            if IV._ang then hrp.AssemblyAngularVelocity = IV._ang end
+        end)
+    end
+    IV._cf, IV._vel, IV._ang = nil, nil, nil
+end
+function S.Invis.LocalShow()
+    if not IV.on then return end
+    local hrp = S.Invis.HRP()
+    if not (hrp and IV._cf) then return end
+    hrp.CFrame = IV._cf
+    pcall(function()
+        if IV._vel then hrp.AssemblyLinearVelocity = IV._vel end
+        if IV._ang then hrp.AssemblyAngularVelocity = IV._ang end
+    end)
+end
+function S.Invis.NetHide()
+    if not IV.on then return end
+    local hrp = S.Invis.HRP()
+    if not hrp then return end
+    S.Invis.SpoofAll()
+    IV._cf = hrp.CFrame
+    pcall(function()
+        IV._vel = hrp.AssemblyLinearVelocity
+        IV._ang = hrp.AssemblyAngularVelocity
+    end)
+    -- Ngụy CFrame tới mọi client (replicate vật lý). Không FireServer. Y nhỏ để không "bay lên trời".
+    hrp.CFrame = IV._cf + IV.Away
 end
 function S.Invis.HideReal(ch)
     ch = ch or S.Invis.Char()
     if not ch then return end
-    S.Invis.SpoofAll()
     local saved = IV._saved
     if not saved then saved = {}; IV._saved = saved end
     for _, d in ipairs(ch:GetDescendants()) do
@@ -11088,7 +11128,6 @@ function S.Invis.EnsureGhost(ch)
     if not (ok and g) or g == ch then return end
     g.Name = "BC_InvisGhost"
     g.Parent = nil
-    -- Gỡ Humanoid + mover TRƯỚC khi vào workspace: 2 Humanoid chồng nhau = phóng lên trời.
     for _, d in ipairs(g:GetDescendants()) do
         if d:IsA("Humanoid") or d:IsA("Animator") or d:IsA("Script")
             or d:IsA("LocalScript") or d:IsA("ModuleScript")
@@ -11113,7 +11152,7 @@ function S.Invis.EnsureGhost(ch)
         end
     end
     local cam = workspace.CurrentCamera
-    if not cam then return end          -- không bao giờ parent workspace (chồng nhân vật = bay)
+    if not cam then return end
     g.Parent = cam
     if g == ch then pcall(function() g:Destroy() end); return end
     IV._ghost = g
@@ -11125,13 +11164,38 @@ function S.Invis.Follow()
     local cam = workspace.CurrentCamera
     if not cam then return end
     if g.Parent ~= cam then g.Parent = cam end
-    pcall(function() g:PivotTo(ch:GetPivot()) end)   -- chỉ ghost, không PivotTo nhân vật thật
+    local cf = IV._cf
+    if cf then
+        pcall(function() g:PivotTo(cf) end)
+    else
+        pcall(function() g:PivotTo(ch:GetPivot()) end)
+    end
+end
+function S.Invis.BindNet(on)
+    if on then
+        if not IV._step then
+            IV._step = RunService.Stepped:Connect(function()
+                pcall(S.Invis.LocalShow)
+            end)
+        end
+        if not IV._hb then
+            IV._hb = RunService.Heartbeat:Connect(function()
+                pcall(S.Invis.NetHide)
+            end)
+        end
+    else
+        pcall(function() if IV._step then IV._step:Disconnect() end end)
+        pcall(function() if IV._hb then IV._hb:Disconnect() end end)
+        IV._step, IV._hb = nil, nil
+    end
 end
 function S.Invis.Bind(on)
     if on and not IV._bound then
         IV._bound = true
+        S.Invis.BindNet(true)
         pcall(function()
             RunService:BindToRenderStep("BC_Invis", Enum.RenderPriority.Camera.Value + 2, function(dt)
+                pcall(S.Invis.LocalShow)
                 pcall(S.Invis.Follow)
                 IV._acc = (IV._acc or 0) + (tonumber(dt) or 0.016)
                 if IV._acc < 0.45 then return end
@@ -11141,6 +11205,7 @@ function S.Invis.Bind(on)
         end)
     elseif (not on) and IV._bound then
         IV._bound = false
+        S.Invis.BindNet(false)
         pcall(function() RunService:UnbindFromRenderStep("BC_Invis") end)
     end
 end
@@ -11148,6 +11213,7 @@ function S.Invis.Set(on)
     IV.on = (on == true)
     if IV.on then
         local ch = S.Invis.Char()
+        S.Invis.SpoofAll()
         S.Invis.HideReal(ch)
         S.Invis.EnsureGhost(ch)
         S.Invis.Bind(true)
@@ -11162,13 +11228,14 @@ end
 function S.Invis.Stop() return S.Invis.Set(false) end
 function S.Invis.Status()
     if not IV.on then return "👻 toàn hình: đang TẮT" end
-    return string.format("👻 toàn hình: BẬT · mình trong suốt · người khác không thấy · %d người trong server · không remote", IV._others or 0)
+    return string.format("👻 toàn hình: BẬT · mình trong suốt · ngụy CFrame tới %d người chơi · không remote", IV._others or 0)
 end
 do
     trackConn(player.CharacterAdded:Connect(function()
         if not IV.on then return end
         IV._saved = {}
         IV._hum, IV._humDisp = nil, nil
+        IV._cf, IV._vel, IV._ang = nil, nil, nil
         S.Invis.KillGhost()
         task.defer(function()
             if not IV.on then return end
@@ -11510,8 +11577,8 @@ do
 
     New("TextLabel", {
         Size = UDim2.new(1, -16, 0, 36), Position = UDim2.new(0, 8, 0, 46),
-        Text = "Không gửi remote lên server. Mình thấy bóng trong suốt (clone local). "
-             .. "Người khác thấy nhân vật biến mất. Không chìm đất, không cướp bay/nhảy/🛡/✨.",
+        Text = "Không FireServer. Transparency client không tới người khác — ngụy CFrame vật lý tới mọi client. "
+             .. "Mình thấy bóng trong suốt tại chỗ. Không chìm đất, không cướp bay/nhảy/🛡/✨.",
         TextWrapped = true, BackgroundTransparency = 1, TextColor3 = C.MUTED,
         Font = Enum.Font.GothamMedium, TextSize = 8, TextXAlignment = Enum.TextXAlignment.Left,
         TextYAlignment = Enum.TextYAlignment.Top, ZIndex = 7,
@@ -12695,7 +12762,7 @@ main.Visible = true
 togBtn.Text = "✕"
 
 print(string.format(
-    "✅ Banana Cat Hub v4.53 — sẵn sàng! Đã nạp lại %d script + %d waypoint + %d tab tính năng từ bộ nhớ (chế độ: %s%s)",
+    "✅ Banana Cat Hub v4.54 — sẵn sàng! Đã nạp lại %d script + %d waypoint + %d tab tính năng từ bộ nhớ (chế độ: %s%s)",
     Store.loadedScripts, Store.loadedWp, #Store.loadedFeatures, Store.mode,
     Store.lastError and (" | ⚠️ " .. Store.lastError) or ""
 ))
