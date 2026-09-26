@@ -1,5 +1,5 @@
 "use strict";
-/** v4.64 — 🎥 Khán giả: camera bay khắp nơi (giống 🚀), nhân vật đứng yên. Xóa 👻 toàn hình. */
+/** v4.65 — 🎥 Khán giả: camera xuyên tường (FR._pos + Last, không Popper). */
 const fs = require("fs");
 const path = require("path");
 const src = fs.readFileSync(path.join(__dirname, "..", "script.js"), "utf8");
@@ -68,11 +68,16 @@ ok("AimCam CameraType Scriptable (camera đi, người ở lại)",
 ok("Step dùng MV.FlyVelocity + _ReadFlyInput (cách bay giống 🚀)",
   step.includes("MV.FlyVelocity") && step.includes("MV._ReadFlyInput") &&
   step.includes("cam.CFrame"));
-ok("Bind BC_FreeCam Camera+1 như 🚀 Fly, không cướp Bind Fly",
+ok("Bind BC_FreeCam Last (sau Popper), không cướp Bind Fly",
   bind.includes('BindToRenderStep("BC_FreeCam"') &&
-  bind.includes("Camera.Value + 1") &&
+  bind.includes("Last.Value") && !bind.includes("Camera.Value + 1") &&
   !bind.includes('BindToRenderStep("Fly"') &&
   src.includes('BindToRenderStep("Fly"'));
+ok("BUG không xuyên tường: Step dùng FR._pos, không cam.CFrame.Position (Popper kéo ra)",
+  step.includes("FR._pos") && !step.includes("cam.CFrame.Position"));
+ok("BUG không xuyên tường: AimCam Scriptable mỗi Step + nil CameraSubject",
+  step.includes("S.Free.AimCam()") && aim.includes("CameraType.Scriptable") &&
+  (aim.includes("CameraSubject = nil") || aim.includes("cam.CameraSubject = nil")));
 ok("không FireServer / không remote trong engine",
   !/:FireServer\s*\(/.test(eng) && !/:InvokeServer\s*\(/.test(eng) &&
   !eng.includes("RemoteEvent") && !eng.includes("RemoteFunction"));

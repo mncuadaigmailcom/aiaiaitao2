@@ -1,5 +1,6 @@
 --[[
     🍌 Banana Cat Hub — FULL CODE  ·  OBSIDIAN NOIR + layout kiểu DELTA
+    v4.65: 🎥 Khán giả — camera xuyên tường (tự lưu vị trí, ghi lúc Last, không Popper).
     v4.64: 🎥 Khán giả — camera bay khắp nơi (giống 🚀), nhân vật đứng yên. Xóa 👻 toàn hình.
     v4.63: 👻 Toàn hình — nhảy: ảo không bám Away, không trượt XZ, camera không nghiêng.
     v4.62: 👻 Toàn hình — nhảy không làm nhân vật ảo trượt một hướng.
@@ -577,7 +578,7 @@ D.verPill = New("Frame", {
 Corner(D.verPill, UDim.new(1,0))
 Stroke(D.verPill, C.ACCENT2, 1)   -- v4.9: huy hiệu đen + viền đồng, chữ champagne
 New("TextLabel", {
-    Size=UDim2.new(1,0,1,0), Text="v4.64 · NOIR", BackgroundTransparency=1,
+    Size=UDim2.new(1,0,1,0), Text="v4.65 · NOIR", BackgroundTransparency=1,
     TextColor3=C.ACCENT3, Font=Enum.Font.GothamBold, TextSize=8, ZIndex=6,
 }, D.verPill)
 
@@ -11012,7 +11013,7 @@ S.Free = {
     on = false, speed = 50,
     _bound = false, _cf = nil, _wasAnchored = nil, _hrp = nil,
     _camType = nil, _camSub = nil, _yaw = 0, _pitch = 0,
-    _mdx = 0, _mdy = 0, _step = nil, _mouse = nil,
+    _mdx = 0, _mdy = 0, _step = nil, _mouse = nil, _pos = nil,
 }
 local FR = S.Free
 function S.Free.Char() return player and player.Character or nil end
@@ -11050,6 +11051,7 @@ function S.Free.AimCam()
     if FR._camType == nil then FR._camType = cam.CameraType end
     if FR._camSub == nil then FR._camSub = cam.CameraSubject end
     cam.CameraType = Enum.CameraType.Scriptable
+    pcall(function() cam.CameraSubject = nil end)
 end
 function S.Free.RestoreCam()
     local cam = workspace.CurrentCamera
@@ -11067,7 +11069,7 @@ function S.Free.RestoreCam()
     local hum = ch and ch:FindFirstChildOfClass("Humanoid")
     local sub = hum or FR._camSub
     if sub then pcall(function() cam.CameraSubject = sub end) end
-    FR._camType, FR._camSub = nil, nil
+    FR._camType, FR._camSub, FR._pos = nil, nil, nil
 end
 function S.Free.Look()
     local yaw = FR._yaw or 0
@@ -11080,6 +11082,8 @@ function S.Free.Look()
     return CFrame.Angles(0, yaw, 0) * CFrame.Angles(pitch, 0, 0)
 end
 function S.Free.Step(dt)
+    -- Lỗi: lấy vị trí camera đã bị Popper + Camera+1 → không xuyên tường.
+    -- Sửa: FR._pos tự lưu; Scriptable mỗi frame; ghi lúc Last.
     if not FR.on then return end
     S.Free.HoldChar()
     local cam = workspace.CurrentCamera
@@ -11089,15 +11093,18 @@ function S.Free.Step(dt)
     if dt < 0 then dt = 0 end
     if dt > 0.1 then dt = 0.1 end
     local look = S.Free.Look()
-    local pos = cam.CFrame.Position
+    local pos = FR._pos
+    if not pos then return end
     local ch = S.Free.Char()
     local hum = ch and ch:FindFirstChildOfClass("Humanoid")
+    local cf = CFrame.new(pos) * look
     local input = Vector3.zero
     pcall(function()
-        input = MV._ReadFlyInput(cam.CFrame, hum)
+        input = MV._ReadFlyInput(cf, hum)
     end)
-    local vel = MV.FlyVelocity(CFrame.new(pos) * look, input, FR.speed)
+    local vel = MV.FlyVelocity(cf, input, FR.speed)
     pos = pos + vel * dt
+    FR._pos = pos
     cam.CFrame = CFrame.new(pos) * look
 end
 function S.Free.Bind(on)
@@ -11114,7 +11121,7 @@ function S.Free.Bind(on)
             end)
         end
         pcall(function()
-            RunService:BindToRenderStep("BC_FreeCam", Enum.RenderPriority.Camera.Value + 1, function(dt)
+            RunService:BindToRenderStep("BC_FreeCam", Enum.RenderPriority.Last.Value, function(dt)
                 pcall(S.Free.Step, dt)
             end)
         end)
@@ -11143,6 +11150,7 @@ function S.Free.Set(on)
             FR._yaw = math.atan2(-look.X, -look.Z)
             FR._pitch = math.asin(y)
             FR._mdx, FR._mdy = 0, 0
+            FR._pos = cam.CFrame.Position
         end
         FR.on = true
         S.Free.HoldChar()
