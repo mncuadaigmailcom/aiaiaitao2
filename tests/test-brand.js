@@ -1,5 +1,5 @@
 "use strict";
-/** v4.68 — tên taodepzai · nút ẩn/bật menu là ảnh game + hiệu ứng · không mất ⚙ thảm */
+/** v4.69 — taodepzai hiện được: SyncTogBtn không crash nil S */
 const fs = require("fs");
 const path = require("path");
 const src = fs.readFileSync(path.join(__dirname, "..", "script.js"), "utf8");
@@ -12,8 +12,8 @@ function ok(name, cond, detail) {
 
 console.log("== tên script taodepzai ==");
 ok("tiêu đề menu Text=taodepzai", src.includes('Text="taodepzai"'));
-ok("pill v4.68 · NOIR đúng 1 lần",
-  (src.match(/Text="v4\.68 · NOIR"/g) || []).length === 1);
+ok("pill v4.69 · NOIR đúng 1 lần",
+  (src.match(/Text="v4\.69 · NOIR"/g) || []).length === 1);
 ok("không còn tiêu đề Banana Cat Hub trên titleBar",
   !src.includes('Text="🍌 Banana Cat Hub"'));
 
@@ -25,9 +25,17 @@ ok("TogRing + UIGradient hiệu ứng",
   src.includes('Name = "TogRing"') && src.includes("UIGradient") &&
   src.includes("BC_TogFx"));
 ok("S.SyncTogBtn — ⚙ khi chạy thảm, ảnh khi menu thường",
-  src.includes("function S.SyncTogBtn") &&
+  src.includes("local function SyncTogBtn") && src.includes("S.SyncTogBtn = SyncTogBtn") &&
   /function MV.SetRunMode[\s\S]{0,1200}S\.SyncTogBtn/.test(src) &&
   src.includes('togBtn.Text = "⚙"'));
+ok("BUG không hiện: không gán S.xxx trước khi S = { (crash nil → không GUI)",
+  (() => {
+    const i = src.indexOf("\nS = {") >= 0 ? src.indexOf("\nS = {") : src.indexOf("\r\nS = {");
+    if (i < 0) return false;
+    return !/function S\.\w+\s*\(/.test(src.slice(0, i));
+  })());
+ok("ScreenGui DisplayOrder để nổi trên GUI game",
+  /Name=\"ExMenu\"[\s\S]{0,280}DisplayOrder/.test(src));
 
 console.log("== không mất tính năng ==");
 ok("🚀/💨/🦘/🛡/✨/🔐/🎥/👣 còn",

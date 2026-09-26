@@ -1,5 +1,6 @@
 --[[
     taodepzai — FULL CODE  ·  OBSIDIAN NOIR + layout kiểu DELTA
+    v4.69: sửa GUI không hiện — SyncTogBtn crash vì S còn nil.
     v4.68: tên taodepzai · nút menu ảnh game + hiệu ứng. KHÔNG cắt tính năng.
     v4.67: tối ưu — nạp lại không kẹt 🎥; rút gọn changelog. KHÔNG cắt hàm/khung/thẻ.
     v4.66: 🎥 quay camera. v4.65: xuyên tường. v4.64: khán giả thay 👻.
@@ -454,13 +455,15 @@ local gui = New("ScreenGui", {
     Name="ExMenu",
     IgnoreGuiInset=true,
     ResetOnSpawn=false,
+    DisplayOrder=10000,
     ZIndexBehavior=Enum.ZIndexBehavior.Sibling,
 }, targetGui)
+pcall(function() gui.Enabled = true end)
 
 local togBtn = New("TextButton", {
     Size=UDim2.new(0,54,0,54),
     Position=UDim2.new(1,-66,1,-66),
-    Text="",
+    Text="✦",
     BackgroundColor3=C.DEEP,
     BackgroundTransparency=0.06,
     TextColor3=C.ACCENT3,
@@ -522,7 +525,8 @@ pcall(function()
         end)
     end)
 end)
-function S.SyncTogBtn()
+local function SyncTogBtn()
+    -- Lỗi v4.68: gan SyncTogBtn vao S khi S con nil → script chet, khong thay menu.
     pcall(function()
         if not togBtn then return end
         local icon = togBtn:FindFirstChild("TogIcon")
@@ -532,7 +536,7 @@ function S.SyncTogBtn()
             if icon then icon.Visible = false end
             if ring then ring.Visible = false end
         else
-            togBtn.Text = ""
+            togBtn.Text = "✦"
             if icon then icon.Visible = true end
             if ring then ring.Visible = true end
         end
@@ -628,7 +632,7 @@ D.verPill = New("Frame", {
 Corner(D.verPill, UDim.new(1,0))
 Stroke(D.verPill, C.ACCENT2, 1)   -- v4.9: huy hiệu đen + viền đồng, chữ champagne
 New("TextLabel", {
-    Size=UDim2.new(1,0,1,0), Text="v4.68 · NOIR", BackgroundTransparency=1,
+    Size=UDim2.new(1,0,1,0), Text="v4.69 · NOIR", BackgroundTransparency=1,
     TextColor3=C.ACCENT3, Font=Enum.Font.GothamBold, TextSize=8, ZIndex=6,
 }, D.verPill)
 
@@ -999,6 +1003,7 @@ S = {
     parkCodeGuis = true,
     embeds       = {},       -- registry: {host, gui, recs={{child,origParent,origPos,origSize}}, conns={}}
 }
+S.SyncTogBtn = SyncTogBtn
 
 S.WRAP_MARK_OLD = "-- ===== AUTO-GENERATED SIZE WRAPPER"
 S.WRAP_MARK_NEW = "-- ===== AUTO-GENERATED FIT WRAPPER"
@@ -12788,7 +12793,7 @@ main.Visible = true
 if S.SyncTogBtn then S.SyncTogBtn() end
 
 print(string.format(
-    "✅ taodepzai v4.68 — sẵn sàng! Đã nạp lại %d script + %d waypoint + %d tab tính năng từ bộ nhớ (chế độ: %s%s)",
+    "✅ taodepzai v4.69 — sẵn sàng! Đã nạp lại %d script + %d waypoint + %d tab tính năng từ bộ nhớ (chế độ: %s%s)",
     Store.loadedScripts, Store.loadedWp, #Store.loadedFeatures, Store.mode,
     Store.lastError and (" | ⚠️ " .. Store.lastError) or ""
 ))
