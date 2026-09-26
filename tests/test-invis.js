@@ -1,5 +1,5 @@
 "use strict";
-/** v4.54 — 👻 người khác không thấy: ngụy CFrame tới client, không FireServer */
+/** v4.55 — 👻 Evade không giật; ngụy CFrame game khác, không FireServer */
 const fs = require("fs");
 const path = require("path");
 const src = fs.readFileSync(path.join(__dirname, "..", "script.js"), "utf8");
@@ -24,7 +24,12 @@ const ghost = sliceFn("EnsureGhost", "Follow");
 const follow = sliceFn("Follow", "BindNet");
 const net = sliceFn("NetHide", "HideReal");
 const show = sliceFn("LocalShow", "NetHide");
-const bind = sliceFn("Bind", "Set");
+const bindNet = sliceFn("BindNet", "Bind(");
+const bind = (() => {
+  const a = eng.indexOf("function S.Invis.Bind(");
+  const b = eng.indexOf("function S.Invis.Set", a + 1);
+  return a >= 0 && b > a ? eng.slice(a, b) : "";
+})();
 const setFn = sliceFn("Set", "Stop");
 const restore = sliceFn("Restore", "LocalShow");
 
@@ -70,6 +75,26 @@ ok("Stop/Restore trả CFrame trước khi tắt",
 ok("SpoofAll duyệt Players:GetPlayers, không đụng Character người khác, không remote",
   eng.includes("Players:GetPlayers()") && !eng.includes("p.Character") &&
   !eng.includes("RemoteEvent") && !eng.includes("RemoteFunction"));
+
+console.log("== Evade không giật / lạ ==");
+ok("IsEvade theo GameId 3647333358 / PlaceId 9872472334 / tên evade",
+  src.includes("function S.Invis.IsEvade") && eng.includes("3647333358") &&
+  eng.includes("9872472334") && eng.includes('"evade"'));
+ok("LocalShow TRƯỚC Camera (không Camera+2)",
+  bind.includes("Enum.RenderPriority.Camera.Value - 1") &&
+  !eng.includes("Camera.Value + 2") && !eng.includes("Character.Value"));
+ok("Evade: NetHide không kéo CFrame",
+  net.includes("S.Invis.IsEvade()") && net.includes("return"));
+ok("Evade: BindNet không Heartbeat CFrame",
+  bindNet.includes("if S.Invis.IsEvade() then return end"));
+ok("Evade / first person: không clone ghost lên camera",
+  ghost.includes("S.Invis.IsEvade()") && ghost.includes("S.Invis.IsFirstPerson()") &&
+  ghost.includes("S.Invis.KillGhost()") && src.includes("function S.Invis.IsFirstPerson"));
+ok("Evade: HideReal không Transparency=1 cả body (mất tay FP)",
+  hide.includes("S.Invis.IsEvade()") && hide.includes("return") &&
+  hide.includes("d.Transparency = 1"));
+ok("Status có nhánh Evade",
+  eng.includes("Evade: không kéo CFrame/clone camera"));
 
 console.log("== mình trong suốt · không bay · không remote ==");
 ok("nhân vật thật Transparency = 1 (local) + ghost 0.45",
