@@ -1,5 +1,6 @@
 --[[
     🍌 Banana Cat Hub — FULL CODE  ·  OBSIDIAN NOIR + layout kiểu DELTA
+    v4.53: 👻 Toàn hình — sửa phóng lên trời (ghost không Humanoid/vật lý, không parent workspace).
     v4.52: 👻 Toàn hình — mình thấy trong suốt, người khác không thấy; không FireServer.
     v4.51: xóa 👻 toàn hình an toàn · tối ưu mượt (bỏ vòng RenderStep Last mỗi frame).
     v4.43: 🔐 Anti Ban — tự hop server khác khi bị kick/ban hoặc server nghi.
@@ -563,7 +564,7 @@ D.verPill = New("Frame", {
 Corner(D.verPill, UDim.new(1,0))
 Stroke(D.verPill, C.ACCENT2, 1)   -- v4.9: huy hiệu đen + viền đồng, chữ champagne
 New("TextLabel", {
-    Size=UDim2.new(1,0,1,0), Text="v4.52 · NOIR", BackgroundTransparency=1,
+    Size=UDim2.new(1,0,1,0), Text="v4.53 · NOIR", BackgroundTransparency=1,
     TextColor3=C.ACCENT3, Font=Enum.Font.GothamBold, TextSize=8, ZIndex=6,
 }, D.verPill)
 
@@ -3637,7 +3638,7 @@ function S.FitToTab(obj, nm)
 end
 
 _G.BananaCatHubAPI = {
-    Version = "4.52",
+    Version = "4.53",
     HubGui = gui,     -- v4.4e: sửa lỗi cũ — biến tên là `gui`, không phải `hubGui` (trước đây là nil)
     Main = main,
     TabArea = function(self, nm) return S.TabArea(nm) end,
@@ -11064,10 +11065,17 @@ function S.Invis.HideReal(ch)
         hum.HealthDisplayType = Enum.HumanoidHealthDisplayType.AlwaysOff
     end
 end
+function S.Invis.IsMover(d)
+    return d:IsA("BodyVelocity") or d:IsA("BodyGyro") or d:IsA("BodyPosition")
+        or d:IsA("BodyForce") or d:IsA("BodyAngularVelocity") or d:IsA("BodyThrust")
+        or d:IsA("AlignPosition") or d:IsA("AlignOrientation")
+        or d:IsA("VectorForce") or d:IsA("LinearVelocity") or d:IsA("AngularVelocity")
+        or d:IsA("Torque") or d:IsA("LineForce") or d:IsA("RocketPropulsion")
+end
 function S.Invis.EnsureGhost(ch)
     ch = ch or S.Invis.Char()
     if not ch then return end
-    if IV._ghost and IV._ghost.Parent and IV._gchar == ch then return end
+    if IV._ghost and IV._ghost.Parent and IV._gchar == ch and IV._ghost ~= ch then return end
     S.Invis.KillGhost()
     IV._gchar = ch
     local ok, g = pcall(function()
@@ -11077,36 +11085,47 @@ function S.Invis.EnsureGhost(ch)
         ch.Archivable = a
         return c
     end)
-    if not (ok and g) then return end
+    if not (ok and g) or g == ch then return end
     g.Name = "BC_InvisGhost"
+    g.Parent = nil
+    -- Gỡ Humanoid + mover TRƯỚC khi vào workspace: 2 Humanoid chồng nhau = phóng lên trời.
     for _, d in ipairs(g:GetDescendants()) do
-        if d:IsA("Script") or d:IsA("LocalScript") or d:IsA("ModuleScript") then
-            d:Destroy()
-        elseif d:IsA("BasePart") then
+        if d:IsA("Humanoid") or d:IsA("Animator") or d:IsA("Script")
+            or d:IsA("LocalScript") or d:IsA("ModuleScript")
+            or d:IsA("Highlight") or d:IsA("ForceField") or d:IsA("Tool") then
+            pcall(function() d:Destroy() end)
+        elseif S.Invis.IsMover(d) then
+            pcall(function() d:Destroy() end)
+        end
+    end
+    for _, d in ipairs(g:GetDescendants()) do
+        if d:IsA("BasePart") then
             d.Anchored = true
             d.CanCollide = false
+            d.CanTouch = false
             d.CanQuery = false
-            d.Massless = true
+            pcall(function() d.EnableFluidForces = false end)
+            pcall(function() d.AssemblyLinearVelocity = Vector3.zero end)
+            pcall(function() d.AssemblyAngularVelocity = Vector3.zero end)
             d.Transparency = 0.45
         elseif d:IsA("Decal") or d:IsA("Texture") then
             d.Transparency = 0.45
-        elseif d:IsA("Humanoid") then
-            d.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.None
-            d.HealthDisplayType = Enum.HumanoidHealthDisplayType.AlwaysOff
-        elseif d:IsA("Highlight") or d:IsA("ForceField") then
-            d:Destroy()
         end
     end
     local cam = workspace.CurrentCamera
-    g.Parent = cam or workspace
+    if not cam then return end          -- không bao giờ parent workspace (chồng nhân vật = bay)
+    g.Parent = cam
+    if g == ch then pcall(function() g:Destroy() end); return end
     IV._ghost = g
 end
 function S.Invis.Follow()
     local ch, g = S.Invis.Char(), IV._ghost
     if not (ch and g and g.Parent) then return end
-    pcall(function() g:PivotTo(ch:GetPivot()) end)
+    if g == ch or g.Name ~= "BC_InvisGhost" then return end
     local cam = workspace.CurrentCamera
-    if cam and g.Parent ~= cam then g.Parent = cam end
+    if not cam then return end
+    if g.Parent ~= cam then g.Parent = cam end
+    pcall(function() g:PivotTo(ch:GetPivot()) end)   -- chỉ ghost, không PivotTo nhân vật thật
 end
 function S.Invis.Bind(on)
     if on and not IV._bound then
@@ -12676,7 +12695,7 @@ main.Visible = true
 togBtn.Text = "✕"
 
 print(string.format(
-    "✅ Banana Cat Hub v4.52 — sẵn sàng! Đã nạp lại %d script + %d waypoint + %d tab tính năng từ bộ nhớ (chế độ: %s%s)",
+    "✅ Banana Cat Hub v4.53 — sẵn sàng! Đã nạp lại %d script + %d waypoint + %d tab tính năng từ bộ nhớ (chế độ: %s%s)",
     Store.loadedScripts, Store.loadedWp, #Store.loadedFeatures, Store.mode,
     Store.lastError and (" | ⚠️ " .. Store.lastError) or ""
 ))
