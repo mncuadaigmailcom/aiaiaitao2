@@ -1,5 +1,6 @@
 --[[
     🍌 Banana Cat Hub — FULL CODE  ·  OBSIDIAN NOIR + layout kiểu DELTA
+    v4.59: 👻 Toàn hình — ngụy CFrame tới người chơi (không FireServer); Evade vẫn LTM + đi được.
     v4.58: 👻 Toàn hình Evade — mình trong suốt (LTM) và đi được (không kéo CFrame).
     v4.57: 👻 Toàn hình — đi được (không CFrame lúc physics/camera; NetHide chỉ Last).
     v4.56: 👻 Toàn hình — người khác không thấy cả Evade (ngụy CFrame Last; không clone camera).
@@ -570,7 +571,7 @@ D.verPill = New("Frame", {
 Corner(D.verPill, UDim.new(1,0))
 Stroke(D.verPill, C.ACCENT2, 1)   -- v4.9: huy hiệu đen + viền đồng, chữ champagne
 New("TextLabel", {
-    Size=UDim2.new(1,0,1,0), Text="v4.58 · NOIR", BackgroundTransparency=1,
+    Size=UDim2.new(1,0,1,0), Text="v4.59 · NOIR", BackgroundTransparency=1,
     TextColor3=C.ACCENT3, Font=Enum.Font.GothamBold, TextSize=8, ZIndex=6,
 }, D.verPill)
 
@@ -3644,7 +3645,7 @@ function S.FitToTab(obj, nm)
 end
 
 _G.BananaCatHubAPI = {
-    Version = "4.58",
+    Version = "4.59",
     HubGui = gui,     -- v4.4e: sửa lỗi cũ — biến tên là `gui`, không phải `hubGui` (trước đây là nil)
     Main = main,
     TabArea = function(self, nm) return S.TabArea(nm) end,
@@ -11008,9 +11009,9 @@ S.Invis = {
 }
 local IV = S.Invis
 -- Lỗi: Transparency client KHÔNG replicate → người khác vẫn thấy.
--- Lỗi Evade: HideReal return luôn → không thấy mình trong suốt; NetHide CFrame → không đi được.
--- Evade: LocalTransparencyModifier 0.45 mỗi frame (FP vẫn thấy bóng); KHÔNG CFrame HRP.
--- Game khác: NetHide CHỈ Last. LocalShow CHỈ Stepped.
+-- Lỗi Evade v4.58: tắt NetHide → người chơi khác vẫn thấy.
+-- Sửa: ngụy CFrame tới mọi client (Last, không FireServer). Evade: LTM 0.45 mỗi frame.
+-- LocalShow Stepped + hum:Move — không ghi Velocity, không Camera CFrame.
 IV.Away = Vector3.new(24000, 40, 24000)
 function S.Invis.IsEvade()
     if IV._evade ~= nil then return IV._evade end
@@ -11036,12 +11037,17 @@ function S.Invis.HRP(ch)
     return ch and ch:FindFirstChild("HumanoidRootPart")
 end
 function S.Invis.SpoofAll()
+    -- Gửi điều kiện (CFrame vật lý) tới MỌI người chơi qua replicate Roblox. Không FireServer.
     local n = 0
     for _, p in ipairs(Players:GetPlayers()) do
         if p ~= player then n = n + 1 end
     end
     IV._others = n
     return n
+end
+function S.Invis.SpoofToPlayers()
+    S.Invis.SpoofAll()
+    S.Invis.NetHide()
 end
 function S.Invis.KillGhost()
     pcall(function() if IV._ghost then IV._ghost:Destroy() end end)
@@ -11077,15 +11083,21 @@ function S.Invis.Restore()
 end
 function S.Invis.LocalShow()
     if not IV.on then return end
-    if S.Invis.IsEvade() then return end
     local hrp = S.Invis.HRP()
     if not (hrp and IV._cf) then return end
-    -- Chỉ trả CFrame. Không ghi Velocity (ghi đè = đứng hình, không đi được).
+    -- Trả chỗ thật trước physics. Không ghi Velocity. hum:Move giữ WASD (Evade).
     hrp.CFrame = IV._cf
+    local ch = S.Invis.Char()
+    local hum = ch and ch:FindFirstChildOfClass("Humanoid")
+    if hum then
+        local md = hum.MoveDirection
+        if md.Magnitude > 0.05 then
+            pcall(function() hum:Move(md, false) end)
+        end
+    end
 end
 function S.Invis.NetHide()
     if not IV.on then return end
-    if S.Invis.IsEvade() then return end
     local hrp = S.Invis.HRP()
     if not hrp then return end
     S.Invis.SpoofAll()
@@ -11214,7 +11226,6 @@ function S.Invis.Follow()
 end
 function S.Invis.BindNet(on)
     if on then
-        if S.Invis.IsEvade() then return end
         if not IV._step then
             IV._step = RunService.Stepped:Connect(function()
                 pcall(S.Invis.LocalShow)
@@ -11236,7 +11247,6 @@ function S.Invis.Bind(on)
                 pcall(S.Invis.Follow)
                 if S.Invis.IsEvade() then
                     pcall(S.Invis.GhostSelf)
-                    return
                 end
                 IV._acc = (IV._acc or 0) + (tonumber(dt) or 0.016)
                 if IV._acc < 0.45 then return end
@@ -11244,13 +11254,11 @@ function S.Invis.Bind(on)
                 pcall(S.Invis.HideReal)
             end)
         end)
-        if not S.Invis.IsEvade() then
-            pcall(function()
-                RunService:BindToRenderStep("BC_InvisNet", Enum.RenderPriority.Last.Value, function()
-                    pcall(S.Invis.NetHide)
-                end)
+        pcall(function()
+            RunService:BindToRenderStep("BC_InvisNet", Enum.RenderPriority.Last.Value, function()
+                pcall(S.Invis.SpoofToPlayers)
             end)
-        end
+        end)
     elseif (not on) and IV._bound then
         IV._bound = false
         S.Invis.BindNet(false)
@@ -11277,10 +11285,8 @@ end
 function S.Invis.Stop() return S.Invis.Set(false) end
 function S.Invis.Status()
     if not IV.on then return "👻 toàn hình: đang TẮT" end
-    if S.Invis.IsEvade() then
-        return "👻 toàn hình: BẬT · Evade: mình trong suốt · đi được · không kéo CFrame"
-    end
-    return string.format("👻 toàn hình: BẬT · mình trong suốt · ngụy CFrame tới %d người chơi · không remote", IV._others or 0)
+    local ev = S.Invis.IsEvade() and " · Evade LTM" or ""
+    return string.format("👻 toàn hình: BẬT · mình trong suốt · ngụy CFrame tới %d người chơi · không remote%s", IV._others or 0, ev)
 end
 do
     trackConn(player.CharacterAdded:Connect(function()
@@ -11629,8 +11635,8 @@ do
 
     New("TextLabel", {
         Size = UDim2.new(1, -16, 0, 36), Position = UDim2.new(0, 8, 0, 46),
-        Text = "Không FireServer. Evade: mình trong suốt (LTM) + đi được (không kéo CFrame). "
-             .. "Game khác: NetHide lúc Last. Không clone camera FP. Không cướp bay/nhảy/🛡/✨.",
+        Text = "Không FireServer. Ngụy CFrame tới mọi người chơi lúc Last. "
+             .. "Evade: mình trong suốt (LTM) mỗi frame + hum:Move. Không clone camera. Không cướp bay/nhảy/🛡/✨.",
         TextWrapped = true, BackgroundTransparency = 1, TextColor3 = C.MUTED,
         Font = Enum.Font.GothamMedium, TextSize = 8, TextXAlignment = Enum.TextXAlignment.Left,
         TextYAlignment = Enum.TextYAlignment.Top, ZIndex = 7,
@@ -12814,7 +12820,7 @@ main.Visible = true
 togBtn.Text = "✕"
 
 print(string.format(
-    "✅ Banana Cat Hub v4.58 — sẵn sàng! Đã nạp lại %d script + %d waypoint + %d tab tính năng từ bộ nhớ (chế độ: %s%s)",
+    "✅ Banana Cat Hub v4.59 — sẵn sàng! Đã nạp lại %d script + %d waypoint + %d tab tính năng từ bộ nhớ (chế độ: %s%s)",
     Store.loadedScripts, Store.loadedWp, #Store.loadedFeatures, Store.mode,
     Store.lastError and (" | ⚠️ " .. Store.lastError) or ""
 ))
