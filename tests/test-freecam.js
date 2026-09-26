@@ -1,5 +1,5 @@
 "use strict";
-/** v4.66 — 🎥 Khán giả: quay được camera (LockCenter + GetMouseDelta). */
+/** v4.67 — 🎥 Khán giả: nạp lại/StopAll không kẹt neo·Scriptable·LockCenter. */
 const fs = require("fs");
 const path = require("path");
 const src = fs.readFileSync(path.join(__dirname, "..", "script.js"), "utf8");
@@ -83,6 +83,9 @@ ok("BUG không quay camera: LockCenter + GetMouseDelta (không khóa chuột th�
   (aim.includes("GetMouseDelta") || step.includes("GetMouseDelta")));
 ok("BUG không quay camera: tắt trả MouseBehavior Default",
   restore.includes("MouseBehavior") && restore.includes("Default"));
+ok("BUG nạp lại: _G.BananaCatHub_Free + StopAll gọi Free.Stop (không kẹt neo/camera/chuột)",
+  src.includes("_G.BananaCatHub_Free") &&
+  /function MV\.StopAll\([\s\S]{0,900}S\.Free\.Stop/.test(src));
 ok("không FireServer / không remote trong engine",
   !/:FireServer\s*\(/.test(eng) && !/:InvokeServer\s*\(/.test(eng) &&
   !eng.includes("RemoteEvent") && !eng.includes("RemoteFunction"));
