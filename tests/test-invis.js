@@ -1,5 +1,5 @@
 "use strict";
-/** v4.59 — 👻 ngụy CFrame tới người chơi, không FireServer; Evade LTM + đi được */
+/** v4.60 — 👻 nhân vật ảo trong suốt đi theo mình + camera bám ghost */
 const fs = require("fs");
 const path = require("path");
 const src = fs.readFileSync(path.join(__dirname, "..", "script.js"), "utf8");
@@ -41,11 +41,10 @@ function ok(name, cond, detail) {
 }
 
 console.log("== nguồn 👻 toàn hình ==");
-ok("S.Invis.Set / HideReal / EnsureGhost / Follow / SpoofAll / SpoofToPlayers / Stop / NetHide / LocalShow",
+ok("S.Invis.Set / HideReal / EnsureGhost / Follow / AimCam / SpoofToPlayers / NetHide / LocalShow",
   src.includes("function S.Invis.Set") && src.includes("function S.Invis.HideReal") &&
   src.includes("function S.Invis.EnsureGhost") && src.includes("function S.Invis.Follow") &&
-  src.includes("function S.Invis.SpoofAll") && src.includes("function S.Invis.SpoofToPlayers") &&
-  src.includes("function S.Invis.Stop") &&
+  src.includes("function S.Invis.AimCam") && src.includes("function S.Invis.SpoofToPlayers") &&
   src.includes("function S.Invis.NetHide") && src.includes("function S.Invis.LocalShow"));
 ok("thẻ invis + khung HubInvis_Panel",
   src.includes('action="invis"') && src.includes('Name = "HubInvis_Panel"') &&
@@ -112,22 +111,28 @@ ok("IsEvade theo GameId 3647333358 / PlaceId 9872472334 / tên evade",
 ok("Camera-1 không Camera+2",
   bind.includes("Enum.RenderPriority.Camera.Value - 1") &&
   !eng.includes("Camera.Value + 2") && !eng.includes("Character.Value"));
-ok("Evade / first person: không clone ghost lên camera",
-  ghost.includes("S.Invis.IsEvade()") && ghost.includes("S.Invis.IsFirstPerson()") &&
-  ghost.includes("S.Invis.KillGhost()") && src.includes("function S.Invis.IsFirstPerson"));
 ok("Transparency=1 game khác + Last SpoofToPlayers mọi game",
   hide.includes("d.Transparency = 1") &&
   bind.includes('BindToRenderStep("BC_InvisNet"') &&
   bind.includes("Enum.RenderPriority.Last.Value") &&
   net.includes("IV._cf + IV.Away"));
 
-console.log("== mình trong suốt · không bay · không remote ==");
+console.log("== nhân vật ảo trong suốt đi theo mình + camera ==");
+ok("BUG: EnsureGhost không bỏ Evade/FP (phải thấy nhân vật ảo)",
+  !ghost.includes("IsEvade() or S.Invis.IsFirstPerson()") &&
+  ghost.includes('g.Name = "BC_InvisGhost"') && ghost.includes("d.Transparency = 0.45"));
+ok("BUG: Follow luôn PivotTo(ch:GetPivot()) — đi thì ảo đi theo, không IV._cf cũ",
+  follow.includes("g:PivotTo(ch:GetPivot())") && !follow.includes("IV._cf") &&
+  !follow.includes("IsEvade() or S.Invis.IsFirstPerson()"));
+ok("BUG: ghost parent Folder BC_InvisHold, KHÔNG parent camera",
+  eng.includes('h.Name = "BC_InvisHold"') &&
+  !eng.includes("g.Parent = cam") && !follow.includes("g.Parent = cam"));
+ok("AimCam CameraSubject = ghost HRP, RestoreCam khi tắt, không đổi kiểu camera",
+  src.includes("function S.Invis.AimCam") && src.includes("function S.Invis.RestoreCam") &&
+  eng.includes("cam.CameraSubject = hrp") && setFn.includes("S.Invis.AimCam()") &&
+  setFn.includes("S.Invis.RestoreCam()") && !eng.includes("CameraType"));
 ok("nhân vật thật Transparency = 1 (local) + ghost 0.45",
-  hide.includes("d.Transparency = 1") && ghost.includes("d.Transparency = 0.45") &&
-  ghost.includes('g.Name = "BC_InvisGhost"'));
-ok("ghost parent CurrentCamera, KHÔNG fallback workspace",
-  ghost.includes("g.Parent = cam") && !ghost.includes("cam or workspace") &&
-  !ghost.includes("g.Parent = workspace"));
+  hide.includes("d.Transparency = 1") && ghost.includes("d.Transparency = 0.45"));
 ok("không chìm đất / không HUD / không CameraType",
   !eng.includes("_underY") && !eng.includes("pressHud") && !eng.includes("CameraType") &&
   !eng.includes("BC_SafeInvisCam"));
@@ -139,7 +144,7 @@ ok("HideReal không đụng Anchored / CanCollide / Massless / PivotTo",
   !hide.includes("Massless") && !hide.includes("PivotTo"));
 ok("ghost hủy Humanoid + mover trước khi parent",
   ghost.includes('d:IsA("Humanoid")') && ghost.includes("S.Invis.IsMover(d)") &&
-  ghost.indexOf('d:IsA("Humanoid")') < ghost.indexOf("g.Parent = cam"));
+  ghost.indexOf('d:IsA("Humanoid")') < ghost.indexOf("g.Parent = hold"));
 ok("Follow chỉ PivotTo ghost, bỏ qua nếu g == nhân vật thật",
   (follow.includes("g:PivotTo(cf)") || follow.includes("g:PivotTo(ch:GetPivot())")) &&
   !follow.includes("ch:PivotTo") && follow.includes("g == ch"));

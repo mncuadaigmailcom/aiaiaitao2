@@ -1,5 +1,6 @@
 --[[
     🍌 Banana Cat Hub — FULL CODE  ·  OBSIDIAN NOIR + layout kiểu DELTA
+    v4.60: 👻 Toàn hình — nhân vật ảo trong suốt đi theo mình, camera bám theo ghost.
     v4.59: 👻 Toàn hình — ngụy CFrame tới người chơi (không FireServer); Evade vẫn LTM + đi được.
     v4.58: 👻 Toàn hình Evade — mình trong suốt (LTM) và đi được (không kéo CFrame).
     v4.57: 👻 Toàn hình — đi được (không CFrame lúc physics/camera; NetHide chỉ Last).
@@ -571,7 +572,7 @@ D.verPill = New("Frame", {
 Corner(D.verPill, UDim.new(1,0))
 Stroke(D.verPill, C.ACCENT2, 1)   -- v4.9: huy hiệu đen + viền đồng, chữ champagne
 New("TextLabel", {
-    Size=UDim2.new(1,0,1,0), Text="v4.59 · NOIR", BackgroundTransparency=1,
+    Size=UDim2.new(1,0,1,0), Text="v4.60 · NOIR", BackgroundTransparency=1,
     TextColor3=C.ACCENT3, Font=Enum.Font.GothamBold, TextSize=8, ZIndex=6,
 }, D.verPill)
 
@@ -3645,7 +3646,7 @@ function S.FitToTab(obj, nm)
 end
 
 _G.BananaCatHubAPI = {
-    Version = "4.59",
+    Version = "4.60",
     HubGui = gui,     -- v4.4e: sửa lỗi cũ — biến tên là `gui`, không phải `hubGui` (trước đây là nil)
     Main = main,
     TabArea = function(self, nm) return S.TabArea(nm) end,
@@ -11006,6 +11007,7 @@ S.Invis = {
     on = false, _ghost = nil, _gchar = nil, _char = nil,
     _saved = {}, _hum = nil, _humDisp = nil, _bound = false, _acc = 0, _others = 0,
     _cf = nil, _vel = nil, _ang = nil, _step = nil, _hb = nil, _evade = nil,
+    _camSub = nil, _hold = nil,
 }
 local IV = S.Invis
 -- Lỗi: Transparency client KHÔNG replicate → người khác vẫn thấy.
@@ -11051,7 +11053,34 @@ function S.Invis.SpoofToPlayers()
 end
 function S.Invis.KillGhost()
     pcall(function() if IV._ghost then IV._ghost:Destroy() end end)
-    IV._ghost, IV._gchar = nil, nil
+    pcall(function() if IV._hold then IV._hold:Destroy() end end)
+    IV._ghost, IV._gchar, IV._hold = nil, nil, nil
+end
+function S.Invis.Hold()
+    local h = IV._hold
+    if h and h.Parent then return h end
+    h = Instance.new("Folder")
+    h.Name = "BC_InvisHold"
+    h.Parent = workspace
+    IV._hold = h
+    return h
+end
+function S.Invis.AimCam()
+    -- Camera bám nhân vật ảo. Không đổi kiểu camera (giữ Popper/Custom của game).
+    local cam = workspace.CurrentCamera
+    local g = IV._ghost
+    if not (cam and g) then return end
+    local hrp = g:FindFirstChild("HumanoidRootPart") or g.PrimaryPart
+    if not hrp then return end
+    if IV._camSub == nil then IV._camSub = cam.CameraSubject end
+    cam.CameraSubject = hrp
+end
+function S.Invis.RestoreCam()
+    local cam = workspace.CurrentCamera
+    if cam and IV._camSub ~= nil then
+        pcall(function() cam.CameraSubject = IV._camSub end)
+    end
+    IV._camSub = nil
 end
 function S.Invis.Restore()
     local saved = IV._saved
@@ -11080,6 +11109,7 @@ function S.Invis.Restore()
         end)
     end
     IV._cf, IV._vel, IV._ang = nil, nil, nil
+    S.Invis.RestoreCam()
 end
 function S.Invis.LocalShow()
     if not IV.on then return end
@@ -11163,11 +11193,10 @@ end
 function S.Invis.EnsureGhost(ch)
     ch = ch or S.Invis.Char()
     if not ch then return end
-    if S.Invis.IsEvade() or S.Invis.IsFirstPerson() then
-        S.Invis.KillGhost()
+    if IV._ghost and IV._ghost.Parent and IV._gchar == ch and IV._ghost ~= ch then
+        S.Invis.AimCam()
         return
     end
-    if IV._ghost and IV._ghost.Parent and IV._gchar == ch and IV._ghost ~= ch then return end
     S.Invis.KillGhost()
     IV._gchar = ch
     local ok, g = pcall(function()
@@ -11203,26 +11232,23 @@ function S.Invis.EnsureGhost(ch)
             d.Transparency = 0.45
         end
     end
-    local cam = workspace.CurrentCamera
-    if not cam then return end
-    g.Parent = cam
+    local hold = S.Invis.Hold()
+    if not hold then return end
+    g.Parent = hold
     if g == ch then pcall(function() g:Destroy() end); return end
     IV._ghost = g
+    pcall(function() g:PivotTo(ch:GetPivot()) end)
+    S.Invis.AimCam()
 end
 function S.Invis.Follow()
-    if S.Invis.IsEvade() or S.Invis.IsFirstPerson() then return end
+    -- Lỗi: parent camera + pivot CFrame cũ + bỏ Evade → không thấy ảo / không đi theo.
     local ch, g = S.Invis.Char(), IV._ghost
     if not (ch and g and g.Parent) then return end
     if g == ch or g.Name ~= "BC_InvisGhost" then return end
-    local cam = workspace.CurrentCamera
-    if not cam then return end
-    if g.Parent ~= cam then g.Parent = cam end
-    local cf = IV._cf
-    if cf then
-        pcall(function() g:PivotTo(cf) end)
-    else
-        pcall(function() g:PivotTo(ch:GetPivot()) end)
-    end
+    local hold = S.Invis.Hold()
+    if hold and g.Parent ~= hold then g.Parent = hold end
+    pcall(function() g:PivotTo(ch:GetPivot()) end)
+    S.Invis.AimCam()
 end
 function S.Invis.BindNet(on)
     if on then
@@ -11275,8 +11301,10 @@ function S.Invis.Set(on)
         S.Invis.EnsureGhost(ch)
         S.Invis.Bind(true)
         S.Invis.Follow()
+        S.Invis.AimCam()
     else
         S.Invis.Bind(false)
+        S.Invis.RestoreCam()
         S.Invis.KillGhost()
         S.Invis.Restore()
     end
@@ -11635,8 +11663,8 @@ do
 
     New("TextLabel", {
         Size = UDim2.new(1, -16, 0, 36), Position = UDim2.new(0, 8, 0, 46),
-        Text = "Không FireServer. Ngụy CFrame tới mọi người chơi lúc Last. "
-             .. "Evade: mình trong suốt (LTM) mỗi frame + hum:Move. Không clone camera. Không cướp bay/nhảy/🛡/✨.",
+        Text = "Nhân vật ảo trong suốt đi theo mình; camera bám ghost. "
+             .. "Không FireServer. Không parent ghost vào camera. Không cướp bay/nhảy/🛡/✨.",
         TextWrapped = true, BackgroundTransparency = 1, TextColor3 = C.MUTED,
         Font = Enum.Font.GothamMedium, TextSize = 8, TextXAlignment = Enum.TextXAlignment.Left,
         TextYAlignment = Enum.TextYAlignment.Top, ZIndex = 7,
@@ -12820,7 +12848,7 @@ main.Visible = true
 togBtn.Text = "✕"
 
 print(string.format(
-    "✅ Banana Cat Hub v4.59 — sẵn sàng! Đã nạp lại %d script + %d waypoint + %d tab tính năng từ bộ nhớ (chế độ: %s%s)",
+    "✅ Banana Cat Hub v4.60 — sẵn sàng! Đã nạp lại %d script + %d waypoint + %d tab tính năng từ bộ nhớ (chế độ: %s%s)",
     Store.loadedScripts, Store.loadedWp, #Store.loadedFeatures, Store.mode,
     Store.lastError and (" | ⚠️ " .. Store.lastError) or ""
 ))
