@@ -1,5 +1,6 @@
 --[[
     🍌 Banana Cat Hub — FULL CODE  ·  OBSIDIAN NOIR + layout kiểu DELTA
+    v4.66: 🎥 Khán giả — quay được camera (LockCenter + GetMouseDelta mỗi frame).
     v4.65: 🎥 Khán giả — camera xuyên tường (tự lưu vị trí, ghi lúc Last, không Popper).
     v4.64: 🎥 Khán giả — camera bay khắp nơi (giống 🚀), nhân vật đứng yên. Xóa 👻 toàn hình.
     v4.63: 👻 Toàn hình — nhảy: ảo không bám Away, không trượt XZ, camera không nghiêng.
@@ -578,7 +579,7 @@ D.verPill = New("Frame", {
 Corner(D.verPill, UDim.new(1,0))
 Stroke(D.verPill, C.ACCENT2, 1)   -- v4.9: huy hiệu đen + viền đồng, chữ champagne
 New("TextLabel", {
-    Size=UDim2.new(1,0,1,0), Text="v4.65 · NOIR", BackgroundTransparency=1,
+    Size=UDim2.new(1,0,1,0), Text="v4.66 · NOIR", BackgroundTransparency=1,
     TextColor3=C.ACCENT3, Font=Enum.Font.GothamBold, TextSize=8, ZIndex=6,
 }, D.verPill)
 
@@ -11013,7 +11014,7 @@ S.Free = {
     on = false, speed = 50,
     _bound = false, _cf = nil, _wasAnchored = nil, _hrp = nil,
     _camType = nil, _camSub = nil, _yaw = 0, _pitch = 0,
-    _mdx = 0, _mdy = 0, _step = nil, _mouse = nil, _pos = nil,
+    _mdx = 0, _mdy = 0, _step = nil, _mouse = nil, _pos = nil, _mouseBeh = nil,
 }
 local FR = S.Free
 function S.Free.Char() return player and player.Character or nil end
@@ -11046,17 +11047,35 @@ function S.Free.ReleaseChar()
     FR._hrp, FR._wasAnchored, FR._cf = nil, nil, nil
 end
 function S.Free.AimCam()
+    -- Lỗi: Scriptable tắt chuột game; InputChanged.Delta = 0 nếu không LockCenter → không quay được.
     local cam = workspace.CurrentCamera
     if not cam then return end
     if FR._camType == nil then FR._camType = cam.CameraType end
     if FR._camSub == nil then FR._camSub = cam.CameraSubject end
     cam.CameraType = Enum.CameraType.Scriptable
     pcall(function() cam.CameraSubject = nil end)
+    pcall(function()
+        if FR._mouseBeh == nil then FR._mouseBeh = UserInputService.MouseBehavior end
+        if UserInputService:GetFocusedTextBox() then
+            UserInputService.MouseBehavior = Enum.MouseBehavior.Default
+            return
+        end
+        UserInputService.MouseBehavior = Enum.MouseBehavior.LockCenter
+        local d = UserInputService:GetMouseDelta()
+        if d then
+            FR._mdx = (FR._mdx or 0) + d.X
+            FR._mdy = (FR._mdy or 0) + d.Y
+        end
+    end)
 end
 function S.Free.RestoreCam()
     local cam = workspace.CurrentCamera
     FR._yaw, FR._pitch, FR._mdx, FR._mdy = 0, 0, 0, 0
-    if not cam then FR._camType, FR._camSub = nil, nil return end
+    pcall(function()
+        UserInputService.MouseBehavior = FR._mouseBeh or Enum.MouseBehavior.Default
+    end)
+    FR._mouseBeh = nil
+    if not cam then FR._camType, FR._camSub, FR._pos = nil, nil, nil return end
     local t = FR._camType
     pcall(function()
         if t and t ~= Enum.CameraType.Scriptable then
