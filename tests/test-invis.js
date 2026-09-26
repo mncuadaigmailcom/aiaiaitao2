@@ -1,5 +1,5 @@
 "use strict";
-/** v4.56 — 👻 người khác không thấy (cả Evade): NetHide CFrame, không tắt trên Evade */
+/** v4.57 — 👻 đi được: không CFrame lúc physics/camera; NetHide chỉ Last */
 const fs = require("fs");
 const path = require("path");
 const src = fs.readFileSync(path.join(__dirname, "..", "script.js"), "utf8");
@@ -64,12 +64,12 @@ ok("NetHide cộng IV.Away, không FireServer",
 ok("Away đủ xa (không đứng nguyên chỗ) nhưng Y nhỏ (không bay lên trời)",
   eng.includes("IV.Away = Vector3.new(24000, 40, 24000)") &&
   !eng.includes("1e5") && !eng.includes("100000"));
-ok("Stepped LocalShow (trước physics) + Heartbeat NetHide (sau physics)",
-  eng.includes("RunService.Stepped:Connect") && eng.includes("RunService.Heartbeat:Connect") &&
-  bind.includes("S.Invis.BindNet(true)") && bind.includes("S.Invis.LocalShow") &&
-  eng.includes("pcall(S.Invis.NetHide)"));
-ok("LocalShow trả CFrame đã lưu — mình không bị kéo ra xa",
-  show.includes("hrp.CFrame = IV._cf") && restore.includes("hrp.CFrame = IV._cf"));
+ok("Stepped LocalShow (trước physics) — Heartbeat KHÔNG NetHide (đè bước đi)",
+  bindNet.includes("RunService.Stepped:Connect") && bindNet.includes("pcall(S.Invis.LocalShow)") &&
+  !bindNet.includes("Heartbeat") && !bindNet.includes("NetHide"));
+ok("LocalShow trả CFrame đã lưu, KHÔNG ghi Velocity (đứng hình)",
+  show.includes("hrp.CFrame = IV._cf") && restore.includes("hrp.CFrame = IV._cf") &&
+  !show.includes("AssemblyLinearVelocity") && !show.includes("AssemblyAngularVelocity"));
 ok("Stop/Restore trả CFrame trước khi tắt",
   setFn.includes("S.Invis.Restore()") && restore.includes("hrp.CFrame = IV._cf"));
 ok("SpoofAll duyệt Players:GetPlayers, không đụng Character người khác, không remote",
@@ -80,16 +80,18 @@ console.log("== lỗi người khác vẫn thấy khi Evade tắt NetHide ==");
 ok("BUG: NetHide KHÔNG return sớm trên Evade (người khác phải không thấy)",
   !/function S\.Invis\.NetHide\([\s\S]*?IsEvade\(\) then[\s\S]*?return end/.test(net) &&
   net.includes("IV._cf + IV.Away"));
-ok("BUG: BindNet KHÔNG bỏ Heartbeat trên Evade",
+ok("BindNet không Heartbeat NetHide (mọi game — đi được)",
   !bindNet.includes("if S.Invis.IsEvade() then return end") &&
-  bindNet.includes("RunService.Heartbeat:Connect"));
-ok("BUG: LocalShow KHÔNG bỏ restore trên Evade (camera vẫn tại chỗ)",
+  !bindNet.includes("Heartbeat") && bindNet.includes("Stepped"));
+ok("BUG: LocalShow KHÔNG bỏ restore trên Evade",
   !/function S\.Invis\.LocalShow\([\s\S]*?IsEvade\(\) then return end/.test(show) &&
   show.includes("hrp.CFrame = IV._cf"));
-ok("NetHide thêm lần Last sau camera (gói replicate ra xa)",
+ok("NetHide CHỈ Last sau camera (không đè physics)",
   bind.includes('BindToRenderStep("BC_InvisNet"') &&
   bind.includes("Enum.RenderPriority.Last.Value") &&
   bind.includes("pcall(S.Invis.NetHide)"));
+ok("Camera-1 KHÔNG LocalShow (CFrame lúc vẽ đè WASD)",
+  !bind.includes("pcall(S.Invis.LocalShow)") && bind.includes("pcall(S.Invis.Follow)"));
 ok("tắt thì Unbind BC_InvisNet",
   bind.includes('UnbindFromRenderStep("BC_InvisNet")') &&
   src.includes('UnbindFromRenderStep("BC_InvisNet")'));
@@ -98,7 +100,7 @@ console.log("== Evade không giật clone / tay ==");
 ok("IsEvade theo GameId 3647333358 / PlaceId 9872472334 / tên evade",
   src.includes("function S.Invis.IsEvade") && eng.includes("3647333358") &&
   eng.includes("9872472334") && eng.includes('"evade"'));
-ok("LocalShow TRƯỚC Camera (không Camera+2)",
+ok("Camera-1 chỉ Follow/HideReal, không Camera+2",
   bind.includes("Enum.RenderPriority.Camera.Value - 1") &&
   !eng.includes("Camera.Value + 2") && !eng.includes("Character.Value"));
 ok("Evade / first person: không clone ghost lên camera",

@@ -1,5 +1,6 @@
 --[[
     🍌 Banana Cat Hub — FULL CODE  ·  OBSIDIAN NOIR + layout kiểu DELTA
+    v4.57: 👻 Toàn hình — đi được (không CFrame lúc physics/camera; NetHide chỉ Last).
     v4.56: 👻 Toàn hình — người khác không thấy cả Evade (ngụy CFrame Last; không clone camera).
     v4.55: 👻 Toàn hình — Evade không giật (không kéo CFrame/clone camera; LocalShow trước Camera).
     v4.54: 👻 Toàn hình — người khác không thấy (ngụy CFrame tới mọi client, không FireServer).
@@ -568,7 +569,7 @@ D.verPill = New("Frame", {
 Corner(D.verPill, UDim.new(1,0))
 Stroke(D.verPill, C.ACCENT2, 1)   -- v4.9: huy hiệu đen + viền đồng, chữ champagne
 New("TextLabel", {
-    Size=UDim2.new(1,0,1,0), Text="v4.56 · NOIR", BackgroundTransparency=1,
+    Size=UDim2.new(1,0,1,0), Text="v4.57 · NOIR", BackgroundTransparency=1,
     TextColor3=C.ACCENT3, Font=Enum.Font.GothamBold, TextSize=8, ZIndex=6,
 }, D.verPill)
 
@@ -3642,7 +3643,7 @@ function S.FitToTab(obj, nm)
 end
 
 _G.BananaCatHubAPI = {
-    Version = "4.56",
+    Version = "4.57",
     HubGui = gui,     -- v4.4e: sửa lỗi cũ — biến tên là `gui`, không phải `hubGui` (trước đây là nil)
     Main = main,
     TabArea = function(self, nm) return S.TabArea(nm) end,
@@ -11006,9 +11007,9 @@ S.Invis = {
 }
 local IV = S.Invis
 -- Lỗi: Transparency client KHÔNG replicate → người khác vẫn thấy.
--- Lỗi v4.55: Evade tắt NetHide → người khác vẫn thấy.
--- Sửa: NetHide mọi game (Heartbeat + Last sau camera). LocalShow Stepped + Camera-1.
--- Evade: vẫn không clone ghost / không Transparency=1 tay FP.
+-- Lỗi v4.56: Heartbeat+Camera LocalShow CFrame mỗi frame → Humanoid không đi được.
+-- Sửa: physics/camera giữ chỗ thật. NetHide CHỈ Last (sau vẽ). LocalShow CHỈ Stepped.
+-- Evade: không clone ghost / không Transparency=1 tay FP.
 IV.Away = Vector3.new(24000, 40, 24000)
 function S.Invis.IsEvade()
     if IV._evade ~= nil then return IV._evade end
@@ -11076,11 +11077,8 @@ function S.Invis.LocalShow()
     if not IV.on then return end
     local hrp = S.Invis.HRP()
     if not (hrp and IV._cf) then return end
+    -- Chỉ trả CFrame. Không ghi Velocity (ghi đè = đứng hình, không đi được).
     hrp.CFrame = IV._cf
-    pcall(function()
-        if IV._vel then hrp.AssemblyLinearVelocity = IV._vel end
-        if IV._ang then hrp.AssemblyAngularVelocity = IV._ang end
-    end)
 end
 function S.Invis.NetHide()
     if not IV.on then return end
@@ -11088,10 +11086,6 @@ function S.Invis.NetHide()
     if not hrp then return end
     S.Invis.SpoofAll()
     IV._cf = hrp.CFrame
-    pcall(function()
-        IV._vel = hrp.AssemblyLinearVelocity
-        IV._ang = hrp.AssemblyAngularVelocity
-    end)
     hrp.CFrame = IV._cf + IV.Away
 end
 function S.Invis.HideReal(ch)
@@ -11208,11 +11202,6 @@ function S.Invis.BindNet(on)
                 pcall(S.Invis.LocalShow)
             end)
         end
-        if not IV._hb then
-            IV._hb = RunService.Heartbeat:Connect(function()
-                pcall(S.Invis.NetHide)
-            end)
-        end
     else
         pcall(function() if IV._step then IV._step:Disconnect() end end)
         pcall(function() if IV._hb then IV._hb:Disconnect() end end)
@@ -11224,9 +11213,8 @@ function S.Invis.Bind(on)
         IV._bound = true
         S.Invis.BindNet(true)
         pcall(function()
-            -- Camera-1: LocalShow TRƯỚC camera (Evade FP không bị kéo góc nhìn ra xa)
+            -- Camera-1: KHÔNG LocalShow (CFrame lúc này đè bước đi). Chỉ ghost + ẩn mesh.
             RunService:BindToRenderStep("BC_Invis", Enum.RenderPriority.Camera.Value - 1, function(dt)
-                pcall(S.Invis.LocalShow)
                 pcall(S.Invis.Follow)
                 IV._acc = (IV._acc or 0) + (tonumber(dt) or 0.016)
                 if IV._acc < 0.45 then return end
@@ -11615,8 +11603,8 @@ do
 
     New("TextLabel", {
         Size = UDim2.new(1, -16, 0, 36), Position = UDim2.new(0, 8, 0, 46),
-        Text = "Không FireServer. Ngụy CFrame tới mọi client (cả Evade) — Transparency không replicate. "
-             .. "Evade: không clone camera, LocalShow trước Camera. Không cướp bay/nhảy/🛡/✨.",
+        Text = "Không FireServer. Đi bình thường: physics không bị kéo CFrame. "
+             .. "Người khác không thấy nhờ NetHide lúc Last. Evade không clone camera. Không cướp bay/nhảy/🛡/✨.",
         TextWrapped = true, BackgroundTransparency = 1, TextColor3 = C.MUTED,
         Font = Enum.Font.GothamMedium, TextSize = 8, TextXAlignment = Enum.TextXAlignment.Left,
         TextYAlignment = Enum.TextYAlignment.Top, ZIndex = 7,
@@ -12800,7 +12788,7 @@ main.Visible = true
 togBtn.Text = "✕"
 
 print(string.format(
-    "✅ Banana Cat Hub v4.56 — sẵn sàng! Đã nạp lại %d script + %d waypoint + %d tab tính năng từ bộ nhớ (chế độ: %s%s)",
+    "✅ Banana Cat Hub v4.57 — sẵn sàng! Đã nạp lại %d script + %d waypoint + %d tab tính năng từ bộ nhớ (chế độ: %s%s)",
     Store.loadedScripts, Store.loadedWp, #Store.loadedFeatures, Store.mode,
     Store.lastError and (" | ⚠️ " .. Store.lastError) or ""
 ))
