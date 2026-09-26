@@ -1,5 +1,5 @@
 "use strict";
-/** v4.62 — 👻 nhảy: nhân vật ảo không trượt một hướng */
+/** v4.63 — 👻 nhảy: ảo không bám Away / không trượt XZ / HRP ảo đứng thẳng */
 const fs = require("fs");
 const path = require("path");
 const src = fs.readFileSync(path.join(__dirname, "..", "script.js"), "utf8");
@@ -124,7 +124,7 @@ ok("BUG: EnsureGhost không bỏ Evade/FP (phải thấy nhân vật ảo)",
 ok("BUG: Follow không PivotTo GetPivot (anim nhảy/WorldPivot làm ảo trượt 1 hướng)",
   !follow.includes("GetPivot") && !follow.includes("IV._cf") &&
   !follow.includes("IsEvade() or S.Invis.IsFirstPerson()") &&
-  (follow.includes("fc.CFrame = rc.CFrame") || follow.includes("gp.CFrame")));
+  follow.includes("fc.CFrame") && follow.includes("rc.CFrame"));
 ok("BUG: ghost parent Folder BC_InvisHold, KHÔNG parent camera",
   eng.includes('h.Name = "BC_InvisHold"') &&
   !eng.includes("g.Parent = cam") && !follow.includes("g.Parent = cam"));
@@ -144,6 +144,18 @@ ok("BUG nhảy: JumpRequest LocalShow trước khi nhảy (HRP đang Away → �
 ok("BUG nhảy: Follow copy CFrame từng BasePart theo cây tên (không IV._cf / GetPivot)",
   follow.includes("FindFirstChild") && follow.includes("BasePart") &&
   follow.includes("CFrame") && !follow.includes("IV._cf") && !follow.includes("GetPivot"));
+ok("BUG nhảy còn trượt: RootCF — HRP đang Away thì ảo đứng chỗ thật (Magnitude 500)",
+  src.includes("function S.Invis.RootCF") && eng.includes("Magnitude > 500") &&
+  follow.includes("RootCF"));
+ok("BUG nhảy còn trượt: HRP ảo đứng thẳng (LookVector Y=0) — camera Part không nghiêng kéo đi",
+  follow.includes("LookVector") && follow.includes("Vector3.new(lv.X, 0, lv.Z)"));
+ok("BUG nhảy còn trượt: AirStick XZ=0 lúc Jumping/Freefall không WASD, giữ Y",
+  src.includes("function S.Invis.AirStick") &&
+  eng.includes("HumanoidStateType.Jumping") && eng.includes("HumanoidStateType.Freefall") &&
+  eng.includes("Vector3.new(0, v.Y, 0)") &&
+  bindNet.includes("pcall(S.Invis.AirStick)") &&
+  /JumpRequest[\s\S]{0,420}AirStick/.test(eng) &&
+  !show.includes("AssemblyLinearVelocity"));
 ok("nhân vật thật Transparency = 1 (local) + ghost 0.45",
   hide.includes("d.Transparency = 1") && ghost.includes("d.Transparency = 0.45"));
 ok("không chìm đất / không HUD / không CameraType",
@@ -160,7 +172,7 @@ ok("ghost hủy Humanoid + mover trước khi parent",
   ghost.indexOf('d:IsA("Humanoid")') < ghost.indexOf("g.Parent = hold"));
 ok("Follow copy CFrame part ghost, bỏ qua nếu g == nhân vật thật, không PivotTo người thật",
   follow.includes("g == ch") && !follow.includes("ch:PivotTo") &&
-  (follow.includes("fc.CFrame = rc.CFrame") || follow.includes("gp.CFrame")));
+  follow.includes("fc.CFrame") && follow.includes("rc.CFrame"));
 
 console.log("== không mất tính năng ==");
 ok("🚀/💨/🦘/🛡/✨/🔐 còn",

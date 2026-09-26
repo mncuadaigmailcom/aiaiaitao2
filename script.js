@@ -1,5 +1,6 @@
 --[[
     🍌 Banana Cat Hub — FULL CODE  ·  OBSIDIAN NOIR + layout kiểu DELTA
+    v4.63: 👻 Toàn hình — nhảy: ảo không bám Away, không trượt XZ, camera không nghiêng.
     v4.62: 👻 Toàn hình — nhảy không làm nhân vật ảo trượt một hướng.
     v4.61: 👻 Toàn hình — tắt/trận mới: camera bám Humanoid nhân vật hiện tại.
     v4.60: 👻 Toàn hình — nhân vật ảo trong suốt đi theo mình, camera bám theo ghost.
@@ -574,7 +575,7 @@ D.verPill = New("Frame", {
 Corner(D.verPill, UDim.new(1,0))
 Stroke(D.verPill, C.ACCENT2, 1)   -- v4.9: huy hiệu đen + viền đồng, chữ champagne
 New("TextLabel", {
-    Size=UDim2.new(1,0,1,0), Text="v4.62 · NOIR", BackgroundTransparency=1,
+    Size=UDim2.new(1,0,1,0), Text="v4.63 · NOIR", BackgroundTransparency=1,
     TextColor3=C.ACCENT3, Font=Enum.Font.GothamBold, TextSize=8, ZIndex=6,
 }, D.verPill)
 
@@ -11040,6 +11041,17 @@ function S.Invis.HRP(ch)
     ch = ch or S.Invis.Char()
     return ch and ch:FindFirstChild("HumanoidRootPart")
 end
+function S.Invis.RootCF()
+    -- Lỗi: Follow copy HRP lúc Away → ảo bay một hướng khi nhảy.
+    local hrp = S.Invis.HRP()
+    local saved = IV._cf
+    if not hrp then return saved end
+    if saved then
+        local d = hrp.Position - saved.Position
+        if d.Magnitude > 500 then return saved end
+    end
+    return hrp.CFrame
+end
 function S.Invis.SpoofAll()
     -- Gửi điều kiện (CFrame vật lý) tới MỌI người chơi qua replicate Roblox. Không FireServer.
     local n = 0
@@ -11251,34 +11263,67 @@ function S.Invis.EnsureGhost(ch)
     S.Invis.AimCam()
 end
 function S.Invis.Follow()
-    -- Lỗi: pivot cả model lúc nhảy → ảo trượt 1 hướng (anim/WorldPivot lệch HRP).
-    -- Sửa: copy CFrame từng BasePart theo cây tên (không CFrame spoof cũ).
+    -- Lỗi: copy CFrame lúc HRP Away / HRP nghiêng lúc nhảy → ảo trượt 1 hướng.
+    -- Sửa: RootCF (chỗ thật), copy relative; HRP ảo đứng thẳng (camera không nghiêng).
     local ch, g = S.Invis.Char(), IV._ghost
     if not (ch and g and g.Parent) then return end
     if g == ch or g.Name ~= "BC_InvisGhost" then return end
     local hold = S.Invis.Hold()
     if hold and g.Parent ~= hold then g.Parent = hold end
+    local hrp = S.Invis.HRP(ch)
+    local root = S.Invis.RootCF()
+    if not (hrp and root) then return end
     pcall(function()
+        local inv = hrp.CFrame:Inverse()
         local function sync(real, fake)
             for _, rc in ipairs(real:GetChildren()) do
                 local fc = fake:FindFirstChild(rc.Name)
                 if fc then
                     if rc:IsA("BasePart") and fc:IsA("BasePart") then
-                        fc.CFrame = rc.CFrame
+                        if (rc.Position - hrp.Position).Magnitude <= 40 then
+                            fc.CFrame = root * inv * rc.CFrame
+                        end
                     end
                     sync(rc, fc)
                 end
             end
         end
         sync(ch, g)
+        local ghrp = g:FindFirstChild("HumanoidRootPart")
+        if ghrp then
+            local p = root.Position
+            local lv = root.LookVector
+            local flat = Vector3.new(lv.X, 0, lv.Z)
+            if flat.Magnitude < 0.05 then
+                ghrp.CFrame = CFrame.new(p)
+            else
+                ghrp.CFrame = CFrame.new(p, p + flat)
+            end
+        end
     end)
     S.Invis.AimCam()
+end
+function S.Invis.AirStick()
+    -- Lỗi: nhảy tại chỗ còn XZ từ ngụy CFrame → trượt 1 hướng. Giữ Y (nhảy/rơi).
+    -- WASD (MoveDirection) thì không đụng — Evade vẫn đi trên không. Không cướp 🦘.
+    if not IV.on then return end
+    local hrp = S.Invis.HRP()
+    local ch = S.Invis.Char()
+    local hum = ch and ch:FindFirstChildOfClass("Humanoid")
+    if not (hrp and hum) then return end
+    local md = hum.MoveDirection
+    if md.Magnitude > 0.05 then return end
+    local st = hum:GetState()
+    if st ~= Enum.HumanoidStateType.Jumping and st ~= Enum.HumanoidStateType.Freefall then return end
+    local v = hrp.AssemblyLinearVelocity
+    hrp.AssemblyLinearVelocity = Vector3.new(0, v.Y, 0)
 end
 function S.Invis.BindNet(on)
     if on then
         if not IV._step then
             IV._step = RunService.Stepped:Connect(function()
                 pcall(S.Invis.LocalShow)
+                pcall(S.Invis.AirStick)
             end)
         end
     else
@@ -11295,6 +11340,7 @@ function S.Invis.BindJump(on)
             IV._jmp = UserInputService.JumpRequest:Connect(function()
                 if not IV.on then return end
                 pcall(S.Invis.LocalShow)
+                pcall(S.Invis.AirStick)
             end)
         end
     else
