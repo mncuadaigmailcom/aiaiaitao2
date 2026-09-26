@@ -6,3 +6,4 @@ require("./test-hub-tune.js");
 require("./test-hub-filter.js");
 require("./test-antiban.js");
 require("./test-freecam.js");
+require("./test-brand.js");

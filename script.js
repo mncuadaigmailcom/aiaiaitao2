@@ -1,5 +1,6 @@
 --[[
-    🍌 Banana Cat Hub — FULL CODE  ·  OBSIDIAN NOIR + layout kiểu DELTA
+    taodepzai — FULL CODE  ·  OBSIDIAN NOIR + layout kiểu DELTA
+    v4.68: tên taodepzai · nút menu ảnh game + hiệu ứng. KHÔNG cắt tính năng.
     v4.67: tối ưu — nạp lại không kẹt 🎥; rút gọn changelog. KHÔNG cắt hàm/khung/thẻ.
     v4.66: 🎥 quay camera. v4.65: xuyên tường. v4.64: khán giả thay 👻.
     v4.43: 🔐 Anti Ban. v4.42 rút gọn. v4.41 chip. v4.40 ⚙. v4.39–v4.36 bay/nhảy/tốc độ.
@@ -99,6 +100,7 @@ pcall(function() RunService:UnbindFromRenderStep("Fly") end)
 pcall(function() RunService:UnbindFromRenderStep("Carpet") end)
 pcall(function() RunService:UnbindFromRenderStep("BC_Speed") end)
 pcall(function() RunService:UnbindFromRenderStep("BC_FreeCam") end)
+pcall(function() RunService:UnbindFromRenderStep("BC_TogFx") end)
 pcall(function() RunService:UnbindFromRenderStep("BC_Invis") end)
 pcall(function() RunService:UnbindFromRenderStep("BC_InvisNet") end)
 pcall(function() RunService:UnbindFromRenderStep("BC_SafeInvis") end)
@@ -456,25 +458,86 @@ local gui = New("ScreenGui", {
 }, targetGui)
 
 local togBtn = New("TextButton", {
-    Size=UDim2.new(0,48,0,48),
-    Position=UDim2.new(1,-60,1,-60),
-    Text="🍌",
-    BackgroundColor3=C.ACCENT,
-    BackgroundTransparency=0.03,
-    TextColor3=C.INK,
+    Size=UDim2.new(0,54,0,54),
+    Position=UDim2.new(1,-66,1,-66),
+    Text="",
+    BackgroundColor3=C.DEEP,
+    BackgroundTransparency=0.06,
+    TextColor3=C.ACCENT3,
     Font=Enum.Font.GothamBold,
-    TextSize=24,
+    TextSize=22,
     BorderSizePixel=0,
+    AutoButtonColor=false,
+    ClipsDescendants=false,
     ZIndex=1000,
 }, gui)
 Corner(togBtn, UDim.new(1,0))
-Stroke(togBtn, C.ACCENT2, 1.4)
-D.Paint3(togBtn, {C.ACCENT3, C.ACCENT, C.ACCENT2}, 135)
+local togStroke = Stroke(togBtn, C.ACCENT2, 1.8)
+D.Paint3(togBtn, {C.SURFACE3, C.DEEP, C.SURFACE2}, 120)
 D.Tactile(togBtn, 0.03)
+local togRing = New("Frame", {
+    Name = "TogRing", Size=UDim2.new(1, 12, 1, 12), Position=UDim2.new(0, -6, 0, -6),
+    BackgroundColor3=C.ACCENT, BackgroundTransparency=0.72, BorderSizePixel=0, ZIndex=999,
+}, togBtn)
+Corner(togRing, UDim.new(1,0))
+local togGrad = New("UIGradient", {
+    Color = ColorSequence.new({
+        ColorSequenceKeypoint.new(0, C.ACCENT3),
+        ColorSequenceKeypoint.new(0.4, C.ACCENT),
+        ColorSequenceKeypoint.new(1, C.ACCENT2),
+    }),
+    Rotation = 20,
+}, togRing)
 pcall(function()
-    local glow = D.Glow(togBtn, C.GLOW, 9, 0.9)
-    if glow then D.Breathe(glow, {BackgroundTransparency = 0.975}, 2.4) end
+    if togStroke then
+        New("UIGradient", {
+            Color = ColorSequence.new({
+                ColorSequenceKeypoint.new(0, C.ACCENT3),
+                ColorSequenceKeypoint.new(1, C.ACCENT2),
+            }),
+            Rotation = 40,
+        }, togStroke)
+    end
 end)
+New("ImageLabel", {
+    Name = "TogIcon",
+    Size = UDim2.new(0.7, 0, 0.7, 0),
+    Position = UDim2.new(0.15, 0, 0.15, 0),
+    BackgroundTransparency = 1,
+    Image = "rbxassetid://3944680095",
+    ImageColor3 = C.ACCENT3,
+    ScaleType = Enum.ScaleType.Fit,
+    ZIndex = 1002,
+}, togBtn)
+pcall(function()
+    local glow = D.Glow(togBtn, C.GLOW, 11, 0.86)
+    if glow then D.Breathe(glow, {BackgroundTransparency = 0.97}, 2.1) end
+end)
+pcall(function()
+    RunService:BindToRenderStep("BC_TogFx", Enum.RenderPriority.Last.Value, function()
+        pcall(function()
+            if togGrad and togGrad.Parent then
+                togGrad.Rotation = (togGrad.Rotation + 1.6) % 360
+            end
+        end)
+    end)
+end)
+function S.SyncTogBtn()
+    pcall(function()
+        if not togBtn then return end
+        local icon = togBtn:FindFirstChild("TogIcon")
+        local ring = togBtn:FindFirstChild("TogRing")
+        if MV and MV.runMode then
+            togBtn.Text = "⚙"
+            if icon then icon.Visible = false end
+            if ring then ring.Visible = false end
+        else
+            togBtn.Text = ""
+            if icon then icon.Visible = true end
+            if ring then ring.Visible = true end
+        end
+    end)
+end
 
 local main = New("Frame", {
     Size=UDim2.new(0,540,0,340),
@@ -549,7 +612,7 @@ D.Paint3(New("Frame", {
 D.PaintText(New("TextLabel", {
     Size=UDim2.new(1,-90,1,0),
     Position=UDim2.new(0,12,0,0),
-    Text="🍌 Banana Cat Hub",
+    Text="taodepzai",
     BackgroundTransparency=1,
     TextColor3=C.DARK,
     Font=Enum.Font.GothamBold,
@@ -559,13 +622,13 @@ D.PaintText(New("TextLabel", {
 }, titleBar), C.ACCENT, C.ACCENT3)   -- v4.9: chữ gradient vàng sâm-panh -> trắng ngà
 
 D.verPill = New("Frame", {
-    Name="VersionPill", Size=UDim2.new(0,62,0,16), Position=UDim2.new(0,158,0,7),
+    Name="VersionPill", Size=UDim2.new(0,62,0,16), Position=UDim2.new(0,92,0,7),
     BackgroundColor3=C.DEEP, BackgroundTransparency=0.15, BorderSizePixel=0, ZIndex=5,
 }, titleBar)
 Corner(D.verPill, UDim.new(1,0))
 Stroke(D.verPill, C.ACCENT2, 1)   -- v4.9: huy hiệu đen + viền đồng, chữ champagne
 New("TextLabel", {
-    Size=UDim2.new(1,0,1,0), Text="v4.67 · NOIR", BackgroundTransparency=1,
+    Size=UDim2.new(1,0,1,0), Text="v4.68 · NOIR", BackgroundTransparency=1,
     TextColor3=C.ACCENT3, Font=Enum.Font.GothamBold, TextSize=8, ZIndex=6,
 }, D.verPill)
 
@@ -8155,7 +8218,7 @@ function MV.SetRunMode(on)
         MV._menuWasOpen = (main and main.Visible) or false
         pcall(function()
             if main then main.Visible = false end
-            if togBtn then togBtn.Text = "⚙" end     -- bản gốc dùng "⚙" lúc đang chạy trên thảm
+            if S.SyncTogBtn then S.SyncTogBtn() end     -- ⚙ lúc chạy thảm; ảnh game lúc menu thường
         end)
         if not MV.carpet then MV.SetCarpet(true) end  -- 🪩 thảm dưới chân
         MV.SetSpeed(true)                            -- 👟 tăng tốc (THEO tốc độ game × speedMul)
@@ -8168,7 +8231,7 @@ function MV.SetRunMode(on)
             pcall(function() if main then main.Visible = true end end)
         end
         pcall(function()
-            if togBtn then togBtn.Text = (main and main.Visible) and "✕" or "🍌" end
+            if S.SyncTogBtn then S.SyncTogBtn() end
         end)
         MV._menuWasOpen = nil
     end
@@ -12611,7 +12674,7 @@ end
 
 local function ToggleMainFrame()
     main.Visible = not main.Visible
-    togBtn.Text = main.Visible and "✕" or "🍌"
+    if S.SyncTogBtn then S.SyncTogBtn() end
     if not main.Visible then ReleaseHubFocus() end   -- v4.4b: đóng menu là phải trả input cho game
     if main.Visible then
         pcall(function()
@@ -12635,7 +12698,7 @@ end
 closeBtn.Activated:Connect(function()
     pcall(function() if D.openTween then D.openTween:Cancel() D.openTween = nil end end)
     main.Visible = false
-    togBtn.Text = "🍌"
+    if S.SyncTogBtn then S.SyncTogBtn() end
     ReleaseHubFocus()   -- v4.5: đóng bằng ✕ cũng phải trả input cho game (trước đây chỉ có nút 🍌 làm)
 end)
 
@@ -12722,10 +12785,10 @@ trackConn(UserInputService.InputBegan:Connect(function(i, gp)
 end))
 
 main.Visible = true
-togBtn.Text = "✕"
+if S.SyncTogBtn then S.SyncTogBtn() end
 
 print(string.format(
-    "✅ Banana Cat Hub v4.61 — sẵn sàng! Đã nạp lại %d script + %d waypoint + %d tab tính năng từ bộ nhớ (chế độ: %s%s)",
+    "✅ taodepzai v4.68 — sẵn sàng! Đã nạp lại %d script + %d waypoint + %d tab tính năng từ bộ nhớ (chế độ: %s%s)",
     Store.loadedScripts, Store.loadedWp, #Store.loadedFeatures, Store.mode,
     Store.lastError and (" | ⚠️ " .. Store.lastError) or ""
 ))
