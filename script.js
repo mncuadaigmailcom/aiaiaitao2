@@ -3,7 +3,7 @@
     v5.0 NOIR: taodepzai - da xoa tham kinh, them hop it nguoi, doi ten. KHONG cat ham/khung/the.
     v4.66: 🎥 quay camera. v4.65: xuyên tường. v4.64: khán giả thay 👻.
     v4.43: 🔐 Anti Ban. v4.42 rút gọn. v4.41 chip. v4.40 ⚙. v4.39–v4.36 bay/nhảy/tốc độ.
-    Giữ: 🚀/🛡 bay · 🧱 noclip · 🦘 nhảy · 💨 sprint · 🪩 thảm/kính · 📍👣 · ✨ · 👥 · ⚙️.
+    Giữ: 🚀/🛡 bay · 🧱 noclip · 🦘 nhảy · 💨 sprint · 📍👣 · ✨ · 👥 · ⚙️.
     Test: node tests/run.js
 --]]
 local Players = game:GetService("Players")
@@ -19,11 +19,10 @@ local camera = workspace.CurrentCamera
 
 local targetGui = playerGui
 pcall(function()
-    if gethui then
+    -- Executor có gethui thì dùng nó; LocalScript chuẩn phải ở PlayerGui.
+    if type(gethui) == "function" then
         local hui = gethui()
         if hui then targetGui = hui end
-    elseif game:GetService("CoreGui") then
-        targetGui = game:GetService("CoreGui")
     end
 end)
 
@@ -43,6 +42,11 @@ if _G.BananaCatHub_Connections then
     end
 end
 _G.BananaCatHub_Connections = {}
+pcall(function()
+    local oldUnhook = _G.BananaCatHub_AntiBanUnhook
+    if type(oldUnhook) == "function" then pcall(oldUnhook) end
+    _G.BananaCatHub_AntiBanUnhook = nil
+end)
 pcall(function()
     local f = _G.BananaCatHub_Free
     if type(f) == "table" and f.Stop then pcall(f.Stop) end
@@ -1276,7 +1280,7 @@ end
 function S.CompatRequest(opts)
     if type(opts) ~= "table" then opts = {Url = tostring(opts)} end
     local url = tostring(opts.Url or opts.url or "")
-    local body, status, good = "", 200, true
+    local body, status, good = "", 0, false
     pcall(function()
         local r = game:GetService("HttpService"):RequestAsync({
             Url = url,
@@ -1284,9 +1288,14 @@ function S.CompatRequest(opts)
             Headers = opts.Headers or opts.headers,
             Body = opts.Body or opts.body,
         })
-        body, status, good = tostring(r.Body or ""), tonumber(r.StatusCode) or 200, (r.Success ~= false)
+        body, status, good = tostring(r.Body or ""), tonumber(r.StatusCode) or 200, (r.Success == true)
     end)
-    if body == "" then pcall(function() body = tostring(game:HttpGet(url)) end) end
+    if body == "" then
+        local okHttp, fetched = pcall(function() return game:HttpGet(url) end)
+        if okHttp then
+            body, status, good = tostring(fetched or ""), 200, true
+        end
+    end
     return {StatusCode = status, StatusMessage = "", Body = body, Success = good, Headers = {}}
 end
 
@@ -1353,7 +1362,7 @@ function S.EnsureCompat()
         S.SetGlobal("fireclickdetector",   function() return true end)
         S.SetGlobal("firetouchinterest",   function() return true end)
         S.SetGlobal("fireproximityprompt", function() return true end)
-        S.SetGlobal("gethui", function() return game:GetService("CoreGui") end)
+        S.SetGlobal("gethui", function() return targetGui end)
         S.SetGlobal("Drawing", S.CompatDrawing())
         S.SetGlobal("setfpscap", function() return true end)
         S.SetGlobal("getfpscap", function() return 60 end)
@@ -3294,7 +3303,6 @@ RebuildWaypoints = function()
         delBtn.Activated:Connect(function()
             table.remove(waypoints, i)
             RebuildWaypoints()
-Store.restoreWaypoints = RebuildWaypoints
             Store.saveSoon()
         end)
 
@@ -3306,6 +3314,7 @@ Store.restoreWaypoints = RebuildWaypoints
 end
 
 RebuildWaypoints()
+Store.restoreWaypoints = RebuildWaypoints
 
 local function NormalizeCode(c)
     if type(c) ~= "string" then return "" end
@@ -3539,6 +3548,9 @@ function S.FitEmbedded(entry)
         S.SnapSubtree(entry.snap, host, true)
         if #entry.snap == 0 then return end
     end
+    for _, rec in ipairs(entry.snap) do
+        rec.dx, rec.dy = 0, 0
+    end
 
     S.RestoreSnap(entry)
     local base = S.MeasureHost(host)
@@ -3663,7 +3675,8 @@ function S.FitToTab(obj, nm)
 end
 
 _G.BananaCatHubAPI = {
-    Version = "4.61",
+    Version = "5.0",
+    LegacyVersion = "4.61", -- giữ thông tin tương thích cho script cũ
     HubGui = gui,     -- v4.4e: sửa lỗi cũ — biến tên là `gui`, không phải `hubGui` (trước đây là nil)
     Main = main,
     TabArea = function(self, nm) return S.TabArea(nm) end,
@@ -3688,8 +3701,7 @@ _G.BananaCatHubAPI = {
         g.ZIndexBehavior = Enum.ZIndexBehavior.Global
         g.DisplayOrder = tonumber(props.DisplayOrder) or 9000
         g:SetAttribute("BCHub_External", true) -- báo cho hub biết đừng nhúng GUI này
-        g.Parent = (gethui and gethui()) or game:GetService("CoreGui")
-                    or (player and player:WaitForChild("PlayerGui"))
+        g.Parent = targetGui or (player and player:WaitForChild("PlayerGui"))
         return g
     end,
     Crosshair = function(self, on)
@@ -3872,7 +3884,11 @@ local function bcMakeExternalGui(name, order)
         ext.DisplayOrder = order or 9500
         ext:SetAttribute("BCHub_External", true)
         local pg2 = game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui")
-        local hui = (gethui and gethui()) or game:GetService("CoreGui") or pg2
+        local hui = pg2
+        if type(gethui) == "function" then
+            local okH, gotH = pcall(gethui)
+            if okH and gotH then hui = gotH end
+        end
         ext.Parent = hui
     end
     return ext
@@ -4640,7 +4656,8 @@ function S.BeginRunCapture()
         local unhook, recs, st = S.HookInstanceNew()
         local stopWatch = S.WatchNewGuis(recs, st)
         st.stopWatch = stopWatch
-        return {unhook = unhook, recs = recs, st = st, stopWatch = stopWatch, parked = 0, names = {}}
+        return {unhook = unhook, recs = recs, st = st, stopWatch = stopWatch,
+            parked = 0, names = {}, cancelled = false}
     end)
     if not ok then return nil end
     S.activeCap = cap     -- để Cancel() gỡ được hook+watcher nếu người dùng bấm ⏹ Dừng giữa chừng
@@ -4651,6 +4668,7 @@ function S.AbortRunCapture()
     local cap = S.activeCap
     if not cap then return false end
     S.activeCap = nil
+    cap.cancelled = true
     pcall(function() if cap.st then cap.st.watchOn = false cap.st.inRun = false end end)
     pcall(cap.stopWatch)
     pcall(cap.unhook)
@@ -4658,7 +4676,7 @@ function S.AbortRunCapture()
 end
 
 function S.EndRunCapture(cap, label)
-    if not cap then return 0 end
+    if not cap or cap.cancelled then return 0 end
     local st, recs = cap.st, cap.recs
     pcall(function()
         st.inRun = false
@@ -4666,7 +4684,7 @@ function S.EndRunCapture(cap, label)
     end)
 
     local function try()
-        if cap.parked >= S.PARK_MAX or not S.embedEnabled then return 0 end
+        if cap.cancelled or cap.parked >= S.PARK_MAX or not S.embedEnabled then return 0 end
         local added = 0
         for _, r in ipairs(recs) do
             if cap.parked >= S.PARK_MAX then break end
@@ -4699,7 +4717,7 @@ function S.EndRunCapture(cap, label)
     local total = try()
     for _, d in ipairs(S.EMBED_TRY_DELAYS) do
         task.delay(d, function()
-            if cap.parked >= S.PARK_MAX then return end
+            if cap.cancelled or cap.parked >= S.PARK_MAX then return end
             if not S.embedEnabled then return end
             try()
         end)
@@ -4729,7 +4747,12 @@ local function RunFeatureScript(code, name, containerFrame, indicator, statusLab
     ReleaseHubFocus()   -- v4.4b: đang dán code trong TextBox mà chạy luôn thì game vẫn "khóa" input
 
     local ft = S.FindFeatureByHost(containerFrame)
-    if ft then ft.records = nil end   -- lần chạy mới -> bỏ danh sách GUI của lần chạy cũ
+    local runToken = nil
+    if ft then
+        ft._runToken = (tonumber(ft._runToken) or 0) + 1
+        runToken = ft._runToken
+        ft.records = nil              -- lần chạy mới -> bỏ danh sách GUI của lần chạy cũ
+    end
 
     local embedCount, lateCandidate = 0, 0
     local featureUnhook, records, lastWhy, hookState = nil, nil, nil, nil
@@ -4789,6 +4812,7 @@ local function RunFeatureScript(code, name, containerFrame, indicator, statusLab
 
         for _, dly in ipairs(S.EMBED_TRY_DELAYS) do
             task.delay(dly, function()
+                if ft and ft._runToken ~= runToken then return end
                 if embedCount > 0 then return end
                 if not (containerFrame and containerFrame.Parent) then return end
                 if not S.embedEnabled then return end
@@ -5207,6 +5231,7 @@ S.DoToggleEmbed = function()
             local hostFrame = ft.frame and ft.frame:FindFirstChild("ScriptHost")
             if hostFrame then S.ClearEmbedsUnder(hostFrame) end
         end
+        pcall(S.RemoveAllParked)
         S.PruneEmbeds()
         createStatus.Text = "🛡 Chế độ an toàn: hub không sửa GUI nào nữa. Muốn nhúng lại thì bấm BẬT."
     end
@@ -6574,6 +6599,9 @@ MV.Safe = {
     _ncPrev = nil,      -- trạng thái Xuyên Tường TRƯỚC KHI bật 🛡 (để trả lại đúng)
     _shield = nil,      -- 4 vách trong suốt
     _shieldPos = nil,
+    _hum = nil,         -- Humanoid mà Safe Fly đã thay đổi trạng thái
+    _platformStandPrev = nil,
+    _autoRotatePrev = nil,
     _root = nil,        -- v4.23: nhân vật đang gắn (đổi là tự dựng lại part bay + khiên)
     _bound = false,     -- v4.23: vòng lặp riêng "BC_Safe" đã gắn chưa
     _lastFrameAt = 0,   -- v4.23: lần cuối vòng lặp 🛡 chạy (watchdog soi còn sống không)
@@ -6604,7 +6632,8 @@ local function sfIgnore(d, char)
     local nm = tostring(d.Name or "")
     if nm:sub(1, 3) == "BC_" then return true end
     if char and d:IsDescendantOf(char) then return true end
-    if d:IsDescendantOf(MV._floor) then return true end
+    local floor = MV._floor
+    if floor and floor.Parent and d:IsDescendantOf(floor) then return true end
     return false
 end
 local function sfOverlap(char)
@@ -6624,7 +6653,7 @@ local function sfCandidates(pos, dt, reach)
     local op0 = sfOverlap(char0)
     local okL, list = pcall(function() return workspace:GetPartBoundsInRadius(pos, r0, op0) end)
     if not okL then okL, list = pcall(function() return workspace:GetPartBoundsInRadius(pos, r0) end) end
-    if okL and type(list) == "table" and #list > 0 then return list end
+    if okL and type(list) == "table" then return list end
     SF._listAcc = (SF._listAcc or 0) + (dt or 0.15)
     if not SF._cache or SF._listAcc >= 2 then
         SF._listAcc = 0
@@ -6881,10 +6910,30 @@ function MV.Safe._EnsureBV()
     SF._bv, SF._bg = bv, bg
     local h = MV.Hum()
     if h then
+        if SF._hum ~= h then
+            SF._hum = h
+            pcall(function() SF._platformStandPrev = h.PlatformStand end)
+            pcall(function() SF._autoRotatePrev = h.AutoRotate end)
+        end
         pcall(function() h.PlatformStand = true end)
         pcall(function() h.AutoRotate = false end)
     end
     return bv, bg
+end
+
+function MV.Safe._RestoreHum()
+    local h = SF._hum
+    if h and h.Parent then
+        if SF._platformStandPrev ~= nil then
+            pcall(function() h.PlatformStand = SF._platformStandPrev end)
+        end
+        if SF._autoRotatePrev ~= nil then
+            pcall(function() h.AutoRotate = SF._autoRotatePrev end)
+        end
+    end
+    SF._hum = nil
+    SF._platformStandPrev = nil
+    SF._autoRotatePrev = nil
 end
 
 function MV.Safe.Repair()
@@ -7046,11 +7095,7 @@ function MV.Safe.Set(on)
         pcall(function() if SF._bg then SF._bg:Destroy() end end)
         SF._bv, SF._bg = nil, nil
         if not MV.fly then
-            local h = MV.Hum()
-            if h then
-                pcall(function() h.PlatformStand = false end)
-                pcall(function() h.AutoRotate = true end)
-            end
+            pcall(MV.Safe._RestoreHum)
         end
         MV.Safe.KillShield()
         SF._root = nil
@@ -7736,11 +7781,13 @@ function MV._PlayerFlyStep(dt)
     end
     MV.SetNoclip(true)                       -- ⚡ v4.34: gọi thẳng (hàm nội bộ, đã tự bọc pcall)
     local bv, bg = MV._EnsurePlayerFlyBV()
+    local dir = Vector3.zero
+    if dist > 0.1 then
+        dir = Vector3.new(dx / dist, dy / dist, dz / dist)
+    end
     if bv then
-        local dir = Vector3.new(dx/dist, dy/dist, dz/dist)
         if close then
             local targetVel = (r and r.Velocity) or Vector3.new(0, 0, 0)
-            if dist <= 0.1 then dir = Vector3.new(0, 0, 0) end
             bv.Velocity = targetVel + dir * speed
         else
             bv.Velocity = dir * speed
@@ -7749,12 +7796,9 @@ function MV._PlayerFlyStep(dt)
     if bg then
         bg.CFrame = CFrame.new(pos, Vector3.new(want.X, pos.Y, want.Z))
     end
-    if not bv then
-        do
-            local step = math.min(dist, speed * (tonumber(dt) or 0.05))
-            local dir = Vector3.new(dx/dist, dy/dist, dz/dist)
-            myRoot.CFrame = CFrame.new(pos.X + dir.X*step, pos.Y + dir.Y*step, pos.Z + dir.Z*step)
-        end
+    if not bv and dist > 0.1 then
+        local step = math.min(dist, speed * (tonumber(dt) or 0.05))
+        myRoot.CFrame = CFrame.new(pos.X + dir.X * step, pos.Y + dir.Y * step, pos.Z + dir.Z * step)
     end
 end
 
@@ -8112,6 +8156,7 @@ S.AntiBan = S.AntiBan or {
     on = (_G.BananaCatHub_AntiBan == true),
     busy = false, lastHop = 0, cooldown = 10, hops = 0,
     lastReason = "", armed = false, snaps = 0, snapAt = 0,
+    conns = {}, _unhookKick = nil,
 }
 
 function S.AntiBanIsMsg(msg)
@@ -8161,60 +8206,100 @@ function S.AntiBanHop(reason)
     return true, msg
 end
 
+function S.AntiBanDisarm()
+    local a = S.AntiBan
+    if not a then return end
+    if a._unhookKick then
+        pcall(a._unhookKick)
+        if _G.BananaCatHub_AntiBanUnhook == a._unhookKick then
+            _G.BananaCatHub_AntiBanUnhook = nil
+        end
+        a._unhookKick = nil
+    end
+    for i = #(a.conns or {}), 1, -1 do
+        local c = a.conns[i]
+        pcall(function() if c then c:Disconnect() end end)
+        a.conns[i] = nil
+    end
+    a.armed = false
+end
+
 function S.AntiBanSet(on)
     S.AntiBan.on = on and true or false
     pcall(function() _G.BananaCatHub_AntiBan = S.AntiBan.on end)
-    if S.AntiBan.on then S.AntiBanArm() end
+    if S.AntiBan.on then
+        S.AntiBanArm()
+    else
+        S.AntiBanDisarm()
+    end
     if S.SyncAntiBanPanel then pcall(S.SyncAntiBanPanel) end
     return S.AntiBan.on
 end
 
 function S.AntiBanArm()
-    if S.AntiBan.armed then return end
-    S.AntiBan.armed = true
+    local a = S.AntiBan
+    if a.armed then return end
+    a.armed = true
+    a.conns = a.conns or {}
+    local function antiConnect(signal, fn)
+        local c = signal:Connect(fn)
+        a.conns[#a.conns + 1] = c
+        trackConn(c)
+        return c
+    end
     pcall(function()
         if type(hookfunction) == "function" then
             local old
             old = hookfunction(player.Kick, function(...)
-                if S.AntiBan.on then S.AntiBanHop("kick") return end
+                if a.on then S.AntiBanHop("kick") return end
                 if old then return old(...) end
             end)
+            if old then
+                local removed = false
+                local function unhookKick()
+                    if removed then return end
+                    removed = true
+                    pcall(function() hookfunction(player.Kick, old) end)
+                end
+                a._unhookKick = unhookKick
+                _G.BananaCatHub_AntiBanUnhook = unhookKick
+            end
         end
     end)
     pcall(function()
-        trackConn(Players.PlayerRemoving:Connect(function(p)
-            if p == player and S.AntiBan.on then S.AntiBanHop("player_removing") end
-        end))
+        antiConnect(Players.PlayerRemoving, function(p)
+            if p == player and a.on then S.AntiBanHop("player_removing") end
+        end)
     end)
     pcall(function()
         local gs = game:GetService("GuiService")
-        trackConn(gs.ErrorMessageChanged:Connect(function()
-            if not S.AntiBan.on then return end
+        antiConnect(gs.ErrorMessageChanged, function()
+            if not a.on then return end
             local msg = ""
             pcall(function() msg = tostring(gs.ErrorMessage or "") end)
             if msg == "" then pcall(function() msg = tostring(gs:GetErrorMessage()) end) end
             if S.AntiBanIsMsg(msg) then S.AntiBanHop("gui_error") end
-        end))
+        end)
     end)
     pcall(function()
-        trackConn(TeleportService.TeleportInitFailed:Connect(function()
-            if not S.AntiBan.on then return end
+        antiConnect(TeleportService.TeleportInitFailed, function()
+            if not a.on then return end
             task.delay(1.2, function()
                 S.AntiBan.busy = false
                 S.AntiBanHop("teleport_fail")
             end)
-        end))
+        end)
     end)
     pcall(function()
-        trackConn(game:GetService("LogService").MessageOut:Connect(function(msg)
-            if S.AntiBan.on and S.AntiBanIsMsg(msg) then S.AntiBanHop("log") end
-        end))
+        antiConnect(game:GetService("LogService").MessageOut, function(msg)
+            if a.on and S.AntiBanIsMsg(msg) then S.AntiBanHop("log") end
+        end)
     end)
     local function watchHum(hum)
         if not hum then return end
         pcall(function()
-            trackConn(hum:GetPropertyChangedSignal("WalkSpeed"):Connect(function()
-                if not S.AntiBan.on then return end
+            antiConnect(hum:GetPropertyChangedSignal("WalkSpeed"), function()
+                if not a.on then return end
                 local m = S.Move
                 local hot = m and (m.fly or m.noclip or m.sprint or m.infJump or m.highJump or (m.Safe and m.Safe.on))
                 if not hot then return end
@@ -8226,15 +8311,15 @@ function S.AntiBanArm()
                     S.AntiBan.snaps = 0
                     S.AntiBanHop("speed_reset")
                 end
-            end))
+            end)
         end)
     end
     pcall(function()
         if player.Character then watchHum(player.Character:FindFirstChildOfClass("Humanoid")) end
-        trackConn(player.CharacterAdded:Connect(function(ch)
+        antiConnect(player.CharacterAdded, function(ch)
             task.wait(0.25)
             watchHum(ch:FindFirstChildOfClass("Humanoid"))
-        end))
+        end)
     end)
 end
 if S.AntiBan.on then pcall(S.AntiBanArm) end
@@ -8948,7 +9033,7 @@ do
     }, P)
     New("TextLabel", {
         Size = UDim2.new(1, -16, 0, 32), Position = UDim2.new(0, 8, 0, 134),
-        Text = "💡 ✔ = áp tốc độ dòng đó. 👟 gõ x3 = theo game ×3, gõ số = cố định. Thảm/kính/bay-tới vẫn ở khung ⚙ bên dưới.",
+        Text = "💡 ✔ = áp tốc độ dòng đó. 👟 gõ x3 = theo game ×3, gõ số = cố định. Bay tới người chơi và Safe Fly ở khung ⚙ bên dưới.",
         BackgroundTransparency = 1, TextColor3 = C.MUTED, Font = Enum.Font.GothamMedium, TextSize = 8,
         TextWrapped = true, TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 7,
     }, P)
@@ -9835,7 +9920,7 @@ do
     New("TextLabel", {
         Name = "PlayerTitle",
         Size = UDim2.new(1, -16, 0, 18), Position = UDim2.new(0, 8, 0, 8),
-        Text = "👥 NGƯỜI CHƠI — ĐỊNH VỊ & XEM NGƯỜI CHƠI & ĐẶT KÍNH",
+        Text = "👥 NGƯỜI CHƠI — ĐỊNH VỊ & XEM NGƯỜI CHƠI",
         BackgroundTransparency = 1,
         TextColor3 = C.ACCENT, Font = Enum.Font.GothamBold, TextSize = 11,
         TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 7,
@@ -9843,7 +9928,7 @@ do
     New("TextLabel", {
         Name = "PlayerNote",
         Size = UDim2.new(1, -16, 0, 14), Position = UDim2.new(0, 8, 0, 26),
-        Text = "📍 = thấy người khác xuyên tường · 👣 = bám camera theo 1 người để xem họ đang làm gì · 🧱 = đặt kính dưới chân, quản lý xóa lẻ trong menu này."
+        Text = "📍 = thấy người khác xuyên tường · 👣 = bám camera theo 1 người để xem họ đang làm gì."
              .. "  (Các nút tắt/mở nhanh vẫn có thẻ trong 📚 Script Hub.)",
         BackgroundTransparency = 1, TextColor3 = C.MUTED, Font = Enum.Font.GothamMedium, TextSize = 8,
         TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 7,
@@ -11779,30 +11864,101 @@ do
             flash(impBtn, "⚠️ Trống", 1.6); return
         end
         local ok, data = pcall(function() return HttpService:JSONDecode(txt) end)
-        if not ok or type(data) ~= "table" or type(data.scripts) ~= "table" then
+        local hasPayload = ok and type(data) == "table" and (
+            type(data.scripts) == "table" or type(data.waypoints) == "table"
+            or type(data.features) == "table" or type(data.settings) == "table")
+        if not hasPayload then
             flash(impBtn, "❌ JSON sai", 1.8); return
         end
-        local have = {}
-        for _, s in ipairs(scripts) do have[tostring(s.name)] = true end
-        local added = 0
-        for _, s in ipairs(data.scripts) do
-            if type(s) == "table" and type(s.code) == "string" then
-                local nm = tostring(s.name or ("Script " .. (#scripts + 1)))
-                if have[nm] then
-                    local base, k = nm, 2
-                    while have[base .. " (" .. k .. ")"] do k = k + 1 end
-                    nm = base .. " (" .. k .. ")"
-                end
-                have[nm] = true
-                scripts[#scripts + 1] = {name = nm, code = s.code, expanded = false}
-                added = added + 1
+
+        local function uniqueName(base, used, fallback)
+            local nm = tostring(base or "")
+            if nm == "" then nm = fallback end
+            if not used[nm] then
+                used[nm] = true
+                return nm
+            end
+            local root, k = nm, 2
+            repeat
+                nm = root .. " (" .. k .. ")"
+                k += 1
+            until not used[nm]
+            used[nm] = true
+            return nm
+        end
+
+        local haveScripts, addedScripts = {}, 0
+        for _, s in ipairs(scripts) do haveScripts[tostring(s.name)] = true end
+        for _, s in ipairs(data.scripts or {}) do
+            if type(s) == "table" and type(s.code) == "string" and #s.code > 0 then
+                local nm = uniqueName(s.name, haveScripts, "Script " .. (#scripts + 1))
+                scripts[#scripts + 1] = {
+                    name = nm,
+                    code = S.SanitizeCode(s.code),
+                    expanded = (s.expanded == true),
+                }
+                addedScripts += 1
             end
         end
+
+        local haveWaypoints, addedWaypoints = {}, 0
+        for _, w in ipairs(waypoints) do haveWaypoints[tostring(w.name)] = true end
+        for _, w in ipairs(data.waypoints or {}) do
+            if type(w) == "table" and Store.isFinite(w.x) and Store.isFinite(w.y) and Store.isFinite(w.z) then
+                local nm = uniqueName(w.name, haveWaypoints, "WP " .. (#waypoints + 1))
+                waypoints[#waypoints + 1] = {
+                    name = nm,
+                    pos = Vector3.new(w.x, w.y, w.z),
+                }
+                addedWaypoints += 1
+            end
+        end
+
+        local haveFeatures, addedFeatures = {}, 0
+        for _, f in ipairs(featureTabs) do haveFeatures[tostring(f.name)] = true end
+        for _, f in ipairs(data.features or {}) do
+            if type(f) == "table" and type(f.code) == "string" and #f.code > 0 then
+                local nm = uniqueName(f.name, haveFeatures, "Tính Năng " .. (#featureTabs + 1))
+                local ic = tostring(f.icon or "⚙️")
+                CreateFeatureTab(nm, ic, S.SanitizeCode(f.code))
+                addedFeatures += 1
+            end
+        end
+
+        if type(data.settings) == "table" then
+            if type(data.settings.embedEnabled) == "boolean" then
+                S.embedEnabled = data.settings.embedEnabled
+            end
+            if type(data.settings.embedGuessNew) == "boolean" then
+                S.embedGuessNew = data.settings.embedGuessNew
+            end
+            if type(data.settings.parkCodeGuis) == "boolean" then
+                S.parkCodeGuis = data.settings.parkCodeGuis
+            end
+            if type(data.settings.hubFavs) == "table" then
+                S.hubFavs = S.hubFavs or {}
+                for _, nm in ipairs(data.settings.hubFavs) do
+                    if tostring(nm) ~= "" then S.hubFavs[tostring(nm)] = true end
+                end
+            end
+        end
+
         pcall(function() RebuildScripts() end)
+        pcall(function() RebuildWaypoints() end)
+        pcall(function() RebuildFeatureList() end)
+        pcall(function() if S.SyncEmbedToggles then S.SyncEmbedToggles() end end)
+        if not S.embedEnabled then
+            for _, ft in ipairs(featureTabs) do
+                local hostFrame = ft.frame and ft.frame:FindFirstChild("ScriptHost")
+                if hostFrame then S.ClearEmbedsUnder(hostFrame) end
+            end
+            pcall(S.RemoveAllParked)
+            pcall(S.PruneEmbeds)
+        end
         refreshStorage()
         Store.saveSoon()
         paste.Text = ""
-        flash(impBtn, "✅ +" .. added, 1.8)
+        flash(impBtn, string.format("✅ +%d script · +%d WP · +%d tab", addedScripts, addedWaypoints, addedFeatures), 2.4)
     end)
 
     -- ---------- [3] MÔI TRƯỜNG EXECUTOR ----------
@@ -11984,4 +12140,4 @@ print(string.format(
 ))
 print("   💾 File lưu: " .. Store.SAVE_FILE .. " (trong thư mục workspace của executor — sống qua cả lần rejoin)")
 print("   Tính năng: Code + Code Đã Lưu + Script Hub + Hỗ Trợ (POS+SIZE+ROT+LOOK+VẬT THỂ+HIGHLIGHT TÍM) + Thiết Lập + Tạo Tính Năng")
-print("   🆕 v4.12.2: Di chuyển — 🦘 nhảy được ở MỌI game (3 cách nhảy) · 🏃 chạy trên thảm NHẢY THOẢI MÁI · 👟 tốc độ THEO GAME ×3 (gõ x4 hay 50 ở ô 👟 Chạy) · 🪩 thảm tự trải lại khi bị game xoá")
+print("   🆕 v5.0: Di chuyển — 🚀/🛡 bay · 🧱 noclip · 🦘 nhảy · 💨 sprint · 👥 định vị/spectator · ✨ glow · 💾 lưu script/waypoint/tab")
