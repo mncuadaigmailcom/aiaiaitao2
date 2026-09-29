@@ -1,10 +1,10 @@
 --[[
     taodepzai v5.0 NOIR — FULL CODE  ·  OBSIDIAN NOIR + layout kiểu DELTA
-    v5.0 NOIR: taodepzai - da xoa tham kinh, them hop it nguoi, doi ten. KHONG cat ham/khung/the.
+    v5.0 NOIR: taodepzai - khoi phuc tham kinh co dinh, them hop it nguoi, doi ten. KHONG cat ham/khung/the.
     v4.66: 🎥 quay camera. v4.65: xuyên tường. v4.64: khán giả thay 👻.
     v4.43: 🔐 Anti Ban. v4.42 rút gọn. v4.41 chip. v4.40 ⚙. v4.39–v4.36 bay/nhảy/tốc độ.
     Giữ: 🚀/🛡 bay · 🧱 noclip · 🦘 nhảy · 💨 sprint · 📍👣 · ✨ · 👥 · ⚙️.
-    Test: node tests/run.js
+    Kiem tra: parser Luau + static regression (script.js la Luau, khong phai JavaScript).
 --]]
 local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
@@ -107,6 +107,8 @@ pcall(function() RunService:UnbindFromRenderStep("BC_Invis") end)
 pcall(function() RunService:UnbindFromRenderStep("BC_InvisNet") end)
 pcall(function() RunService:UnbindFromRenderStep("BC_SafeInvis") end)
 pcall(function() RunService:UnbindFromRenderStep("BC_SafeInvisFly") end)
+pcall(function() RunService:UnbindFromRenderStep("BC_AutoGlass") end)
+pcall(function() RunService:UnbindFromRenderStep("BC_GlassFly") end)
 
 local C = {
     WHITE  = Color3.fromRGB(255, 255, 255),
@@ -7539,10 +7541,24 @@ end
 end   -- hết khối 🛡 BAY AN TOÀN (v4.18)
 
 -- ---------- 🪩 THẢM KÍNH (chỉnh Rộng × Cao × Dài + khoảng cách tới chân) ----------
+-- Có hai chế độ độc lập:
+--   • SetCarpet: thảm bám dưới chân để tương thích API cũ.
+--   • PlaceGlass: các tấm kính CỐ ĐỊNH, được lưu trong _placedGlasses và không bị
+--     tấm mới ghi đè. UI dùng các record { id, part, position, size } bên dưới.
 function MV.SetCarpetSize(w, h, l)
+    MV.carpetW = mvClamp(w, 0.5, 100, MV.carpetW or 6)
+    MV.carpetH = mvClamp(h, 0.1, 20, MV.carpetH or 0.5)
+    MV.carpetL = mvClamp(l, 0.5, 100, MV.carpetL or 6)
+    if MV._carpet and MV._carpet.Parent then
+        pcall(function()
+            MV._carpet.Size = Vector3.new(MV.carpetW, MV.carpetH, MV.carpetL)
+            MV._MakeEdge(MV._carpet)
+        end)
+    end
     return MV.carpetW, MV.carpetH, MV.carpetL
 end
 function MV.SetCarpetGap(g)
+    MV.carpetGap = mvClamp(g, -10, 50, MV.carpetGap or 0.2)
     return MV.carpetGap
 end
 function MV.FootY()
@@ -7560,90 +7576,401 @@ function MV.CarpetHost()
     return workspace
 end
 function MV._MakeEdge(cp)
+    if not cp then return end
+    local old = nil
+    pcall(function() old = cp:FindFirstChild("BC_GlassEdge") end)
+    if not MV.carpetEdge then
+        if old then pcall(function() old:Destroy() end) end
+        return
+    end
+    if old then return end
+    pcall(function()
+        local edge = Instance.new("SelectionBox")
+        edge.Name = "BC_GlassEdge"
+        edge.Adornee = cp
+        edge.LineThickness = 0.035
+        edge.SurfaceTransparency = 1
+        edge.Color3 = C.ACCENT
+        edge.Parent = cp
+    end)
 end
 function MV.SetCarpetEdge(on)
-    MV.carpetEdge = false
-    return false
+    MV.carpetEdge = (on == true)
+    pcall(function() MV._MakeEdge(MV._carpet) end)
+    for _, rec in ipairs(MV.GetPlacedGlasses and MV.GetPlacedGlasses() or {}) do
+        pcall(function() MV._MakeEdge(rec.part) end)
+    end
+    return MV.carpetEdge
 end
 function MV.SetCarpetHold(on)
-    MV.carpetHold = false
-    return false
+    MV.carpetHold = (on == true)
+    return MV.carpetHold
 end
 function MV.SetCarpetSlack(n)
+    MV.carpetSlack = mvClamp(n, 0, 50, MV.carpetSlack or 0.5)
     return MV.carpetSlack
 end
 function MV.CreateCarpet(y)
-    pcall(function() if MV._carpet then MV._carpet:Destroy() end end)
-    MV._carpet = nil
+    local r = MV.Root()
+    if not r then return nil end
+    local cp = MV._carpet
+    if not cp or not cp.Parent then
+        pcall(function() if cp then cp:Destroy() end end)
+        cp = New("Part", {
+            Name = "BC_GlassCarpet_Follow",
+            Size = Vector3.new(MV.carpetW or 6, MV.carpetH or 0.5, MV.carpetL or 6),
+            Anchored = true, CanCollide = true, CanTouch = false,
+            Material = Enum.Material.Glass, Color = Color3.fromRGB(116, 221, 255),
+            Transparency = 0.42, Reflectance = 0.04, CastShadow = false,
+        }, MV.CarpetHost())
+        MV._carpet = cp
+    end
+    local hh = mvClamp(MV.carpetH, 0.1, 20, 0.5)
+    local cy = tonumber(y)
+    if cy == nil then
+        cy = MV.carpetY
+        if cy == nil then
+            cy = (MV.FootY() or r.Position.Y - 3.0) - (MV.carpetGap or 0.2) - hh / 2
+        end
+    end
+    MV.carpetY = cy
+    pcall(function()
+        cp.Size = Vector3.new(
+            mvClamp(MV.carpetW, 0.5, 100, 6),
+            hh,
+            mvClamp(MV.carpetL, 0.5, 100, 6)
+        )
+        cp.CFrame = CFrame.new(r.Position.X, cy, r.Position.Z)
+        cp.Anchored = true
+        cp.CanCollide = true
+        cp.CanTouch = false
+        cp.Material = Enum.Material.Glass
+        cp.Transparency = 0.42
+        cp.Color = Color3.fromRGB(116, 221, 255)
+        MV._MakeEdge(cp)
+    end)
+    return cp
 end
 function MV.SetCarpet(on)
-    MV.carpet = false
-    pcall(function() if MV._carpet then MV._carpet:Destroy() end end)
-    MV._carpet = nil
+    on = (on == true)
+    if not on then
+        MV.carpet = false
+        MV._StopCarpet()
+        MV._carpetRetries = 0
+        pcall(function() if MV.SyncHud then MV.SyncHud() end end)
+        return false
+    end
+    if not MV.Root() then
+        return false, "chưa có nhân vật để tạo thảm"
+    end
+    MV.carpet = true
     MV._carpetRetries = 0
+    MV.carpetY = nil
+    local cp = MV.CreateCarpet()
+    if not cp then
+        MV.carpet = false
+        return false, "không tạo được thảm kính"
+    end
     pcall(function() RunService:UnbindFromRenderStep("Carpet") end)
-    return false, "tinh nang tham kinh da bi xoa"
+    local okBind = pcall(function()
+        RunService:BindToRenderStep("Carpet", Enum.RenderPriority.Character.Value + 1, function()
+            if not MV.carpet then return end
+            local root = MV.Root()
+            if not root then return end
+            if not MV._carpet or not MV._carpet.Parent then
+                MV._carpetRetries = (MV._carpetRetries or 0) + 1
+                if MV._carpetRetries <= 3 then
+                    MV.CreateCarpet(MV.carpetY)
+                end
+                return
+            end
+            local y = MV.carpetY
+            if y == nil then
+                y = (MV.FootY() or root.Position.Y - 3.0) - (MV.carpetGap or 0.2) - (MV.carpetH or 0.5) / 2
+                MV.carpetY = y
+            end
+            pcall(function() MV._carpet.CFrame = CFrame.new(root.Position.X, y, root.Position.Z) end)
+        end)
+    end)
+    if not okBind then
+        MV.SetCarpet(false)
+        return false, "executor không bind được thảm kính"
+    end
+    pcall(function() if MV.SyncHud then MV.SyncHud() end end)
+    return true
 end
 
 -- ---------- v4.24: ĐẶT KÍNH DƯỚI CHÂN (đặt nhiều tấm kính cố định) ----------
 MV._placedGlasses = MV._placedGlasses or {}
-MV._glassId = MV._glassId or 0
-MV.autoGlass = MV.autoGlass or false
+MV._glassId = tonumber(MV._glassId) or 0
+MV.autoGlass = MV.autoGlass == true
 MV._lastGlassPos = MV._lastGlassPos or nil
+MV.glassMax = mvClamp(MV.glassMax, 1, 1000, 250)
+MV._autoGlassBound = MV._autoGlassBound == true
 
-function MV.PlaceGlass()
-    return false, "tinh nang dat kinh da bi xoa"
+function MV._GlassPart(entry)
+    if type(entry) == "table" then return entry.part or entry.Part end
+    return entry
 end
+function MV._GlassRecord(entry, fallbackId)
+    if type(entry) == "table" then
+        local p = MV._GlassPart(entry)
+        if p then
+            entry.part = p
+            entry.id = tonumber(entry.id) or fallbackId
+            return entry
+        end
+        return nil
+    end
+    if entry then
+        return { id = fallbackId, part = entry }
+    end
+    return nil
+end
+function MV._GlassChanged()
+    local refresh = S.GlassRefreshList
+    if type(refresh) ~= "function" then return end
+    if MV._glassRefreshQueued then return end
+    MV._glassRefreshQueued = true
+    local function run()
+        MV._glassRefreshQueued = false
+        pcall(refresh)
+    end
+    if task and type(task.defer) == "function" then task.defer(run) else run() end
+end
+function MV._GlassPosition(root)
+    root = root or MV.Root()
+    if not root then return nil end
+    local h = mvClamp(MV.carpetH, 0.1, 20, 0.5)
+    local foot = MV.FootY() or (root.Position.Y - root.Size.Y / 2)
+    return Vector3.new(
+        root.Position.X,
+        foot - mvClamp(MV.carpetGap, -10, 50, 0.2) - h / 2,
+        root.Position.Z
+    )
+end
+function MV._CreateGlassAt(pos)
+    if not pos then return nil, "không có vị trí đặt kính" end
+    local list = MV._placedGlasses
+    if type(list) ~= "table" then
+        list = {}
+        MV._placedGlasses = list
+    end
+    if #list >= mvClamp(MV.glassMax, 1, 1000, 250) then
+        return nil, "đã đạt giới hạn " .. tostring(MV.glassMax) .. " tấm kính"
+    end
+    MV._glassId = (tonumber(MV._glassId) or 0) + 1
+    local id = MV._glassId
+    local w = mvClamp(MV.carpetW, 0.5, 100, 6)
+    local h = mvClamp(MV.carpetH, 0.1, 20, 0.5)
+    local l = mvClamp(MV.carpetL, 0.5, 100, 6)
+    local part = New("Part", {
+        Name = string.format("BC_GlassCarpet_%03d", id),
+        Size = Vector3.new(w, h, l), CFrame = CFrame.new(pos),
+        Anchored = true, CanCollide = true, CanTouch = false,
+        Material = Enum.Material.Glass, Color = Color3.fromRGB(116, 221, 255),
+        Transparency = 0.42, Reflectance = 0.04, CastShadow = false,
+    }, MV.CarpetHost())
+    pcall(function()
+        part:SetAttribute("BananaCatGlass", true)
+        part:SetAttribute("BananaCatGlassId", id)
+        part:SetAttribute("BananaCatGlassFixed", true)
+    end)
+    local rec = { id = id, part = part, position = pos, size = Vector3.new(w, h, l), createdAt = os.clock() }
+    table.insert(list, rec)
+    MV._MakeEdge(part)
+    return rec
+end
+function MV._RecoverPlacedGlasses()
+    if type(MV._placedGlasses) ~= "table" then MV._placedGlasses = {} end
+    local recovered = {}
+    local ok, children = pcall(function() return workspace:GetChildren() end)
+    if not ok or type(children) ~= "table" then return 0 end
+    for _, child in ipairs(children) do
+        local idText = nil
+        pcall(function()
+            if child:IsA("BasePart") then idText = tostring(child.Name):match("^BC_GlassCarpet_(%d+)$") end
+        end)
+        local id = tonumber(idText)
+        if id then
+            recovered[#recovered + 1] = { id = id, part = child, position = child.Position, size = child.Size }
+            if id > (tonumber(MV._glassId) or 0) then MV._glassId = id end
+            pcall(function() MV._MakeEdge(child) end)
+        end
+    end
+    table.sort(recovered, function(a, b) return (a.id or 0) < (b.id or 0) end)
+    for _, rec in ipairs(recovered) do table.insert(MV._placedGlasses, rec) end
+    return #recovered
+end
+if type(MV._placedGlasses) ~= "table" then MV._placedGlasses = {} end
+if #MV._placedGlasses == 0 then pcall(MV._RecoverPlacedGlasses) end
 
+function MV.PlaceGlass(silent)
+    local root = MV.Root()
+    if not root then return false, "chưa có nhân vật để đặt kính" end
+    local pos = MV._GlassPosition(root)
+    local rec, err = MV._CreateGlassAt(pos)
+    if not rec then return false, err end
+    MV._lastGlassPos = root.Position
+    if not silent then MV._GlassChanged() end
+    return true, rec.part, rec
+end
 function MV.ClearPlacedGlasses()
+    pcall(function() if MV.StopGlassFly then MV.StopGlassFly() end end)
+    if MV.autoGlass then pcall(function() MV.SetAutoGlass(false) end) end
     local n = 0
-    if MV._placedGlasses then
-        for _, p in ipairs(MV._placedGlasses) do
-            if p and p.Parent then pcall(function() p:Destroy() end) n=n+1 end
+    if type(MV._placedGlasses) == "table" then
+        for _, entry in ipairs(MV._placedGlasses) do
+            local part = MV._GlassPart(entry)
+            if part and part.Parent then
+                pcall(function() part:Destroy() end)
+                n = n + 1
+            end
         end
     end
     MV._placedGlasses = {}
     MV._lastGlassPos = nil
+    MV._GlassChanged()
     return n
 end
-
 function MV.RemoveGlassAt(idx)
-    return false, "tinh nang kinh da bi xoa"
+    local n = math.floor(tonumber(idx) or 0)
+    if n < 1 or type(MV._placedGlasses) ~= "table" then return false, "không tìm thấy tấm kính" end
+    local entry = MV._placedGlasses[n]
+    if not entry then return false, "không tìm thấy tấm kính" end
+    local part = MV._GlassPart(entry)
+    if MV._glassFlyTarget == entry or MV._glassFlyIdx == n then
+        pcall(function() MV.StopGlassFly() end)
+    end
+    table.remove(MV._placedGlasses, n)
+    if part and part.Parent then pcall(function() part:Destroy() end) end
+    MV._GlassChanged()
+    return true, part, entry
 end
-
 function MV.RemoveGlass(part)
-    return false, "tinh nang kinh da bi xoa"
+    if not part or type(MV._placedGlasses) ~= "table" then return false, "không tìm thấy tấm kính" end
+    for i, entry in ipairs(MV._placedGlasses) do
+        if MV._GlassPart(entry) == part then return MV.RemoveGlassAt(i) end
+    end
+    return false, "không tìm thấy tấm kính"
 end
-
 function MV.GetPlacedGlasses()
-    return {}
+    local out = {}
+    if type(MV._placedGlasses) ~= "table" then MV._placedGlasses = {} end
+    for i = #MV._placedGlasses, 1, -1 do
+        local old = MV._placedGlasses[i]
+        local rec = MV._GlassRecord(old, i)
+        local part = rec and rec.part
+        if not part or not part.Parent then
+            table.remove(MV._placedGlasses, i)
+        else
+            rec.position = part.Position
+            rec.size = part.Size
+            out[i] = rec
+        end
+    end
+    local compact = {}
+    for i = 1, #MV._placedGlasses do
+        local rec = MV._GlassRecord(MV._placedGlasses[i], i)
+        if rec and rec.part and rec.part.Parent then compact[#compact + 1] = rec end
+    end
+    if #compact ~= #MV._placedGlasses then MV._placedGlasses = compact end
+    return compact
 end
-
 function MV.SetAutoGlass(on)
-    MV.autoGlass = false
+    local want = (on == true)
+    MV.autoGlass = want
+    if not want then
+        MV._autoGlassBound = false
+        pcall(function() RunService:UnbindFromRenderStep("BC_AutoGlass") end)
+        MV._GlassChanged()
+        return false
+    end
+    if not MV._autoGlassBound then
+        local ok = pcall(function()
+            RunService:BindToRenderStep("BC_AutoGlass", Enum.RenderPriority.Camera.Value - 5, function()
+                pcall(function()
+                    local root = MV.Root()
+                    if root then MV._AutoGlassTick(root.Position) end
+                end)
+            end)
+        end)
+        MV._autoGlassBound = ok
+    end
+    local root = MV.Root()
+    if root then pcall(function() MV._AutoGlassTick(root.Position) end) end
+    MV._GlassChanged()
+    return MV.autoGlass
+end
+function MV._AutoGlassTick(curPos)
+    if not MV.autoGlass or not curPos then return false end
+    local last = MV._lastGlassPos
+    local w = mvClamp(MV.carpetW, 0.5, 100, 6)
+    local l = mvClamp(MV.carpetL, 0.5, 100, 6)
+    local step = mvClamp(math.min(w, l) * 0.65, 1, 100, 3)
+    if last then
+        local dx, dz = curPos.X - last.X, curPos.Z - last.Z
+        if dx * dx + dz * dz < step * step then return false end
+    end
+    local ok = MV.PlaceGlass(true)
+    if ok then
+        MV._lastGlassPos = curPos
+        MV._GlassChanged()
+        return true
+    end
     return false
 end
 
-function MV._AutoGlassTick(curPos)
-end
-
 -- ---------- v4.27: BAY TỚI TẤM KÍNH (đổi đặt kính thành bay tới kính, chỉnh được tốc độ) ----------
-MV.glassFlySpeed = MV.glassFlySpeed or 60
+MV.glassFlySpeed = mvClamp(MV.glassFlySpeed, 1, 2000, 60)
 MV._glassFlyTarget = MV._glassFlyTarget or nil
-MV._glassFlyActive = MV._glassFlyActive or false
+MV._glassFlyActive = MV._glassFlyActive == true
 MV._glassFlyIdx = MV._glassFlyIdx or nil
 MV._glassFlyBV = MV._glassFlyBV or nil
 MV._glassFlyBG = MV._glassFlyBG or nil
 MV._glassFlyNcPrev = MV._glassFlyNcPrev or nil
+MV._glassFlyHum = MV._glassFlyHum or nil
+MV._glassFlyPlatformStandPrev = MV._glassFlyPlatformStandPrev
+MV._glassFlyAutoRotatePrev = MV._glassFlyAutoRotatePrev
 
 function MV.SetGlassFlySpeed(n)
-    return MV.glassFlySpeed
+    local v = tonumber(n)
+    if v == nil or v ~= v then return false, "nhập tốc độ bay 1-2000" end
+    MV.glassFlySpeed = mvClamp(v, 1, 2000, MV.glassFlySpeed or 60)
+    return true, MV.glassFlySpeed
 end
-
 function MV._EnsureGlassFlyBV()
-    return nil, nil
+    local r = MV.Root()
+    if not r then return nil, nil end
+    if MV._glassFlyBV and MV._glassFlyBV.Parent == r and MV._glassFlyBG and MV._glassFlyBG.Parent == r then
+        local h = MV.Hum()
+        if h and MV._glassFlyHum ~= h then
+            MV._glassFlyHum = h
+            pcall(function() MV._glassFlyPlatformStandPrev = h.PlatformStand end)
+            pcall(function() MV._glassFlyAutoRotatePrev = h.AutoRotate end)
+            pcall(function() h.PlatformStand = true; h.AutoRotate = false end)
+        end
+        return MV._glassFlyBV, MV._glassFlyBG
+    end
+    pcall(function() if MV._glassFlyBV then MV._glassFlyBV:Destroy() end end)
+    pcall(function() if MV._glassFlyBG then MV._glassFlyBG:Destroy() end end)
+    MV._glassFlyBV, MV._glassFlyBG = nil, nil
+    local bv = New("BodyVelocity", {
+        Name = "BC_GlassFlyVel", MaxForce = Vector3.new(1e9, 1e9, 1e9), Velocity = Vector3.new(0, 0, 0)
+    }, r)
+    local bg = New("BodyGyro", {
+        Name = "BC_GlassFlyGyro", MaxTorque = Vector3.new(1e9, 1e9, 1e9), P = 1e4, D = 50
+    }, r)
+    MV._glassFlyBV, MV._glassFlyBG = bv, bg
+    local h = MV.Hum()
+    if h then
+        MV._glassFlyHum = h
+        pcall(function() MV._glassFlyPlatformStandPrev = h.PlatformStand end)
+        pcall(function() MV._glassFlyAutoRotatePrev = h.AutoRotate end)
+        pcall(function() h.PlatformStand = true; h.AutoRotate = false end)
+    end
+    return bv, bg
 end
-
 function MV.StopGlassFly()
     MV._glassFlyActive = false
     MV._glassFlyTarget = nil
@@ -7652,13 +7979,108 @@ function MV.StopGlassFly()
     pcall(function() if MV._glassFlyBV then MV._glassFlyBV:Destroy() end end)
     pcall(function() if MV._glassFlyBG then MV._glassFlyBG:Destroy() end end)
     MV._glassFlyBV, MV._glassFlyBG = nil, nil
+    local h = MV._glassFlyHum
+    local safeOn = MV.Safe and MV.Safe.on == true
+    if h and h.Parent and not MV.fly and not MV._playerFlyActive and not safeOn then
+        if MV._glassFlyPlatformStandPrev ~= nil then pcall(function() h.PlatformStand = MV._glassFlyPlatformStandPrev end) end
+        if MV._glassFlyAutoRotatePrev ~= nil then pcall(function() h.AutoRotate = MV._glassFlyAutoRotatePrev end) end
+    end
+    MV._glassFlyHum = nil
+    MV._glassFlyPlatformStandPrev = nil
+    MV._glassFlyAutoRotatePrev = nil
+    if MV._glassFlyNcPrev ~= nil then
+        local was = MV._glassFlyNcPrev
+        MV._glassFlyNcPrev = nil
+        local safeOwnsNoclip = safeOn and MV.Safe.noclip == true
+        if not MV._playerFlyActive and not safeOwnsNoclip then
+            pcall(function() MV.SetNoclip(was) end)
+        end
+    end
+    return true
 end
-
 function MV._GlassFlyStep(dt)
+    if not MV._glassFlyActive then return end
+    local rec = MV._glassFlyTarget
+    local part = MV._GlassPart(rec)
+    if not part or not part.Parent then
+        MV.StopGlassFly()
+        MV._GlassChanged()
+        return
+    end
+    local root = MV.Root()
+    if not root then return end -- respawn: giữ mục tiêu, Refresh/khung sau sẽ gắn lực vào root mới
+    local topY = part.Position.Y + part.Size.Y / 2
+    local want = Vector3.new(part.Position.X, topY + 3.2, part.Position.Z)
+    local pos = root.Position
+    local dx, dy, dz = want.X - pos.X, want.Y - pos.Y, want.Z - pos.Z
+    local dist = math.sqrt(dx * dx + dy * dy + dz * dz)
+    if dist <= 0.75 then
+        pcall(function() root.CFrame = CFrame.new(want) end)
+        MV.StopGlassFly()
+        return
+    end
+    local speed = mvClamp(MV.glassFlySpeed, 1, 2000, 60)
+    if dist < 2 then speed = math.max(4, speed * 0.15)
+    elseif dist < 5 then speed = math.max(8, speed * 0.45) end
+    pcall(function() MV.SetNoclip(true) end)
+    local bv, bg = MV._EnsureGlassFlyBV()
+    local dir = Vector3.new(dx / dist, dy / dist, dz / dist)
+    if bv then bv.Velocity = dir * speed end
+    local horizontal = Vector3.new(want.X - pos.X, 0, want.Z - pos.Z)
+    if bg and horizontal.Magnitude > 0.05 then
+        pcall(function() bg.CFrame = CFrame.new(pos, Vector3.new(want.X, pos.Y, want.Z)) end)
+    end
+    if not bv then
+        local step = math.min(dist, speed * (tonumber(dt) or 0.05))
+        pcall(function() root.CFrame = CFrame.new(pos + dir * step) end)
+    end
 end
-
+function MV.NearestGlassIndex()
+    local root = MV.Root()
+    if not root then return nil end
+    local best, bestD = nil, math.huge
+    for i, rec in ipairs(MV.GetPlacedGlasses()) do
+        local part = MV._GlassPart(rec)
+        if part and part.Parent then
+            local d = (part.Position - root.Position).Magnitude
+            if d < bestD then best, bestD = i, d end
+        end
+    end
+    return best
+end
 function MV.FlyToGlass(idx)
-    return false, "tinh nang bay toi kinh da bi xoa"
+    local list = MV.GetPlacedGlasses()
+    local n = math.floor(tonumber(idx) or 0)
+    local rec = (n >= 1 and list[n]) or nil
+    if not rec and n > 0 then
+        for i, item in ipairs(list) do
+            if tonumber(item.id) == n then rec, n = item, i break end
+        end
+    end
+    if not rec then return false, "không tìm thấy tấm kính" end
+    if not MV.Root() then return false, "chưa có nhân vật để bay" end
+    if MV.fly then pcall(function() MV.SetFly(false) end) end
+    if MV._playerFlyActive then pcall(function() MV.StopPlayerFly() end) end
+    if MV._glassFlyNcPrev == nil and (not MV.Safe or MV.Safe.noclip ~= true) then
+        MV._glassFlyNcPrev = MV.noclip == true
+    end
+    MV._glassFlyTarget = rec
+    MV._glassFlyIdx = n
+    MV._glassFlyActive = true
+    pcall(function() MV.SetNoclip(true) end)
+    pcall(function() MV._EnsureGlassFlyBV() end)
+    pcall(function() RunService:UnbindFromRenderStep("BC_GlassFly") end)
+    local okBind = pcall(function()
+        RunService:BindToRenderStep("BC_GlassFly", Enum.RenderPriority.Camera.Value - 1, function(dt)
+            pcall(MV._GlassFlyStep, dt)
+        end)
+    end)
+    if not okBind then
+        MV.StopGlassFly()
+        return false, "executor không bind được bay tới kính"
+    end
+    pcall(MV._Watchdog)
+    return true, rec
 end
 
 -- ---------- v4.28: BAY TỚI NGƯỜI CHƠI (xuyên tường, chỉnh tốc độ, 0=auto lấy tốc độ game) ----------
@@ -7960,7 +8382,8 @@ function MV.Refresh()
         pcall(MV._HighJumpBind)
     end
     if MV.Safe and MV.Safe.on then pcall(MV.Safe.Step, 0.05) end     -- v4.23: 🛡 tự chữa lành sau respawn
-    -- [REMOVED] carpet refresh
+    if MV._glassFlyActive then pcall(MV._EnsureGlassFlyBV) end       -- giữ mục tiêu qua respawn
+    if MV.autoGlass and not MV._autoGlassBound then pcall(MV.SetAutoGlass, true) end
     MV.SyncHud()
     pcall(function() if MV.Safe and MV.Safe.SyncHud then MV.Safe.SyncHud() end end)
 end
@@ -7986,6 +8409,13 @@ function MV.Status()
         else
             t[#t + 1] = string.format("🚀 bay tới người %s %g", pn, sp)
         end
+    end
+    local glassCount = 0
+    pcall(function() glassCount = #MV.GetPlacedGlasses() end)
+    if glassCount > 0 then t[#t + 1] = "🧱 kính " .. tostring(glassCount) .. " tấm" end
+    if MV._glassFlyActive then
+        local targetId = MV._glassFlyTarget and MV._glassFlyTarget.id or "?"
+        t[#t + 1] = "🚀 bay tới kính #" .. tostring(targetId)
     end
     if #t == 0 then return "🚶 di chuyển: đang TẮT hết" end
     return "🚶 đang BẬT: " .. table.concat(t, " · ")
@@ -8364,6 +8794,20 @@ S.ScriptHubList = {
      desc="Bay ĐIỀU KHIỂN TAY theo camera (khác 🛡 Bay An Toàn). Nhìn xuống 60° + tiến tới = xuống 60°. WASD/joystick; thả phím đứng lơ lửng. Space lên · Shift/Ctrl xuống. 🧱 xuyên tường bật/tắt riêng ở khung 🚀."},
     {icon="💨", name="Tốc độ theo camera", cat="Di chuyển", ord=12.2, action="camspeed",
      desc="Chạy trên mặt đất 100% kiểu 🚀: WASD/joystick theo hướng camera. KHÔNG xuyên tường, nhảy bình thường, rơi theo trọng lực game, không nút ảo. Chỉnh tốc độ ở khung 💨."},
+    {icon="🪩", name="Thảm kính bám chân", cat="Di chuyển", ord=12.6, action="carpet",
+     desc="Bật/tắt một thảm kính trong suốt bám dưới chân; tương thích chế độ thảm cũ, không ảnh hưởng các tấm kính cố định."},
+    {icon="🧱", name="Đặt tấm kính cố định", cat="Di chuyển", ord=12.7, action="placeglass",
+     desc="Đặt thêm một tấm kính dưới chân tại vị trí hiện tại. Mỗi lần bấm tạo một tấm mới, không ghi đè tấm trước."},
+    {icon="📋", name="Quản lý kính đã đặt", cat="Di chuyển", ord=12.8, action="openglasspanel",
+     desc="Mở tab 👥 Người Chơi để xem số lượng/danh sách, bay tới hoặc xóa riêng từng tấm kính."},
+    {icon="🔄", name="Tự đặt kính theo đường đi", cat="Di chuyển", ord=12.9, action="autoglass",
+     desc="Tự thêm kính cố định khi di chuyển đủ xa; bấm lại để dừng. Danh sách và số lượng cập nhật trong menu."},
+    {icon="🧹", name="Xóa toàn bộ kính", cat="Di chuyển", ord=12.95, action="clearglass",
+     desc="Xóa tất cả tấm kính cố định đã đặt, không tắt thảm kính bám chân."},
+    {icon="🚀", name="Bay tới kính gần nhất", cat="Di chuyển", ord=12.96, action="flyglass",
+     desc="Bay xuyên vật cản tới tâm tấm kính cố định gần nhất; tốc độ chỉnh trong tab 👥 Người Chơi."},
+    {icon="⏹", name="Dừng bay tới kính", cat="Di chuyển", ord=12.97, action="stopglassfly",
+     desc="Dừng ngay lực bay tới tấm kính và khôi phục trạng thái nhân vật trước khi bay."},
     {icon="🧱", name="Xuyên Tường", cat="Di chuyển", ord=13, action="noclip",
      desc="Đi xuyên mọi vật cản. Tắt đi trả lại ĐÚNG CanCollide gốc của từng part (không gán cứng như bản cũ)."},
     {icon="🦘", name="Nhảy Vô Hạn", cat="Di chuyển", ord=14, action="infjump",
@@ -8507,19 +8951,46 @@ function S.RunHubAction(id)
                                  .. " · JumpPower " .. tostring(S.Move.jumpPower))
                             or ("👟 Chạy độ: TẮT — về tốc độ game (" .. tostring(S.Move._baseWS) .. ")")
     elseif id == "carpet" then
-        return "⚠️ Tính năng thảm kính đã bị xóa (🪩)"
+        local wanted = not S.Move.carpet
+        local okC, on, errC = pcall(S.Move.SetCarpet, wanted)
+        if not okC then return "⚠️ lỗi thảm kính: " .. tostring(on) end
+        if wanted and not on then return "⚠️ " .. tostring(errC) end
+        S.Rebuild()
+        return S.Move.carpet and "🪩 Thảm kính bám chân: BẬT — thảm di chuyển cùng bạn"
+                              or "🪩 Thảm kính bám chân: TẮT"
     elseif id == "placeglass" then
-        return "⚠️ Tính năng đặt kính đã bị xóa"
+        local okP, part, rec = S.Move.PlaceGlass()
+        if not okP then return "⚠️ " .. tostring(part) end
+        pcall(function() if S.GlassRefreshList then S.GlassRefreshList() end end)
+        S.Rebuild()
+        return "🧱 Đã đặt tấm kính cố định #" .. tostring(rec and rec.id or "?")
+            .. " · tổng " .. tostring(#(S.Move.GetPlacedGlasses() or {})) .. " tấm"
     elseif id == "clearglass" then
-        return "⚠️ Tính năng kính đã bị xóa"
+        local n = S.Move.ClearPlacedGlasses()
+        pcall(function() if S.GlassRefreshList then S.GlassRefreshList() end end)
+        S.Rebuild()
+        return "🧹 Đã xóa toàn bộ " .. tostring(n) .. " tấm kính cố định"
     elseif id == "autoglass" then
-        return "⚠️ Tính năng tự đặt kính đã bị xóa"
+        local on = S.Move.SetAutoGlass(not S.Move.autoGlass)
+        pcall(function() if S.GlassRefreshList then S.GlassRefreshList() end end)
+        S.Rebuild()
+        return on and "🔄 Tự đặt kính: BẬT — đi tới đâu tự đặt tấm cố định ở đó"
+                   or "🔄 Tự đặt kính: TẮT"
     elseif id == "openglasspanel" then
-        return "⚠️ Tính năng kính đã bị xóa"
+        local okOpen = false
+        pcall(function() okOpen = S.OpenGlassPanel and S.OpenGlassPanel() or S.OpenPlayerTab() end)
+        return okOpen and "📋 Đã mở 👥 Người Chơi → danh sách thảm kính"
+                      or "⚠️ chưa mở được bảng thảm kính"
     elseif id == "flyglass" then
-        return "⚠️ Tính năng bay tới kính đã bị xóa"
+        local idx = S.Move.NearestGlassIndex and S.Move.NearestGlassIndex()
+        if not idx then return "⚠️ chưa có tấm kính cố định để bay tới" end
+        local okF, rec = S.Move.FlyToGlass(idx)
+        if not okF then return "⚠️ " .. tostring(rec) end
+        return "🚀 đang bay tới tấm kính #" .. tostring(rec and rec.id or idx)
+            .. " · tốc độ " .. tostring(S.Move.glassFlySpeed) .. " — sẽ dừng khi tới nơi"
     elseif id == "stopglassfly" then
-        return "⚠️ Tính năng bay tới kính đã bị xóa"
+        S.Move.StopGlassFly()
+        return "⏹ đã dừng bay tới kính"
     elseif id == "flyplayer" then
         if not S.Move.Root() then return "⚠️ chưa có nhân vật để bay (đợi vào game xong hãy bấm)" end
         local target = nil
@@ -11463,6 +11934,7 @@ do
             if not visible then return end
             if S.Loc.RefreshList then S.Loc.RefreshList() end
             if S.Spec.RefreshList then S.Spec.RefreshList() end
+            if S.GlassRefreshList then S.GlassRefreshList() end
         end)
     end)
 end
@@ -11699,12 +12171,251 @@ do
     end)
 end
 
--- ---------- KHUNG 🧱 ĐẶT KÍNH & 🚀 BAY TỚI KÍNH (DA XOA) ----------
+-- ---------- KHUNG 🧱 ĐẶT KÍNH & 🚀 BAY TỚI KÍNH (nhiều tấm cố định) ----------
 do
+    local PH = 354
+    local P = New("Frame", {
+        Name = "HubGlass_Panel",
+        Size = UDim2.new(1, -16, 0, PH),
+        Position = UDim2.new(0, 8, 0, D.playerY or 46),
+        LayoutOrder = 3,
+        BackgroundColor3 = C.SURFACE, BackgroundTransparency = 0.12, BorderSizePixel = 0, ZIndex = 6,
+    }, D.playerTab)
+    D.playerY = (D.playerY or 46) + PH + 8
+    Corner(P, UDim.new(0, 10))
+    Stroke(P, C.HAIRLINE, 1)
+    D.Shade(P, Color3.fromRGB(255, 255, 255), Color3.fromRGB(188, 192, 205), 90)
+
+    New("TextLabel", {
+        Size = UDim2.new(1, -16, 0, 14), Position = UDim2.new(0, 8, 0, 4),
+        Text = "🧱 THẢM KÍNH CỐ ĐỊNH · 🚀 BAY TỚI TỪNG TẤM",
+        BackgroundTransparency = 1, TextColor3 = C.ACCENT, Font = Enum.Font.GothamBold, TextSize = 10,
+        TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 7,
+    }, P)
+    New("TextLabel", {
+        Size = UDim2.new(1, -16, 0, 22), Position = UDim2.new(0, 8, 0, 20),
+        Text = "Bấm 🧱 Đặt thêm để tạo tấm mới tại chân bạn. Tấm đã đặt đứng yên, không bị ghi đè; mỗi dòng có nút bay tới và xóa riêng.",
+        TextWrapped = true, BackgroundTransparency = 1, TextColor3 = C.MUTED,
+        Font = Enum.Font.GothamMedium, TextSize = 8, TextXAlignment = Enum.TextXAlignment.Left,
+        TextYAlignment = Enum.TextYAlignment.Top, ZIndex = 7,
+    }, P)
+
+    local function glassAct(txt, x, y, w, color)
+        local b = New("TextButton", {
+            Size = UDim2.new(0, w, 0, 20), Position = UDim2.new(0, x, 0, y),
+            Text = txt, BackgroundColor3 = color, TextColor3 = D.BestText(color),
+            Font = Enum.Font.GothamBold, TextSize = 9, BorderSizePixel = 0, ZIndex = 8,
+        }, P)
+        Corner(b, UDim.new(0, 6))
+        D.Shade(b, Color3.fromRGB(255, 255, 255), Color3.fromRGB(182, 187, 201), 90)
+        D.Tactile(b, 0.08)
+        return b
+    end
+    local function glassLab(txt, x, y, w)
+        New("TextLabel", {
+            Size = UDim2.new(0, w, 0, 20), Position = UDim2.new(0, x, 0, y),
+            Text = txt, BackgroundTransparency = 1, TextColor3 = C.MUTED,
+            Font = Enum.Font.GothamMedium, TextSize = 9,
+            TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 7,
+        }, P)
+    end
+    local function glassInput(txt, x, y, w)
+        local box = New("TextBox", {
+            Size = UDim2.new(0, w, 0, 20), Position = UDim2.new(0, x, 0, y),
+            Text = txt, ClearTextOnFocus = false,
+            BackgroundColor3 = C.SURFACE2, BackgroundTransparency = 0.1, TextColor3 = C.DARK,
+            PlaceholderColor3 = C.GRAY, Font = Enum.Font.GothamMedium, TextSize = 9,
+            TextXAlignment = Enum.TextXAlignment.Center, BorderSizePixel = 0, ZIndex = 7,
+        }, P)
+        Corner(box, UDim.new(0, 6))
+        return box
+    end
+    local function numberFrom(box, fallback)
+        local s = tostring(box and box.Text or "")
+        return tonumber(s:match("[+-]?%d+%.?%d*")) or fallback
+    end
+
+    glassLab("Rộng", 8, 44, 32)
+    local widthIn = glassInput(tostring(MV.carpetW or 6), 42, 44, 42)
+    glassLab("Cao", 91, 44, 27)
+    local heightIn = glassInput(tostring(MV.carpetH or 0.5), 119, 44, 42)
+    glassLab("Dài", 168, 44, 27)
+    local lengthIn = glassInput(tostring(MV.carpetL or 6), 196, 44, 42)
+    glassLab("Gap", 245, 44, 28)
+    local gapIn = glassInput(tostring(MV.carpetGap or 0.2), 275, 44, 43)
+    local sizeApply = glassAct("✅ Áp dụng", 326, 44, 60, C.SURFACE3)
+
+    local placeBtn = glassAct("🧱 Đặt thêm", 8, 70, 94, C.BLUE)
+    local autoBtn = glassAct("🔄 Tự đặt: TẮT", 108, 70, 94, C.SURFACE3)
+    local clearBtn = glassAct("🧹 Xóa tất cả", 208, 70, 94, C.RED)
+    local stopBtn = glassAct("⏹ Dừng bay", 308, 70, 78, C.SURFACE3)
+
+    glassLab("🚀 Tốc độ bay:", 8, 96, 90)
+    local flySpeedIn = glassInput(tostring(MV.glassFlySpeed or 60), 98, 96, 48)
+    local flySpeedApply = glassAct("✅ Đặt", 150, 96, 52, C.GREEN)
+    local speedNote = New("TextLabel", {
+        Size = UDim2.new(1, -210, 0, 20), Position = UDim2.new(0, 208, 0, 96),
+        Text = "tấm gần nhất từ 📚 Script Hub · 1–2000",
+        BackgroundTransparency = 1, TextColor3 = C.MUTED, Font = Enum.Font.GothamMedium, TextSize = 8,
+        TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 7,
+    }, P)
+
+    local countLbl = New("TextLabel", {
+        Size = UDim2.new(1, -16, 0, 18), Position = UDim2.new(0, 8, 0, 120),
+        Text = "🧱 Đã đặt: 0 tấm · cố định",
+        BackgroundTransparency = 1, TextColor3 = C.ACCENT, Font = Enum.Font.GothamBold, TextSize = 9,
+        TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 7,
+    }, P)
+    local list = New("ScrollingFrame", {
+        Name = "GlassList", Size = UDim2.new(1, -16, 0, 208), Position = UDim2.new(0, 8, 0, 142),
+        BackgroundTransparency = 1, BorderSizePixel = 0, ScrollBarThickness = 4,
+        CanvasSize = UDim2.new(0, 0, 0, 0), ZIndex = 7,
+    }, P)
+    New("UIListLayout", {
+        Padding = UDim.new(0, 3), SortOrder = Enum.SortOrder.LayoutOrder,
+    }, list)
+
+    local function applyGlassSettings()
+        local w, h, l = MV.SetCarpetSize(
+            numberFrom(widthIn, MV.carpetW or 6),
+            numberFrom(heightIn, MV.carpetH or 0.5),
+            numberFrom(lengthIn, MV.carpetL or 6)
+        )
+        local g = MV.SetCarpetGap(numberFrom(gapIn, MV.carpetGap or 0.2))
+        widthIn.Text, heightIn.Text, lengthIn.Text, gapIn.Text = tostring(w), tostring(h), tostring(l), tostring(g)
+        return w, h, l, g
+    end
+    local function glassCount()
+        local ok, items = pcall(MV.GetPlacedGlasses)
+        if ok and type(items) == "table" then return items end
+        return {}
+    end
+    local function paintGlassButtons(items)
+        local auto = MV.autoGlass == true
+        autoBtn.Text = auto and "🔄 Tự đặt: BẬT" or "🔄 Tự đặt: TẮT"
+        autoBtn.BackgroundColor3 = auto and C.GREEN or C.SURFACE3
+        autoBtn.TextColor3 = D.BestText(autoBtn.BackgroundColor3)
+        countLbl.Text = "🧱 Đã đặt: " .. tostring(#items) .. " tấm · cố định"
+        speedNote.Text = "tấm gần nhất từ 📚 Script Hub · " .. tostring(MV.glassFlySpeed or 60) .. ""
+    end
+
+    S.GlassRefreshList = function()
+        if not (list and list.Parent) then return end
+        local items = glassCount()
+        for _, child in ipairs(list:GetChildren()) do
+            if not child:IsA("UIListLayout") then pcall(function() child:Destroy() end) end
+        end
+        for i, rec in ipairs(items) do
+            local glassIndex = i
+            local part = rec.part
+            local pos = rec.position or (part and part.Position) or Vector3.new(0, 0, 0)
+            local row = New("Frame", {
+                Name = "GlassRow_" .. tostring(rec.id or i),
+                Size = UDim2.new(1, 0, 0, 29), LayoutOrder = i,
+                BackgroundColor3 = C.SURFACE2, BackgroundTransparency = 0.18,
+                BorderSizePixel = 0, ZIndex = 8,
+            }, list)
+            Corner(row, UDim.new(0, 6))
+            Stroke(row, (MV._glassFlyTarget == rec) and C.ACCENT or C.BORDER, 1)
+            New("TextLabel", {
+                Size = UDim2.new(1, -126, 1, 0), Position = UDim2.new(0, 7, 0, 0),
+                Text = string.format("#%s  X %.1f  Y %.1f  Z %.1f", tostring(rec.id or i), pos.X, pos.Y, pos.Z),
+                BackgroundTransparency = 1, TextColor3 = C.DARK, Font = Enum.Font.GothamBold, TextSize = 8,
+                TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 9,
+            }, row)
+            local fly = New("TextButton", {
+                Size = UDim2.new(0, 56, 0, 21), Position = UDim2.new(1, -116, 0, 4),
+                Text = "🚀 Tới", BackgroundColor3 = C.ACCENT, TextColor3 = D.BestText(C.ACCENT),
+                Font = Enum.Font.GothamBold, TextSize = 8, BorderSizePixel = 0, ZIndex = 9,
+            }, row)
+            Corner(fly, UDim.new(0, 5)); D.Tactile(fly, 0.08)
+            fly.Activated:Connect(function()
+                ReleaseHubFocus()
+                local ok, result = MV.FlyToGlass(glassIndex)
+                if ok then
+                    D.Say("🚀 đang bay tới tấm kính #" .. tostring(result and result.id or glassIndex) .. " · bấm ⏹ để dừng", C.YELLOW)
+                else
+                    D.Say("⚠️ " .. tostring(result), C.RED)
+                end
+                pcall(S.GlassRefreshList)
+            end)
+            local del = New("TextButton", {
+                Size = UDim2.new(0, 52, 0, 21), Position = UDim2.new(1, -56, 0, 4),
+                Text = "🗑 Xóa", BackgroundColor3 = C.RED, TextColor3 = D.BestText(C.RED),
+                Font = Enum.Font.GothamBold, TextSize = 8, BorderSizePixel = 0, ZIndex = 9,
+            }, row)
+            Corner(del, UDim.new(0, 5)); D.Tactile(del, 0.08)
+            del.Activated:Connect(function()
+                ReleaseHubFocus()
+                local ok, result = MV.RemoveGlassAt(glassIndex)
+                if ok then
+                    D.Say("🗑 đã xóa tấm kính #" .. tostring(result and result.id or glassIndex), C.GREEN)
+                else
+                    D.Say("⚠️ " .. tostring(result), C.RED)
+                end
+                pcall(S.GlassRefreshList)
+            end)
+        end
+        pcall(function() list.CanvasSize = UDim2.new(0, 0, 0, math.max(0, #items * 32)) end)
+        paintGlassButtons(items)
+    end
+
+    S.OpenGlassPanel = function()
+        local ok = S.OpenPlayerTab and S.OpenPlayerTab() or false
+        pcall(S.GlassRefreshList)
+        return ok
+    end
+    sizeApply.Activated:Connect(function()
+        ReleaseHubFocus()
+        local w, h, l, g = applyGlassSettings()
+        D.Say(string.format("✅ kích thước kính: %g × %g × %g · gap %g", w, h, l, g), C.GREEN)
+    end)
+    placeBtn.Activated:Connect(function()
+        ReleaseHubFocus()
+        applyGlassSettings()
+        local ok, part, rec = MV.PlaceGlass()
+        if ok then
+            D.Say("🧱 đã đặt tấm kính cố định #" .. tostring(rec and rec.id or "?")
+                .. " · tổng " .. tostring(#glassCount()) .. " tấm", C.GREEN)
+        else
+            D.Say("⚠️ " .. tostring(part), C.RED)
+        end
+        pcall(S.GlassRefreshList)
+    end)
+    autoBtn.Activated:Connect(function()
+        ReleaseHubFocus()
+        applyGlassSettings()
+        local on = MV.SetAutoGlass(not MV.autoGlass)
+        D.Say(on and "🔄 tự đặt kính: BẬT" or "🔄 tự đặt kính: TẮT", C.YELLOW)
+        pcall(S.GlassRefreshList)
+    end)
+    clearBtn.Activated:Connect(function()
+        ReleaseHubFocus()
+        local n = MV.ClearPlacedGlasses()
+        D.Say("🧹 đã xóa toàn bộ " .. tostring(n) .. " tấm kính cố định", C.GREEN)
+        pcall(S.GlassRefreshList)
+    end)
+    stopBtn.Activated:Connect(function()
+        ReleaseHubFocus()
+        MV.StopGlassFly()
+        D.Say("⏹ đã dừng bay tới kính", C.YELLOW)
+        pcall(S.GlassRefreshList)
+    end)
+    flySpeedApply.Activated:Connect(function()
+        ReleaseHubFocus()
+        local ok, value = MV.SetGlassFlySpeed(numberFrom(flySpeedIn, MV.glassFlySpeed or 60))
+        if ok then
+            flySpeedIn.Text = tostring(value)
+            speedNote.Text = "tấm gần nhất từ 📚 Script Hub · " .. tostring(value)
+            D.Say("🚀 tốc độ bay tới kính: " .. tostring(value), C.GREEN)
+        else
+            D.Say("⚠️ " .. tostring(value), C.RED)
+        end
+    end)
+    pcall(S.GlassRefreshList)
     pcall(function()
         if D.playerTab then D.playerTab.CanvasSize = UDim2.new(0, 0, 0, (D.playerY or 600) + 16) end
     end)
-    S.GlassRefreshList = function() end
 end
 
 D.hubChipBtns = {}
