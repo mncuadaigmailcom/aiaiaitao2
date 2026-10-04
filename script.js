@@ -1,117 +1,121 @@
 --[[
-    taodepzai v5.0 NOIR — FULL CODE  ·  OBSIDIAN NOIR + layout kiểu DELTA
-    v5.0 NOIR: taodepzai - khoi phuc tham kinh co dinh, them hop it nguoi, doi ten. KHONG cat ham/khung/the.
-    v4.66: 🎥 quay camera. v4.65: xuyên tường. v4.64: khán giả thay 👻.
-    v4.43: 🔐 Anti Ban. v4.42 rút gọn. v4.41 chip. v4.40 ⚙. v4.39–v4.36 bay/nhảy/tốc độ.
-    Giữ: 🚀/🛡 bay · 🧱 noclip · 🦘 nhảy · 💨 sprint · 📍👣 · ✨ · 👥 · ⚙️.
-    Kiem tra: parser Luau + static regression (script.js la Luau, khong phai JavaScript).
+    taodepzai v5.0 NOIR — FULL CODE · OBSIDIAN NOIR + layout kiểu DELTA
+    v5.0 NOIR: taodepzai - khoi phuc tham kinh co dinh, họ hop it người, doi ten. KHONG cát ham/khung/the.
+    v4.66: 🎥 quay camera. v4.65: Thường xuyên. v4.64: mở giả thay 👻.
+    v4.43: 🔐 Chống Cấm. v4.42 rút gọn. chip v4.41. v4.40 ⚙. v4.39–v4.36 bay/nhảy/tốc độ.
+    Giữ: 🚀/🛡 bay · 🧱 noclip · 🦘 nhảy · 💨 chạy nước rút · 📍👣 · ✨ · 👥 · ⚙️.
+    Kiếm tra: trình phân tích cú pháp Luau + hồi quy tĩnh (script.js la Luau, không phải JavaScript).
 --]]
 local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 local HttpService = game:GetService("HttpService")
-local TeleportService = game:GetService("TeleportService")   -- v4.6.3: Reset / Hop / vào server theo mã
+local TeleportService = game:GetService("TeleportService") -- v4.6.3: Reset / Hop / vào server theo mã
 
-local player = Players.LocalPlayer
+người chơi cục bộ = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
-local camera = workspace.CurrentCamera
+camera cục bộ = workspace.CurrentCamera
 
 local targetGui = playerGui
 pcall(function()
-    -- Executor có gethui thì dùng nó; LocalScript chuẩn phải ở PlayerGui.
-    if type(gethui) == "function" then
+    -- Người thi hành có gethui thì dùng nó; Chuẩn LocalScript phải ở PlayerGui.
+    nếu kiểu dữ liệu (gethui) == "function" thì
         local hui = gethui()
         if hui then targetGui = hui end
-    end
-end)
+    kết thúc
+kết thúc)
 
-do
-    local old = _G.BananaCatHub_MV
-    if old then
+LÀM
+    cục bộ cũ = _G.BananaCatHub_MV
+    nếu cũ thì
         if old.StopAll then pcall(old.StopAll) end
         old._wdToken = nil
         if type(old._wd) == "thread" then pcall(task.cancel, old._wd) end
         old._wd = nil
-    end
-end
+    kết thúc
+kết thúc
 
-if _G.BananaCatHub_Connections then
+nếu _G.BananaCatHub_Connections thì
     for _, c in ipairs(_G.BananaCatHub_Connections) do
         pcall(function() c:Disconnect() end)
-    end
-end
+    kết thúc
+kết thúc
 _G.BananaCatHub_Connections = {}
 pcall(function()
     local oldUnhook = _G.BananaCatHub_AntiBanUnhook
     if type(oldUnhook) == "function" then pcall(oldUnhook) end
-    _G.BananaCatHub_AntiBanUnhook = nil
-end)
+    _G.BananaCatHub_AntiBanUnhook = không
+kết thúc)
 pcall(function()
-    local f = _G.BananaCatHub_Free
+    cục bộ f = _G.BananaCatHub_Free
     if type(f) == "table" and f.Stop then pcall(f.Stop) end
-end)
+kết thúc)
 
 pcall(function()
-    local old = _G.BananaCatHub_SpecCam
-    if old ~= nil then
+    cục bộ cũ = _G.BananaCatHub_SpecCam
+    nếu old ~= nil thì
         local cam = workspace.CurrentCamera
-        if cam then
-            if old ~= Enum.CameraType.Scriptable then
+        nếu có camera thì
+            nếu old ~= Enum.CameraType.Scriptable thì
                 pcall(function() cam.CameraType = old end)
-            else
+            khác
                 pcall(function() cam.CameraType = Enum.CameraType.Custom end)
-            end
+            kết thúc
             pcall(function()
                 local char = player and player.Character
                 local hum = char and char:FindFirstChildOfClass("Humanoid")
-                local root = char and char:FindFirstChild("HumanoidRootPart")
-                if hum then cam.CameraSubject = hum end
-                if root then
+                cục bộ gốc = char và char:FindFirstChild("HumanoidRootPart")
+                nếu có tiếng "hum" thì cam.CameraSubject = hum end
+                nếu là root thì
                     cam.CFrame = CFrame.new(root.Position + Vector3.new(0, 3.2, 12), root.Position + Vector3.new(0,1.5,0))
                     cam.Focus = CFrame.new(root.Position)
-                end
-            end)
-        end
+                kết thúc
+            kết thúc)
+        kết thúc
         _G.BananaCatHub_SpecCam = nil
-    end
+    kết thúc
     pcall(function() RunService:UnbindFromRenderStep("BC_Spec") end)
-end)
+kết thúc)
 
 for _, parent in ipairs({targetGui, playerGui, game:GetService("CoreGui")}) do
     pcall(function()
-        local old = parent:FindFirstChild("BananaCatHub_Crosshair")
-        if old then old:Destroy() end
-    end)
-    pcall(function()   -- v5.1: dọn định vị vật của lần chạy trước (tránh chồng Highlight)
-        local old = parent:FindFirstChild("BC_ObjTrackESP")
-        if old then old:Destroy() end
-    end)
-end
+        cục bộ cũ = cha:TìmConĐầuTiên("BananaCatHub_Crosshair")
+        nếu cũ thì hủy bỏ cũ()
+    kết thúc)
+    pcall(function() -- v5.1: up the location of the run before (làm nổi bật chồng lên)
+        cục bộ cũ = cha:TìmConĐầuTiên("BC_ObjTrackESP")
+        nếu cũ thì hủy bỏ cũ()
+    kết thúc)
+    pcall(function()
+        cục bộ cũ = cha:TìmConĐầuTiên("BananaCatHub_AnaAimDot")
+        nếu cũ thì hủy bỏ cũ()
+    kết thúc)
+kết thúc
 
--- v5.1.1: Highlight/nhãn/hộp giờ gắn thẳng vào VẬT (trong Workspace) nên phải dọn trong workspace
+-- v5.1.1: Highlight/nhãn/hộp giờ gắn thẳng vào VẬT (trong Workspace) nên nâng lên trong không gian làm việc
 pcall(function()
     for _, d in ipairs(workspace:GetDescendants()) do
         local n = d.Name
-        if n == "BC_OT_HL" or n == "BC_OT_BB" or n == "BC_OT_BOX" then
+        nếu n == "BC_OT_HL" hoặc n == "BC_OT_BB" hoặc n == "BC_OT_BOX" thì
             pcall(function() d:Destroy() end)
-        end
-    end
-end)
+        kết thúc
+    kết thúc
+kết thúc)
 
-local function trackConn(conn)
+hàm cục bộ trackConn(conn)
     local t = _G.BananaCatHub_Connections
-    if #t > 300 then
-        local alive, n = {}, 0
+    nếu #t > 300 thì
+        còn sống cục bộ, n = {}, 0
         for i = 1, #t do
-            local c = t[i]
+            cục bộ c = t[i]
             if c ~= nil and c.Connected ~= false then n = n + 1; alive[n] = c end
-        end
-        for i = 1, #t do t[i] = alive[i] end   -- dồn lên đầu; phần tử thừa tự thành nil
-    end
+        kết thúc
+        for i = 1, #t do t[i] = live[i] end -- ngâm lên đầu; thành phần nhiều phần tử thành con số không
+    kết thúc
     table.insert(t, conn)
-    return conn
-end
+    trả về kết nối
+kết thúc
 
 pcall(function() RunService:UnbindFromRenderStep("Fly") end)
 pcall(function() RunService:UnbindFromRenderStep("Carpet") end)
@@ -123,223 +127,224 @@ pcall(function() RunService:UnbindFromRenderStep("BC_SafeInvis") end)
 pcall(function() RunService:UnbindFromRenderStep("BC_SafeInvisFly") end)
 pcall(function() RunService:UnbindFromRenderStep("BC_AutoGlass") end)
 pcall(function() RunService:UnbindFromRenderStep("BC_GlassFly") end)
-pcall(function() RunService:UnbindFromRenderStep("BC_ObjTrack") end)  -- v5.1: định vị vật theo tên
-pcall(function() RunService:UnbindFromRenderStep("BC_ObjFly") end)    -- v5.1: bay tới vật
+pcall(function() RunService:UnbindFromRenderStep("BC_ObjTrack") end) -- v5.1: định vị vật theo tên
+pcall(function() RunService:UnbindFromRenderStep("BC_ObjFly") end) -- v5.1: bay tới vật
+pcall(function() RunService:UnbindFromRenderStep("BC_AnaAim") end) -- v5.2: view/chọn vật tại tâm màn hình
 
-local C = {
-    WHITE  = Color3.fromRGB(255, 255, 255),
-    DARK   = Color3.fromRGB(238, 241, 248),   -- chữ chính trên nền tối
-    GRAY   = Color3.fromRGB(120, 128, 146),   -- nút tắt / chữ phụ
-    GREEN  = Color3.fromRGB(64, 214, 152),
-    BLUE   = Color3.fromRGB(79, 150, 240),
-    RED    = Color3.fromRGB(230, 88, 88),
-    YELLOW = Color3.fromRGB(250, 204, 102),
-    PURPLE = Color3.fromRGB(155, 128, 245),
-    ORANGE = Color3.fromRGB(251, 146, 60),
-    PINK   = Color3.fromRGB(226, 82, 158),
-    BG     = Color3.fromRGB(11, 12, 17),      -- nền cửa sổ chính (obsidian)
+cục bộ C = {
+    TRẮNG = Color3.fromRGB(255, 255, 255),
+    DARK = Color3.fromRGB(238, 241, 248), -- chữ chính trên nền tối
+    GRAY = Color3.fromRGB(120, 128, 146), -- nút tắt / chữ phụ
+    XANH LÁ CÂY = Color3.fromRGB(64, 214, 152),
+    XANH DƯƠNG = Color3.fromRGB(79, 150, 240),
+    ĐỎ = Color3.fromRGB(230, 88, 88),
+    VÀNG = Color3.fromRGB(250, 204, 102),
+    TÍM = Color3.fromRGB(155, 128, 245),
+    CAM = Color3.fromRGB(251, 146, 60),
+    HỒNG = Color3.fromRGB(226, 82, 158),
+    BG = Color3.fromRGB(11, 12, 17), -- nền cửa sổ chính (obsidian)
 
-    INK      = Color3.fromRGB(12, 10, 6),     -- chữ ĐẬM dùng trên nền vàng/cam/sáng
-    SURFACE  = Color3.fromRGB(20, 22, 30),    -- thẻ, ô nhập liệu
-    SURFACE2 = Color3.fromRGB(29, 32, 43),    -- panel, dòng hover, thanh tiêu đề
-    SURFACE3 = Color3.fromRGB(44, 49, 64),    -- viền sáng, scrollbar, nút mặc định
-    BORDER   = Color3.fromRGB(60, 66, 84),    -- viền mảnh 1px
-    MUTED    = Color3.fromRGB(154, 162, 180), -- chữ phụ
-    ACCENT   = Color3.fromRGB(240, 201, 122), -- champagne (màu nhận diện hub)
-    ACCENT2  = Color3.fromRGB(198, 141, 62),  -- đồng (đuôi gradient / viền nhấn)
+    INK = Color3.fromRGB(12, 10, 6), -- chữ ĐẬM dùng trên nền vàng/cam/sáng
+    SURFACE = Color3.fromRGB(20, 22, 30), -- thẻ, ô nhập
+    SURFACE2 = Color3.fromRGB(29, 32, 43), -- panel, line hover, thanh tiêu đề
+    SURFACE3 = Color3.fromRGB(44, 49, 64), -- viền sáng, thanh cuộn, nút mặc định
+    BORDER = Color3.fromRGB(60, 66, 84), -- viền mảnh 1px
+    MUTED = Color3.fromRGB(154, 162, 180), -- chữ phụ
+    ACCENT = Color3.fromRGB(240, 201, 122), -- Champagne (màu nhận diện hub)
+    ACCENT2 = Color3.fromRGB(198, 141, 62), -- đồng (đuôi gradient / nhấn viền)
 
-    ACCENT3  = Color3.fromRGB(255, 238, 203), -- đỉnh sáng nhất của vàng (highlight mép trên)
-    HAIRLINE = Color3.fromRGB(72, 79, 99),    -- đường tách khối sáng hơn BORDER một bậc
-    GLOW     = Color3.fromRGB(255, 214, 140), -- màu quầng sáng ấm
-    DEEP     = Color3.fromRGB(7, 8, 11),      -- đáy của mọi gradient dọc (hút chiều sâu)
+    ACCENT3 = Color3.fromRGB(255, 238, 203), -- đỉnh sáng nhất của vàng (highlight viền trên)
+    HAIRLINE = Color3.fromRGB(72, 79, 99), -- đường phân tách khối sáng hơn BORDER một bậc
+    GLOW = Color3.fromRGB(255, 214, 140), -- màu quần sáng ấm
+    DEEP = Color3.fromRGB(7, 8, 11), -- đáy của mọi độ dốc dọc (hút chiều sâu)
 }
 
-local function New(cls, props, parent)
-    local obj = Instance.new(cls)
+hàm cục bộ New(cls, props, parent)
+    cục bộ obj = Instance.new(cls)
     pcall(function()
-        if cls == "Frame" or cls == "ScrollingFrame" or cls == "TextButton"
-           or cls == "TextLabel" or cls == "TextBox" or cls == "ImageButton" then
-            obj.BorderSizePixel = 0          -- phẳng, không viền 1px kiểu cũ
-        end
-        if cls == "ScrollingFrame" then
-            obj.ScrollBarThickness = 3       -- scrollbar mảnh kiểu hiện đại
-            obj.ScrollBarImageColor3 = Color3.fromRGB(88, 96, 118)   -- v4.9: sáng hơn để thấy trên nền obsidian
+        nếu cls == "Frame" hoặc cls == "ScrollingFrame" hoặc cls == "TextButton"
+           hoặc cls == "TextLabel" hoặc cls == "TextBox" hoặc cls == "ImageButton" thì
+            obj.BorderSizePixel = 0 -- Lớp, không viền 1px kiểu cũ
+        kết thúc
+        nếu cls == "ScrollingFrame" thì
+            obj.ScrollBarThickness = 3 -- thanh cuộn mảnh kiểu hiện đại
+            obj.ScrollBarImageColor3 = Color3.fromRGB(88, 96, 118) -- v4.9: sáng hơn để hiển thị trên nền obsidian
             obj.ScrollBarImageTransparency = 0.45
-        end
-    end)
+        kết thúc
+    kết thúc)
     for k, v in pairs(props or {}) do
         obj[k] = v
-    end
-    if parent then obj.Parent = parent end
+    kết thúc
+    nếu đối tượng cha thì đối tượng cha bằng đối tượng cha.
     pcall(function()
-        if cls == "TextButton" or cls == "TextLabel" or cls == "TextBox" then
+        nếu cls == "TextButton" hoặc cls == "TextLabel" hoặc cls == "TextBox" thì
             local w = Enum.FontWeight.Medium
-            local f = obj.Font
-            if f == Enum.Font.GothamBold or f == Enum.Font.GothamBlack then
+            cục bộ f = obj.Font
+            nếu f == Enum.Font.GothamBold hoặc f == Enum.Font.GothamBlack thì
                 w = Enum.FontWeight.Bold
             elseif f == Enum.Font.GothamSemibold then
                 w = Enum.FontWeight.SemiBold
             elseif f == Enum.Font.Gotham or f == Enum.Font.GothamLight or f == Enum.Font.GothamItalic then
                 w = Enum.FontWeight.Regular
-            end
+            kết thúc
             obj.FontFace = Font.new("rbxasset://fonts/families/GothamSSo.json", w)
-        end
-    end)
+        kết thúc
+    kết thúc)
     pcall(function()
-        if cls == "TextBox" then
+        nếu cls == "TextBox" thì
             trackConn(obj.Focused:Connect(function()
                 local st = obj:FindFirstChildOfClass("UIStroke")
-                if not st then   -- ô chưa có viền thì tạo lúc được focus (không tạo thừa lúc dựng UI)
+                if not st then -- ô chưa có ranh giới thì tạo lúc tập trung (không tạo quyền lúc UI)
                     st = New("UIStroke", {
-                        Thickness = 1.3, Transparency = 0.05,
+                        Độ dày = 1,3, Độ trong suốt = 0,05,
                         ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
                     }, obj)
-                end
+                kết thúc
                 TweenService:Create(st, TweenInfo.new(0.16, Enum.EasingStyle.Quart, Enum.EasingDirection.Out),
                     {Color = C.ACCENT, Transparency = 0.02}):Play()
-            end))
+            kết thúc))
             trackConn(obj.FocusLost:Connect(function()
                 local st = obj:FindFirstChildOfClass("UIStroke")
-                if st then
+                nếu st thì
                     TweenService:Create(st, TweenInfo.new(0.28, Enum.EasingStyle.Quart, Enum.EasingDirection.Out),
                         {Color = C.BORDER, Transparency = 0.35}):Play()
-                end
-            end))
-        end
-    end)
+                kết thúc
+            kết thúc))
+        kết thúc
+    kết thúc)
     pcall(function()
-        if (cls == "TextButton" or cls == "TextLabel") and props
-           and props.BackgroundColor3 ~= nil and props.TextColor3 ~= nil
-           and (props.BackgroundTransparency or 0) < 0.5 then
+        nếu (cls == "TextButton" hoặc cls == "TextLabel") và props
+           và props.BackgroundColor3 ~= nil và props.TextColor3 ~= nil
+           và (props.BackgroundTransparency hoặc 0) < 0.5 thì
             local bg = props.BackgroundColor3
-            if typeof(bg) == "Color3" then
+            nếu typeof(bg) == "Color3" thì
                 local lum = 0.2126 * bg.R + 0.7152 * bg.G + 0.0722 * bg.B
-                if lum > 0.6 and props.TextColor3 == Color3.fromRGB(255, 255, 255) then
+                nếu lum > 0.6 và props.TextColor3 == Color3.fromRGB(255, 255, 255) thì
                     obj.TextColor3 = C.INK
-                end
-            end
-        end
-    end)
-    return obj
-end
+                kết thúc
+            kết thúc
+        kết thúc
+    kết thúc)
+    trả về obj
+kết thúc
 
-local function Corner(p, r)
-    return New("UICorner", {CornerRadius = r or UDim.new(0, 10)}, p)   -- v4.5: bo 10px (trước 8px)
-end
+hàm cục bộ Corner(p, r)
+    return New("UICorner", {CornerRadius = r or UDim.new(0, 10)}, p) -- v4.5: bo 10px ( 8px)
+kết thúc
 
-local function Stroke(p, c, t)
-    return New("UIStroke", {
-        Color = c or C.BORDER,                          -- v4.9: viền tách khối rõ hơn trên nền obsidian
-        Thickness = t or 1,
-        Transparency = 0.15,                            -- v4.9: nét viền "có mặt" hơn (trước 0.25)
+hàm cục bộ Stroke(p, c, t)
+    trả về New("UIStroke", {
+        Color = c hoặc C.BORDER, -- v4.9: viền đóng khối rõ hơn trên nền obsidian
+        Độ dày = t hoặc 1,
+        Độ trong suốt = 0,15, -- v4.9: viền viền "có mặt" hơn (trước 0,25)
         ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
-    }, p)
-end
+    }, P)
+kết thúc
 
 local flashBack = setmetatable({}, { __mode = "k" })
-local function flash(btn, temp, secs, tempColor, back)
-    if not btn then return end
+hàm cục bộ flash(btn, temp, secs, tempColor, back)
+    nếu không phải btn thì trả về end
     if flashBack[btn] == nil then flashBack[btn] = { back or btn.Text, btn.TextColor3 } end
     pcall(function()
         btn.Text = tostring(temp)
         if tempColor then btn.TextColor3 = tempColor end
-    end)
-    task.delay(secs or 1.6, function()
+    kết thúc)
+    task.delay(giây hoặc 1.6, hàm())
         if not (btn and btn.Parent) then return end
-        local old = flashBack[btn]
-        if not old then return end
+        cục bộ cũ = flashBack[btn]
+        nếu không phải là cũ thì trả về cuối
         pcall(function() btn.Text = old[1]; btn.TextColor3 = old[2] end)
         flashBack[btn] = nil
-    end)
-end
+    kết thúc)
+kết thúc
 
-local function Tween(o, p, d, e)
+hàm cục bộ Tween(o, p, d, e)
     TweenService:Create(o, TweenInfo.new(d or 1.5, e or Enum.EasingStyle.Quart, Enum.EasingDirection.Out), p):Play()
-end
+kết thúc
 
-local D = {}
+cục bộ D = {}
 
-local S
+địa phương S
 
-function D.Say(msg, color)
-    if not D.hubStatus then return end
+hàm D.Say(msg, color)
+    nếu không phải D.hubStatus thì trả về end
     pcall(function()
         D.hubStatus.Text = tostring(msg)
-        D.hubStatus.TextColor3 = color or C.RED
-    end)
-end
+        D.hubStatus.TextColor3 = màu hoặc C.RED
+    kết thúc)
+kết thúc
 
-function D.BestText(bg)
+hàm D.BestText(bg)
     if typeof(bg) ~= "Color3" then return C.WHITE end
     local lum = 0.2126 * bg.R + 0.7152 * bg.G + 0.0722 * bg.B
-    return (lum > 0.6) and C.INK or C.WHITE
-end
+    trả lại (lum > 0.6) và C.INK hoặc C.WHITE
+kết thúc
 
-function D.Edge(bg)
+hàm D.Edge(bg)
     if typeof(bg) ~= "Color3" then return C.BORDER end
-    return Color3.new(
+    trả về Color3.new(
         math.min(1, bg.R + 0.11), math.min(1, bg.G + 0.12), math.min(1, bg.B + 0.16))
-end
+kết thúc
 
-function D.Grad(obj)
+hàm D.Grad(obj)
     local g = obj:FindFirstChildOfClass("UIGradient")
-    if not g then
+    nếu không phải g thì
         g = New("UIGradient", {Color = ColorSequence.new(Color3.new(1,1,1), Color3.new(1,1,1))}, obj)
-    end
-    return g
-end
+    kết thúc
+    trả lại g
+kết thúc
 
-function D.Paint(obj, c1, c2, rotation)
+hàm D.Paint(obj, c1, c2, rotation)
     pcall(function()
         obj.BackgroundColor3 = Color3.new(1, 1, 1)
-        local g = D.Grad(obj)
+        cục bộ g = D.Grad(obj)
         g.Color = ColorSequence.new(c1, c2 or c1)
-        g.Rotation = rotation or 90
-    end)
-    return obj
-end
+        g. Xoay = xoay hoặc 90
+    kết thúc)
+    trả về obj
+kết thúc
 
-function D.Unpaint(obj)
+hàm D.Unpaint(obj)
     pcall(function()
-        if not obj then return end
+        nếu không phải là obj thì trả về end
         local g = obj:FindFirstChildOfClass("UIGradient")
-        if g then g.Color = ColorSequence.new(Color3.new(1, 1, 1), Color3.new(1, 1, 1)) end
-    end)
-    return obj
-end
+        nếu g thì g.Color = ColorSequence.new(Color3.new(1, 1, 1), Color3.new(1, 1, 1)) end
+    kết thúc)
+    trả về obj
+kết thúc
 
-function D.Paint3(obj, colors, rotation)
+hàm D.Paint3(obj, colors, rotation)
     pcall(function()
         if type(colors) ~= "table" or #colors == 0 then return obj end
         obj.BackgroundColor3 = Color3.new(1, 1, 1)
-        local g = D.Grad(obj)
-        local n = #colors
-        if n == 1 then
+        cục bộ g = D.Grad(obj)
+        cục bộ n = #màu sắc
+        nếu n == 1 thì
             g.Color = ColorSequence.new(colors[1], colors[1])
-        else
-            local kp = {}
+        khác
+            cục bộ kp = {}
             for i, col in ipairs(colors) do
                 kp[i] = ColorSequenceKeypoint.new((i - 1) / (n - 1), col)
-            end
+            kết thúc
             g.Color = ColorSequence.new(kp)
-        end
-        g.Rotation = rotation or 90
-    end)
-    return obj
-end
+        kết thúc
+        g. Xoay = xoay hoặc 90
+    kết thúc)
+    trả về obj
+kết thúc
 
-function D.TopLight(obj, color, thickness, inset)
-    local line = nil
+hàm D.TopLight(obj, color, thickness, inset)
+    dòng cục bộ = nil
     pcall(function()
-        inset = inset or 14
-        line = New("Frame", {
-            Name = "BC_TopLight",
-            Size = UDim2.new(1, -inset * 2, 0, thickness or 1),
-            Position = UDim2.new(0, inset, 0, 0),
-            BackgroundColor3 = color or C.HAIRLINE,
-            BackgroundTransparency = 0.3,
+        inset = inset hoặc 14
+        dòng = Mới("Khung", {
+            Tên = "BC_TopLight",
+            Kích thước = UDim2.new(1, -inset * 2, 0, thickness hoặc 1),
+            Vị trí = UDim2.new(0, inset, 0, 0),
+            BackgroundColor3 = màu hoặc C.HAIRLINE,
+            Độ trong suốt của nền = 0.3,
             BorderSizePixel = 0,
-            ZIndex = (obj.ZIndex or 1) + 1,
+            ZIndex = (obj.ZIndex hoặc 1) + 1,
         }, obj)
         local g = New("UIGradient", {Rotation = 0}, line)
         g.Transparency = NumberSequence.new({
@@ -347,150 +352,150 @@ function D.TopLight(obj, color, thickness, inset)
             NumberSequenceKeypoint.new(0.50, 0.05),
             NumberSequenceKeypoint.new(1.00, 1.00),
         })
-    end)
-    return line
-end
+    kết thúc)
+    đường trả về
+kết thúc
 
-function D.Shade(obj, k1, k2, rotation)
+hàm D.Shade(obj, k1, k2, rotation)
     pcall(function()
-        local g = D.Grad(obj)
+        cục bộ g = D.Grad(obj)
         local a = k1 or Color3.new(1.0, 1.0, 1.0)
         local b = k2 or Color3.new(0.82, 0.84, 0.90)
-        local function mix(t)
-            return Color3.new(a.R + (b.R - a.R) * t, a.G + (b.G - a.G) * t, a.B + (b.B - a.B) * t)
-        end
+        hàm cục bộ mix(t)
+            return Color3.new(aR + (bR - aR) * t, aG + (bG - aG) * t, aB + (bB - aB) * t)
+        kết thúc
         g.Color = ColorSequence.new({
-            ColorSequenceKeypoint.new(0.00, a),        -- mép trên: hắt sáng
+            ColorSequenceKeypoint.new(0.00, a), -- mép trên: hắt sáng
             ColorSequenceKeypoint.new(0.10, mix(0.28)),
             ColorSequenceKeypoint.new(0.58, mix(0.62)),
-            ColorSequenceKeypoint.new(1.00, b),        -- đáy: hút tối
+            ColorSequenceKeypoint.new(1.00, b), -- đáy: hút tối
         })
-        g.Rotation = rotation or 90
-    end)
-    return obj
-end
+        g. Xoay = xoay hoặc 90
+    kết thúc)
+    trả về obj
+kết thúc
 
-function D.PaintText(obj, c1, c2)
+hàm D.PaintText(obj, c1, c2)
     pcall(function()
         obj.TextColor3 = Color3.new(1, 1, 1)
-        local g = D.Grad(obj)
+        cục bộ g = D.Grad(obj)
         g.Color = ColorSequence.new(c1, c2 or c1)
         g.Rotation = 0
-    end)
-    return obj
-end
+    kết thúc)
+    trả về obj
+kết thúc
 
-function D.Tactile(btn, baseTrans)
-    baseTrans = baseTrans or 0.08
+hàm D.Tactile(btn, baseTrans)
+    baseTrans = baseTrans hoặc 0,08
     pcall(function()
         trackConn(btn.MouseEnter:Connect(function()
             Tween(btn, {BackgroundTransparency = math.max(0, baseTrans - 0.06)}, 0.16)
-        end))
+        kết thúc))
         trackConn(btn.MouseLeave:Connect(function()
             Tween(btn, {BackgroundTransparency = baseTrans}, 0.2)
-        end))
+        kết thúc))
         trackConn(btn.MouseButton1Down:Connect(function()
             Tween(btn, {BackgroundTransparency = math.min(1, baseTrans + 0.12)}, 0.08)
-        end))
+        kết thúc))
         trackConn(btn.MouseButton1Up:Connect(function()
             Tween(btn, {BackgroundTransparency = baseTrans}, 0.14)
-        end))
-    end)
-    return btn
-end
+        kết thúc))
+    kết thúc)
+    nút quay lại
+kết thúc
 
-function D.HoverText(btn, overColor, downColor)
+hàm D.HoverText(btn, overColor, downColor)
     pcall(function()
         local base = btn.TextColor3
         trackConn(btn.MouseEnter:Connect(function() Tween(btn, {TextColor3 = overColor or C.WHITE}, 0.15) end))
         trackConn(btn.MouseLeave:Connect(function() Tween(btn, {TextColor3 = base}, 0.2) end))
         trackConn(btn.MouseButton1Down:Connect(function()
             Tween(btn, {TextColor3 = downColor or overColor or C.WHITE}, 0.08)
-        end))
-    end)
-    return btn
-end
+        kết thúc))
+    kết thúc)
+    nút quay lại
+kết thúc
 
-function D.Glow(obj, color, pad, trans)
-    local glow = nil
+hàm D.Glow(obj, color, pad, trans)
+    ánh sáng cục bộ = không
     pcall(function()
-        if not obj or not obj.Parent then return end
-        pad = pad or 7
-        local function posOf()
+        nếu không phải obj hoặc không phải obj.Parent thì trả về end
+        miếng đệm = miếng đệm hoặc 7
+        hàm cục bộ posOf()
             local pp = obj.Position
             return UDim2.new(pp.X.Scale, pp.X.Offset - pad, pp.Y.Scale, pp.Y.Offset - pad)
-        end
-        glow = New("Frame", {
-            Name = "BC_Glow",
-            Size = UDim2.new(1, pad * 2, 1, pad * 2),
-            Position = posOf(),
-            BackgroundColor3 = color or C.ACCENT,
-            BackgroundTransparency = trans or 0.86,
+        kết thúc
+        phát sáng = Mới("Khung", {
+            Tên = "BC_Glow",
+            Kích thước = UDim2.new(1, pad * 2, 1, pad * 2),
+            Vị trí = posOf(),
+            BackgroundColor3 = màu hoặc C.ACCENT,
+            BackgroundTransparency = trans hoặc 0.86,
             BorderSizePixel = 0,
-            ZIndex = (obj.ZIndex or 1) - 1,
+            ZIndex = (obj.ZIndex hoặc 1) - 1,
         }, obj.Parent)
-        Corner(glow, UDim.new(1, 0))
+        Góc(phát sáng, UDim.new(1, 0))
         trackConn(obj:GetPropertyChangedSignal("Position"):Connect(function()
             pcall(function() glow.Position = posOf() end)
-        end))
-    end)
-    return glow
-end
+        kết thúc))
+    kết thúc)
+    ánh sáng trở lại
+kết thúc
 
-function D.SetBg(obj, color, trans)
+hàm D.SetBg(obj, color, trans)
     pcall(function()
-        if not obj then return end
-        obj.BackgroundColor3 = color
+        nếu không phải là obj thì trả về end
+        obj.BackgroundColor3 = màu
         if trans ~= nil then obj.BackgroundTransparency = trans end
-        if obj:IsA("TextButton") or obj:IsA("TextLabel") then
-            obj.TextColor3 = D.BestText(color)
-        end
+        nếu obj:IsA("TextButton") hoặc obj:IsA("TextLabel") thì
+            obj.TextColor3 = D.BestText(màu)
+        kết thúc
         local st = obj:FindFirstChildOfClass("UIStroke")
         if st then st.Color = D.Edge(color) end
-    end)
-    return obj
-end
+    kết thúc)
+    trả về obj
+kết thúc
 
-function D.Breathe(obj, props, dur)
+hàm D.Breathe(obj, props, dur)
     pcall(function()
         local ti = TweenInfo.new(dur or 1.9, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true)
         TweenService:Create(obj, ti, props):Play()
-    end)
-end
+    kết thúc)
+kết thúc
 
-local function ReleaseHubFocus()
+hàm cục bộ ReleaseHubFocus()
     pcall(function()
         local tb = UserInputService:GetFocusedTextBox()
         if tb then tb:ReleaseFocus() end
-    end)
+    kết thúc)
     pcall(function() playerGui:ReleaseFocus() end)
-end
+kết thúc
 
-if targetGui:FindFirstChild("ExMenu") then
+nếu targetGui:FindFirstChild("ExMenu") thì
     targetGui.ExMenu:Destroy()
-end
+kết thúc
 
 local gui = New("ScreenGui", {
-    Name="ExMenu",
+    Tên="ExMenu",
     IgnoreGuiInset=true,
     ResetOnSpawn=false,
     ZIndexBehavior=Enum.ZIndexBehavior.Sibling,
 }, targetGui)
 
 local togBtn = New("TextButton", {
-    Size=UDim2.new(0,48,0,48),
-    Position=UDim2.new(1,-60,1,-60),
-    Text="",
+    Kích thước = UDim2.new(0,48,0,48),
+    Vị trí = UDim2.new(1, -60, 1, -60),
+    Văn bản="",
     BackgroundColor3=Color3.fromRGB(0,0,0),
     BackgroundTransparency=1, -- trong suốt hoàn toàn, không che màn hình
     TextColor3=Color3.fromRGB(255,255,255),
     Font=Enum.Font.GothamBold,
-    TextSize=32,
+    Kích thước văn bản=32,
     BorderSizePixel=0,
-    ZIndex=1000,
+    Chỉ số Z = 1000,
 }, gui)
-Corner(togBtn, UDim.new(1,0))
--- viền cầu vồng mỏng, chỉ viền, không che
+Góc(togBtn, UDim.new(1,0))
+-- viền cầu vồng đậm, chỉ viền, không che
 local rainbowStroke = Instance.new("UIStroke")
 rainbowStroke.Thickness = 2
 rainbowStroke.Color = Color3.fromRGB(255,255,255)
@@ -509,227 +514,251 @@ pcall(function()
     grad.Rotation = 0
     grad.Parent = rainbowStroke
     task.spawn(function()
-        while true do
+        trong khi đúng vậy
             if not togBtn.Parent then break end
-            for r=0,360,4 do
+            với r=0,360,4 thực hiện
                 if not togBtn.Parent then break end
                 pcall(function() grad.Rotation = r end)
                 task.wait(0.03)
-            end
-        end
-    end)
-end)
+            kết thúc
+        kết thúc
+    kết thúc)
+kết thúc)
 D.Tactile(togBtn, 1)
--- đã bỏ glow toàn màn hình để không che góc phải khi kéo nút vào giữa
+-- bỏ ánh sáng toàn màn hình để không che góc phải khi kéo nút vào giữa
 
 local main = New("Frame", {
-    Size=UDim2.new(0,540,0,340),
-    Position=UDim2.new(0.5,-270,0.5,-170),
+    Kích thước = UDim2.new(0, 540, 0, 340),
+    Vị trí = UDim2.new(0.5, -270, 0.5, -170),
     BackgroundColor3=C.BG,
-    BackgroundTransparency=0,      -- v4.9: đục tuyệt đối để gradient 4 chặng lên đúng màu
+    BackgroundTransparency=0, -- v4.9: đục tuyệt đối để gradient 4 màu lên đúng màu
     BorderSizePixel=0,
-    Visible=false,
+    Hiển thị = false,
     ClipsDescendants=false,
-    ZIndex=2,
+    Chỉ số Z = 2,
 }, gui)
-Corner(main, UDim.new(0,16))
+Góc(chính, UDim.new(0,16))
 Stroke(main, C.HAIRLINE, 1.2)
 D.Paint3(main, {C.SURFACE2, C.BG, C.BG, C.DEEP}, 90)
 
-local Hit = {}
+Lượt truy cập cục bộ = {}
 
-function Hit.inObject(o, x, y)
-    if not o then return false end
-    local ok, res = pcall(function()
+hàm Hit.inObject(o, x, y)
+    nếu không phải là o thì trả về false kết thúc
+    cục bộ ok, res = pcall(function()
         if not o.Visible then return false end
         local p, s = o.AbsolutePosition, o.AbsoluteSize
-        return x >= p.X and x <= p.X + s.X and y >= p.Y and y <= p.Y + s.Y
-    end)
-    return ok and res == true
-end
+        Trả về x >= pX và x <= pX + sX và y >= pY và y <= pY + sY
+    kết thúc)
+    trả về ok và res == true
+kết thúc
 
-function Hit.onHub(x, y)
-    local ok, objs = pcall(function()
+hàm Hit.onHub(x, y)
+    cục bộ ổn, objs = pcall(function()
         return playerGui:GetGuiObjectsAtPosition(x, y)
-    end)
-    if ok and type(objs) == "table" then
+    kết thúc)
+    nếu ok và type(objs) == "table" thì
         for _, o in ipairs(objs) do
             if o == gui or o:IsDescendantOf(gui) then return true end
-        end
-    end
+        kết thúc
+    kết thúc
+    local aimOverlayHit = false
+    pcall(function()
+        lớp phủ cục bộ = S.AnaUi và S.AnaUi.aimGui
+        nếu không có lớp phủ thì trả về end
+        các container cục bộ = {playerGui}
+        if targetGui and targetGui ~= playerGui then containers[#containers + 1] = targetGui end
+        for _, container in ipairs(containers) do
+            local okAim, aimObjs = pcall(function()
+                trả về container:GetGuiObjectsAtPosition(x, y)
+            kết thúc)
+            nếu okAim và type(aimObjs) == "table" thì
+                for _, o in ipairs(aimObjs) do
+                    nếu o:IsDescendantOf(overlay) thì
+                        dấu chấm cục bộ = S.AnaUi và S.AnaUi.aimDot
+                        nếu không phải dot hoặc (o ~= dot và không phải o:IsDescendantOf(dot)) thì
+                            aimOverlayHit = true
+                            trở lại
+                        kết thúc
+                    kết thúc
+                kết thúc
+            kết thúc
+        kết thúc
+    kết thúc)
+    nếu aimOverlayHit thì trả về true
     if Hit.inObject(main, x, y) then return true end
     if Hit.inObject(togBtn, x, y) then return true end
-    return false
-end
+    trả về false
+kết thúc
 
 local bgPattern = New("ImageLabel", {
-    Name = "CheckeredBG",
-    Size = UDim2.new(1, 0, 1, 0),
-    Position = UDim2.new(0, 0, 0, 0),
-    BackgroundTransparency = 1,
-    Image = "rbxassetid://9822602710",
-    ScaleType = Enum.ScaleType.Tile,
-    TileSize = UDim2.new(0, 13, 0, 13),               -- v4.9: hạt nhỏ hơn -> chất liệu mịn như vải, không còn "caro"
-    ImageTransparency = 0.955,                        -- v4.9: nhẹ hơn nữa, chỉ còn là ánh kim loại
-    ImageColor3 = C.ACCENT2,                          -- v4.9: ánh đồng (trước là vàng chuối gắt)
-    ZIndex = 2,
-}, main)
-Corner(bgPattern, UDim.new(0, 14))
+    Tên = "CheckeredBG",
+    Kích thước = UDim2.new(1, 0, 1, 0),
+    Vị trí = UDim2.new(0, 0, 0, 0),
+    Độ trong suốt của nền = 1,
+    Hình ảnh = "rbxassetid9822602710",
+    Loại tỷ lệ = Enum.ScaleType.Tile,
+    TileSize = UDim2.new(0, 13, 0, 13), -- v4.9: hạt nhỏ hơn -> chất liệu thô như vải, không còn "caro"
+    ImageTransparency = 0.955, -- v4.9: nhẹ hơn nữa, chỉ còn là loại kim loại
+    ImageColor3 = C.ACCENT2, -- v4.9: ánh đồng (trước là vàng chuối gạt)
+    Chỉ số Z = 2,
+}, chủ yếu)
+Góc(bgPattern, UDim.new(0, 14))
 
 local titleBar = New("Frame", {
-    Size=UDim2.new(1,0,0,30),
+    Kích thước = UDim2.new(1, 0, 0, 30),
     BackgroundColor3=C.SURFACE2,
-    BackgroundTransparency=0,      -- v4.9: đục để gradient 3 chặng lên đúng
+    BackgroundTransparency=0, -- v4.9: đục để gradient 3 tăng đúng
     BorderSizePixel=0,
-    ZIndex=3,
-}, main)
-Corner(titleBar, UDim.new(0,16))
+    Chỉ số Z = 3,
+}, chủ yếu)
+Góc(thanh tiêu đề, UDim.new(0,16))
 D.Paint3(titleBar, {C.SURFACE3, C.SURFACE2, C.SURFACE}, 90)
-D.TopLight(titleBar, C.ACCENT3, 1, 22)   -- v4.9: chỉ vàng mảnh chạy dọc mép trên cửa sổ
+D.TopLight(titleBar, C.ACCENT3, 1, 22) -- v4.9: chỉ vàng mảnh chạy dọc viền trên cửa sổ
 
 D.Paint3(New("Frame", {
-    Name="TitleAccent", Size=UDim2.new(1,-2,0,2), Position=UDim2.new(0,1,1,-1),
+    Tên="TitleAccent", Kích thước=UDim2.new(1,-2,0,2), Vị trí=UDim2.new(0,1,1,-1),
     BackgroundColor3=C.ACCENT, BorderSizePixel=0, ZIndex=5,
 }, titleBar), {C.ACCENT2, C.ACCENT3, C.ACCENT2}, 0)
 
 D.PaintText(New("TextLabel", {
-    Size=UDim2.new(1,-90,1,0),
-    Position=UDim2.new(0,12,0,0),
-    Text="taodepzai v5.0 NOIR",
-    BackgroundTransparency=1,
+    Kích thước = UDim2.new(1, -90, 1, 0),
+    Vị trí = UDim2.new(0, 12, 0, 0),
+    Văn bản="taodepzai v5.0 NOIR",
+    Độ trong suốt nền = 1,
     TextColor3=C.DARK,
     Font=Enum.Font.GothamBold,
-    TextSize=13,
-    TextXAlignment=Enum.TextXAlignment.Left,
-    ZIndex=4,
-}, titleBar), C.ACCENT, C.ACCENT3)   -- v4.9: chữ gradient vàng sâm-panh -> trắng ngà
+    Kích thước văn bản=13,
+    TextXAlignment = Enum.TextXAlignment.Left,
+    Chỉ số Z = 4,
+}, titleBar), C.ACCENT, C.ACCENT3) -- v4.9: chữ gradient vàng rượu-panh -> trắng ngà
 
 D.verPill = New("Frame", {
-    Name="VersionPill", Size=UDim2.new(0,62,0,16), Position=UDim2.new(0,158,0,7),
+    Tên="VersionPill", Kích thước=UDim2.new(0,62,0,16), Vị trí=UDim2.new(0,158,0,7),
     BackgroundColor3=C.DEEP, BackgroundTransparency=0.15, BorderSizePixel=0, ZIndex=5,
-}, titleBar)
-Corner(D.verPill, UDim.new(1,0))
-Stroke(D.verPill, C.ACCENT2, 1)   -- v4.9: huy hiệu đen + viền đồng, chữ champagne
-New("TextLabel", {
+}, thanh tiêu đề)
+Góc (D.verPill, UDim.new (1,0))
+Stroke(D.verPill, C.ACCENT2, 1) -- v4.9: huy hiệu đen + viền đồng, chữ sâm panh
+Mới("TextLabel", {
     Size=UDim2.new(1,0,1,0), Text="v5.0 · NOIR", BackgroundTransparency=1,
     TextColor3=C.ACCENT3, Font=Enum.Font.GothamBold, TextSize=8, ZIndex=6,
 }, D.verPill)
 
-local function TitleBtn(txt, xOff)
-    return New("TextButton", {
-        Size=UDim2.new(0,30,0,30), Position=UDim2.new(1,-xOff,0,0), Text=txt,
+hàm cục bộ TitleBtn(txt, xOff)
+    trả về New("TextButton", {
+        Kích thước=UDim2.new(0,30,0,30), Vị trí=UDim2.new(1,-xOff,0,0), Văn bản=txt,
         BackgroundTransparency=1, TextColor3=C.MUTED, Font=Enum.Font.GothamBold,
-        TextSize=15, BorderSizePixel=0, ZIndex=4,
-    }, titleBar)
-end
+        Kích thước chữ=15, Kích thước viền pixel=0, Chỉ số Z=4,
+    }, thanh tiêu đề)
+kết thúc
 local dragLockBtn = TitleBtn("🔒", 64)
-local closeBtn    = TitleBtn("✕", 32)
+local closeBtn = TitleBtn("✕", 32)
 D.HoverText(closeBtn, C.RED, C.RED)
 D.HoverText(dragLockBtn, C.ACCENT, C.ACCENT)
 
-local minW, minH = 440, 260
+minW, minH cục bộ = 440, 260
 
-local function BcFit()
+hàm cục bộ BcFit()
     local fn = _G.BananaCatHub_SyncEmbeds
     if type(fn) ~= "function" then return end
-    local ok, now = pcall(os.clock)
-    if ok and _G.BcFitLast and now - _G.BcFitLast < 0.05 then return end
-    _G.BcFitLast = ok and now or 0
+    cục bộ ổn, bây giờ = pcall(os.clock)
+    Nếu ổn và _G.BcFitLast và bây giờ - _G.BcFitLast < 0.05 thì trả về end
+    _G.BcFitLast = ok và bây giờ hoặc 0
     task.defer(fn)
-end
+kết thúc
 
-local function SetupResizeHandle(btn, cornerType)
-    local resizing, sizeStart, posStart, inputStart
+hàm cục bộ SetupResizeHandle(btn, cornerType)
+    thay đổi kích thước cục bộ, sizeStart, posStart, inputStart
     trackConn(btn.InputBegan:Connect(function(i)
-        if i.UserInputType==Enum.UserInputType.MouseButton1 or i.UserInputType==Enum.UserInputType.Touch then
-            pcall(function() if D.openTween then D.openTween:Cancel() D.openTween = nil end end)  -- v4.5
-            resizing=true
+        nếu i.UserInputType == Enum.UserInputType.MouseButton1 hoặc i.UserInputType == Enum.UserInputType.Touch thì
+            pcall(function() if D.openTween then D.openTween:Cancel() D.openTween = nil end end) -- v4.5
+            thay đổi kích thước = đúng
             sizeStart=main.Size
             posStart=main.Position
             inputStart=i.Position
-        end
-    end))
+        kết thúc
+    kết thúc))
     trackConn(UserInputService.InputChanged:Connect(function(i)
-        if resizing and sizeStart and posStart and inputStart and (i.UserInputType==Enum.UserInputType.MouseMovement or i.UserInputType==Enum.UserInputType.Touch) then
+        nếu resizing và sizeStart và posStart và inputStart và (i.UserInputType==Enum.UserInputType.MouseMovement hoặc i.UserInputType==Enum.UserInputType.Touch) thì
             local d = i.Position - inputStart
             local w, h = sizeStart.X.Offset, sizeStart.Y.Offset
             local posX, posY = posStart.X.Offset, posStart.Y.Offset
-            local newW, newH = w, h
-            local newX, newY = posX, posY
-            if cornerType == "BR" then
-                newW = math.max(minW, w + d.X)
-                newH = math.max(minH, h + d.Y)
+            cục bộ newW, newH = w, h
+            cục bộ newX, newY = posX, posY
+            nếu cornerType == "BR" thì
+                newW = math.max(minW, w + dX)
+                newH = math.max(minH, h + dY)
             elseif cornerType == "BL" then
-                newW = math.max(minW, w - d.X)
-                newH = math.max(minH, h + d.Y)
+                newW = math.max(minW, w - dX)
+                newH = math.max(minH, h + dY)
                 newX = posX + (w - newW)
             elseif cornerType == "TR" then
-                newW = math.max(minW, w + d.X)
-                newH = math.max(minH, h - d.Y)
+                newW = math.max(minW, w + dX)
+                newH = math.max(minH, h - dY)
                 newY = posY + (h - newH)
             elseif cornerType == "TL" then
-                newW = math.max(minW, w - d.X)
-                newH = math.max(minH, h - d.Y)
+                newW = math.max(minW, w - dX)
+                newH = math.max(minH, h - dY)
                 newX = posX + (w - newW)
                 newY = posY + (h - newH)
-            end
+            kết thúc
             main.Size = UDim2.new(sizeStart.X.Scale, newW, sizeStart.Y.Scale, newH)
             main.Position = UDim2.new(posStart.X.Scale, newX, posStart.Y.Scale, newY)
-        end
-    end))
+        kết thúc
+    kết thúc))
     trackConn(UserInputService.InputEnded:Connect(function(i)
-        if i.UserInputType==Enum.UserInputType.MouseButton1 or i.UserInputType==Enum.UserInputType.Touch then
-            resizing=false
-        end
-    end))
-end
+        nếu i.UserInputType == Enum.UserInputType.MouseButton1 hoặc i.UserInputType == Enum.UserInputType.Touch thì
+            thay đổi kích thước = false
+        kết thúc
+    kết thúc))
+kết thúc
 
-local function CreateHandle(icon, pos)
+hàm cục bộ CreateHandle(icon, pos)
     local btn = New("TextButton", {
-        Size=UDim2.new(0,20,0,20),
-        Position=pos,
-        Text=icon,
+        Kích thước = UDim2.new(0,20,0,20),
+        Vị trí = vị trí,
+        Văn bản=biểu tượng,
         BackgroundColor3=C.SURFACE3,
-        BackgroundTransparency=0.35,
+        Độ trong suốt của nền = 0.35,
         TextColor3=C.MUTED,
         Font=Enum.Font.GothamBold,
-        TextSize=11,
+        Kích thước văn bản=11,
         BorderSizePixel=0,
-        ZIndex=100,
-    }, main)
-    Corner(btn, UDim.new(0,5))
+        Chỉ số Z = 100,
+    }, chủ yếu)
+    Góc(btn, UDim.new(0,5))
     Stroke(btn, C.HAIRLINE, 1)
     D.Shade(btn, Color3.fromRGB(255,255,255), Color3.fromRGB(190,196,210), 90)
     D.Tactile(btn, 0.35)
-    return btn
-end
+    nút quay lại
+kết thúc
 
 SetupResizeHandle(CreateHandle("↖", UDim2.new(0, 2, 0, 2)), "TL")
 SetupResizeHandle(CreateHandle("↗", UDim2.new(1, -22, 0, 2)), "TR")
 SetupResizeHandle(CreateHandle("↙", UDim2.new(0, 2, 1, -22)), "BL")
 SetupResizeHandle(CreateHandle("↘", UDim2.new(1, -22, 1, -22)), "BR")
 
-local tabs = {}
+tab cục bộ = {}
 local tabContent = {}
 
-local tabBar = New("ScrollingFrame", {
-    Size=UDim2.new(0,56,1,-30),
-    Position=UDim2.new(0,0,0,30),
+tab cục bộBar = Mới ("ScrollingFrame", {
+    Kích thước = UDim2.new(0, 56, 1, -30),
+    Vị trí = UDim2.new(0,0,0,30),
     BackgroundColor3=C.SURFACE,
-    BackgroundTransparency=0,
+    Độ trong suốt nền = 0,
     BorderSizePixel=0,
-    ZIndex=3,
-    ScrollBarThickness=3,
+    Chỉ số Z = 3,
+    Độ dày thanh cuộn = 3,
     CanvasSize=UDim2.new(0,0,0,0),
-}, main)
+}, chủ yếu)
 D.Paint3(tabBar, {C.SURFACE, C.BG, C.DEEP}, 90)
 
-New("Frame", {
-    Name="TabRailDivider", Size=UDim2.new(0,1,1,-30), Position=UDim2.new(0,56,0,30),
+Mới("Khung", {
+    Tên="TabRailDivider", Kích thước=UDim2.new(0,1,1,-30), Vị trí=UDim2.new(0,56,0,30),
     BackgroundColor3=C.HAIRLINE, BackgroundTransparency=0.45, BorderSizePixel=0, ZIndex=4,
-}, main)
+}, chủ yếu)
 
-New("UIListLayout", {
+Mới("UIListLayout", {
     FillDirection=Enum.FillDirection.Vertical,
     SortOrder=Enum.SortOrder.LayoutOrder,
     Padding=UDim.new(0,4),
@@ -738,604 +767,604 @@ New("UIListLayout", {
 New("UIPadding", {PaddingTop=UDim.new(0,6), PaddingLeft=UDim.new(0,4)}, tabBar)
 
 local contentArea = New("Frame", {
-    Size=UDim2.new(1,-56,1,-54),     -- v4.5: nhường 56px cho thanh icon + 24px cho header trang
-    Position=UDim2.new(0,56,0,54),
-    BackgroundTransparency=1,
+    Size=UDim2.new(1,-56,1,-54), -- v4.5: nhường 56px cho thanh icon + 24px cho header trang
+    Vị trí = UDim2.new(0, 56, 0, 54),
+    Độ trong suốt nền = 1,
     BorderSizePixel=0,
-    ZIndex=3,
+    Chỉ số Z = 3,
     ClipsDescendants=true,
-}, main)
+}, chủ yếu)
 
 D.pageHeader = New("Frame", {
-    Name="PageHeader", Size=UDim2.new(1,-56,0,24), Position=UDim2.new(0,56,0,30),
+    Tên="Tiêu đề trang", Kích thước=UDim2.new(1,-56,0,24), Vị trí=UDim2.new(0,56,0,30),
     BackgroundColor3=C.SURFACE, BackgroundTransparency=0.2, BorderSizePixel=0, ZIndex=3,
-}, main)
-D.Paint3(D.pageHeader, {C.SURFACE2, C.SURFACE}, 90)   -- v4.9: dải chrome mảnh dưới thanh tiêu đề
+}, chủ yếu)
+D.Paint3(D.pageHeader, {C.SURFACE2, C.SURFACE}, 90) -- v4.9: phạm vi chrome mảnh dưới thanh tiêu đề
 D.pageTitle = New("TextLabel", {
-    Name="PageTitle", Size=UDim2.new(1,-196,1,0), Position=UDim2.new(0,10,0,0),
-    Text="💾 Code Đã Lưu", BackgroundTransparency=1, TextColor3=C.ACCENT,   -- v4.6.2: trang đầu tiên
+    Tên="Tiêu đề trang", Kích thước=UDim2.new(1,-196,1,0), Vị trí=UDim2.new(0,10,0,0),
+    Text="💾 Code Đã Lưu", BackgroundTransparency=1, TextColor3=C.ACCENT, -- v4.6.2: trang đầu tiên
     Font=Enum.Font.GothamBold, TextSize=11,
     TextXAlignment=Enum.TextXAlignment.Left, ZIndex=5,
 }, D.pageHeader)
 D.pageChips = New("Frame", {
-    Name="PageChips", Size=UDim2.new(0,150,1,-6), Position=UDim2.new(1,-156,0,3),
+    Tên="PageChips", Kích thước=UDim2.new(0,150,1,-6), Vị trí=UDim2.new(1,-156,0,3),
     BackgroundTransparency=1, BorderSizePixel=0, ZIndex=5,
 }, D.pageHeader)
-New("UIListLayout", {
+Mới("UIListLayout", {
     FillDirection=Enum.FillDirection.Horizontal, Padding=UDim.new(0,8),
     SortOrder=Enum.SortOrder.LayoutOrder, VerticalAlignment=Enum.VerticalAlignment.Center,
 }, D.pageChips)
 
 D.hdrSwitches = {}
-for i, sw in ipairs({
-    {key="embed", icon="🧩", onColor=C.GREEN,  tip="Nhúng GUI của script vào tab tính năng"},
-    {key="guess", icon="🕵", onColor=C.ORANGE, tip="Đoán GUI tạo trễ (dễ ăn nhầm GUI game)"},
-    {key="park",  icon="🪟", onColor=C.GREEN,  tip="Đưa GUI của tab 💻 Code vào menu"},
-}) do
+đối với i, sw trong ipairs({
+    {key="embed", icon="🧩", onColor=C.GREEN, tip="Nhúng GUI của tập lệnh vào tab tính năng"},
+    {key="guess", icon="🕵", onColor=C.ORANGE, tip="Đoán GUI tạo đị (dễ ăn nhầm GUI game)"},
+    {key="park", icon="🪟", onColor=C.GREEN, tip="Đưa GUI của tab 💻 Mã vào menu"},
+}) LÀM
     local btn = New("TextButton", {
         Size=UDim2.new(0,42,0,16), Text="", AutoButtonColor=false,
         BackgroundTransparency=1, BorderSizePixel=0, LayoutOrder=i, ZIndex=6,
     }, D.pageChips)
     btn:SetAttribute("BCSwKey", sw.key)
     local ic = New("TextLabel", {
-        Size=UDim2.new(0,14,1,0), Position=UDim2.new(0,0,0,0), Text=sw.icon,
+        Kích thước=UDim2.new(0,14,1,0), Vị trí=UDim2.new(0,0,0,0), Văn bản=sw.icon,
         BackgroundTransparency=1, TextColor3=C.MUTED, Font=Enum.Font.GothamBold,
-        TextSize=10, TextXAlignment=Enum.TextXAlignment.Left, ZIndex=7,
+        Kích thước văn bản=10, Căn chỉnh văn bản theo chiều ngang=Enum.TextXAlignment.Left, Chỉ số Z=7,
     }, btn)
-    local track = New("Frame", {
-        Name="BC_SwTrack", Size=UDim2.new(0,26,0,12), Position=UDim2.new(1,-26,0,2),
+    theo dõi cục bộ = Mới("Khung", {
+        Tên="BC_SwTrack", Kích thước=UDim2.new(0,26,0,12), Vị trí=UDim2.new(1,-26,0,2),
         BackgroundColor3=C.SURFACE3, BorderSizePixel=0, ZIndex=7,
     }, btn)
-    Corner(track, UDim.new(1,0))
+    Góc(track, UDim.new(1,0))
     local trackStroke = Stroke(track, C.HAIRLINE, 1)
-    local knob = New("Frame", {
-        Name="BC_SwKnob", Size=UDim2.new(0,8,0,8), Position=UDim2.new(0,2,0,2),
+    nút cục bộ = Mới("Khung", {
+        Tên="BC_SwKnob", Kích thước=UDim2.new(0,8,0,8), Vị trí=UDim2.new(0,2,0,2),
         BackgroundColor3=C.GRAY, BorderSizePixel=0, ZIndex=8,
-    }, track)
-    Corner(knob, UDim.new(1,0))
+    }, theo dõi)
+    Góc(núm vặn, UDim.new(1,0))
     D.hdrSwitches[sw.key] = {btn=btn, icon=ic, track=track, knob=knob, onColor=sw.onColor, stroke=trackStroke}
 
     btn.Activated:Connect(function()
         local fn = (sw.key == "embed" and S.DoToggleEmbed)
-                or (sw.key == "guess" and S.DoToggleGuess)
-                or (sw.key == "park"  and S.DoTogglePark)
-        if type(fn) == "function" then
-            pcall(fn)   -- hàm gốc đã tự đổi nhãn nút, ghi đĩa và báo trạng thái
-        end
+                hoặc (sw.key == "guess" và S.DoToggleGuess)
+                hoặc (sw.key == "park" và S.DoTogglePark)
+        nếu kiểu(fn) == "function" thì
+            pcall(fn) -- function gốc đã tự động thay đổi nút nhãn, ghi đĩa và trạng thái báo cáo
+        kết thúc
         D.SyncPageChips()
         pcall(function() if S.SyncEmbedToggles then S.SyncEmbedToggles() end end)
-    end)
+    kết thúc)
     btn.MouseEnter:Connect(function()
-        D.pageTitle.Text = sw.icon .. "  " .. sw.tip
+        D.pageTitle.Text = sw.icon .. " " .. sw.tip
         D.pageTitle.TextColor3 = C.DARK
-        D.pageTitle.TextTransparency = 0.25
-    end)
+        D.pageTitle.TextTransparency = 0,25
+    kết thúc)
     btn.MouseLeave:Connect(function()
         D.pageTitle.TextColor3 = C.ACCENT
         local back = D.hoverName or D.activeName
-        if back then D.pageTitle.Text = back end
-        D.pageTitle.TextTransparency = D.hoverName and 0.4 or 0
-    end)
-end
-New("Frame", {   -- kẻ mảnh dưới header
+        nếu quay lại thì D.pageTitle.Text = back end
+        D.pageTitle.TextTransparency = D.hoverName và 0.4 hoặc 0
+    kết thúc)
+kết thúc
+Mới("Khung", { -- bỏ sót phần dưới tiêu đề
     Name="PageHeaderRule", Size=UDim2.new(1,-56,0,1), Position=UDim2.new(0,56,0,53),
     BackgroundColor3=C.HAIRLINE, BackgroundTransparency=0.5, BorderSizePixel=0, ZIndex=4,
-}, main)
+}, chủ yếu)
 
 local activeTab = nil
 
-local function SwitchTab(index)
-    ReleaseHubFocus()   -- v4.4b: đổi tab mà để TextBox còn focus là game chặn input (không đi/không bắn)
+hàm cục bộ SwitchTab(index)
+    ReleaseHubFocus() -- v4.4b:thay đổi tab mà để TextBox còn tập trung vào trò chơi chặn đầu vào (không đi/không bắn)
     for _, t in ipairs(tabContent) do t.Visible = false end
     for _, b in ipairs(tabs) do
         b.BackgroundColor3 = C.SURFACE2
-        b.BackgroundTransparency = 1
+        b. Độ trong suốt của nền = 1
         b.TextColor3 = C.MUTED
-        D.Unpaint(b)   -- v4.9: rửa gradient của lần mở trước để pill ghost/hover lên đúng màu
+        D.Unpaint(b) -- v4.9: wash gradient of time before open to pill ghost/hover up right color
         local bar = b:FindFirstChild("BC_Bar")
-        if bar then bar.Visible = false end
-    end
-    if tabContent[index] and tabs[index] then
+        nếu thanh thì thanh đó hiển thị = false
+    kết thúc
+    nếu tabContent[index] và tabs[index] thì
         tabContent[index].Visible = true
-        local b = tabs[index]
+        cục bộ b = tab[chỉ mục]
         b.BackgroundColor3 = C.SURFACE2
         b.BackgroundTransparency = 0.1
         b.TextColor3 = C.ACCENT
         D.Paint3(b, {C.SURFACE3, C.SURFACE2, C.SURFACE}, 90)
         local bar = b:FindFirstChild("BC_Bar")
-        if not bar then
-            bar = New("Frame", {
-                Name = "BC_Bar", Size = UDim2.new(0, 3, 1, -12), Position = UDim2.new(0, 2, 0, 6),
+        nếu không phải quán bar thì
+            thanh = Mới("Khung", {
+                Tên = "BC_Bar", Kích thước = UDim2.new(0, 3, 1, -12), Vị trí = UDim2.new(0, 2, 0, 6),
                 BackgroundColor3 = C.ACCENT, BorderSizePixel = 0, ZIndex = 6,
             }, b)
-            Corner(bar, UDim.new(1, 0))
-            D.Paint3(bar, {C.ACCENT3, C.ACCENT, C.ACCENT2}, 90)   -- v4.9: vạch như thanh kim loại đánh bóng
-        end
-        bar.Visible = true
+            Góc(thanh, UDim.new(1, 0))
+            D.Paint3(bar, {C.ACCENT3, C.ACCENT, C.ACCENT2}, 90) -- v4.9: vạch như thanh kim loại đánh bóng
+        kết thúc
+        thanh hiển thị = true
         activeTab = tabContent[index]
         pcall(function()
-            if D.pageTitle then
+            nếu D.pageTitle thì
                 local ic = b:GetAttribute("BCTabIcon")
                 local nm = b:GetAttribute("BCTabName")
-                D.activeName = (ic and (ic .. "  ") or "") .. tostring(nm or ("Trang " .. index))
-                if not D.hoverName then
+                D.activeName = (ic and (ic .. " ") or "") .. tostring(nm or ("Trang " .. index))
+                nếu không phải D.hoverName thì
                     D.pageTitle.Text = D.activeName
                     D.pageTitle.TextTransparency = 0
-                end
-            end
-        end)
-    end
-    BcFit()   -- v4.4c: tab vừa hiện -> đo lại để GUI nằm vừa đúng ô của tab
-end
+                kết thúc
+            kết thúc
+        kết thúc)
+    kết thúc
+    BcFit() -- v4.4c: tab vừa hiện -> đo lại để GUI vừa đúng ô của tab
+kết thúc
 
-local function OpenFirstPage()
-    local idx, best = 1, nil
+hàm cục bộ OpenFirstPage()
+    chỉ số cục bộ, tốt nhất = 1, nil
     for i, b in ipairs(tabs) do
-        local o = b and b.LayoutOrder
+        cục bộ o = b và b.LayoutOrder
         if type(o) == "number" and (best == nil or o < best) then best = o; idx = i end
-    end
+    kết thúc
     SwitchTab(idx)
-end
+kết thúc
 
-local function MakeTabFrame()
-    return New("ScrollingFrame", {
-        Size=UDim2.new(1,0,1,0),
-        BackgroundTransparency=1,
+hàm cục bộ MakeTabFrame()
+    trả về New("ScrollingFrame", {
+        Kích thước = UDim2.new(1, 0, 1, 0),
+        Độ trong suốt nền = 1,
         BorderSizePixel=0,
-        ScrollBarThickness=4,                                   -- v4.9: mảnh hơn
-        ScrollBarImageColor3=Color3.fromRGB(88, 96, 118),       -- v4.9: thấy rõ trên nền obsidian
+        ScrollBarThickness=4, -- v4.9: mảnh hơn
+        ScrollBarImageColor3=Color3.fromRGB(88, 96, 118), -- v4.9: known obsidian trên nền
         ClipsDescendants=true,
         CanvasSize=UDim2.new(0,0,0,0),
-        Visible=false,
+        Hiển thị = false,
         Active=true,
-        Selectable=false,
+        Có thể chọn = false,
         ScrollingDirection=Enum.ScrollingDirection.Y,
-        ZIndex=4,
+        Chỉ số Z = 4,
     }, contentArea)
-end
+kết thúc
 
-local function MakeTabButton(name, icon, order, onClick)
+hàm cục bộ MakeTabButton(name, icon, order, onClick)
     local btn = New("TextButton", {
-        Size=UDim2.new(1,-8,0,38),        -- v4.5 Delta: ô icon 48x38
-        Text=icon,                        -- CHỈ icon; tên trang hiện ở header
-        BackgroundColor3=C.SURFACE2,      -- pill ghost (SwitchTab tô màu khi trang mở)
-        BackgroundTransparency=1,
+        Kích thước=UDim2.new(1,-8,0,38), -- v4.5 Delta: ô icon 48x38
+        Text=icon, -- CHỈ icon; tên trang hiện ở tiêu đề
+        BackgroundColor3=C.SURFACE2, -- pill ghost (SwitchTab tô màu khi trang mở)
+        Độ trong suốt nền = 1,
         TextColor3=C.MUTED,
         Font=Enum.Font.GothamBold,
-        TextSize=16,
+        Kích thước văn bản=16,
         BorderSizePixel=0,
         LayoutOrder=order,
         TextXAlignment=Enum.TextXAlignment.Center,
-        ZIndex=4,
+        Chỉ số Z = 4,
     }, tabBar)
-    Corner(btn, UDim.new(0,10))           -- v4.5 Delta: bo 10px cho ô icon
+    Corner(btn, UDim.new(0,10)) -- v4.5 Delta: bo 10px cho ô icon
     pcall(function()
-        btn:SetAttribute("BCTabName", name)   -- header + hover đọc tên trang từ đây
+        btn:SetAttribution("BCTabName", name) -- tiêu đề + di chuột đọc tên trang từ đây
         btn:SetAttribute("BCTabIcon", icon)
-    end)
+    kết thúc)
     pcall(function()
         trackConn(btn.MouseEnter:Connect(function()
             if btn.BackgroundTransparency > 0.5 then Tween(btn, {BackgroundTransparency = 0.62}, 0.16) end
-            pcall(function()   -- v4.5 Delta: rê vào icon nào thì header hiện TÊN trang đó (mờ nhẹ)
-                if D.pageTitle then
+            pcall(function() -- v4.5 Delta: rê vào icon nào thì header hiện NAME trang đó (mờ nhẹ)
+                nếu D.pageTitle thì
                     D.hoverName = btn:GetAttribute("BCTabName")
                     local ic = btn:GetAttribute("BCTabIcon")
-                    D.pageTitle.Text = (ic and (ic .. "  ") or "") .. tostring(D.hoverName or "")
-                    D.pageTitle.TextTransparency = 0.4
-                end
-            end)
-        end))
+                    D.pageTitle.Text = (ic and (ic .. " ") or "") .. tostring(D.hoverName or "")
+                    D.pageTitle.TextTransparency = 0,4
+                kết thúc
+            kết thúc)
+        kết thúc))
         trackConn(btn.MouseLeave:Connect(function()
             if btn.TextColor3 ~= C.ACCENT then Tween(btn, {BackgroundTransparency = 1}, 0.2) end
-            pcall(function()   -- rời chuột: header trả về tên trang ĐANG MỞ
+            pcall(function() -- left mouse: header trả về tên trang ĐANG MỞ
                 D.hoverName = nil
-                if D.pageTitle and D.activeName then
+                nếu D.pageTitle và D.activeName thì
                     D.pageTitle.Text = D.activeName
                     D.pageTitle.TextTransparency = 0
-                end
-            end)
-        end))
-    end)
+                kết thúc
+            kết thúc)
+        kết thúc))
+    kết thúc)
     btn.Activated:Connect(function()
         for i, b in ipairs(tabs) do
-            if b == btn then
+            nếu b == btn thì
                 SwitchTab(i)
-                if onClick then pcall(onClick) end
-                break
-            end
-        end
-    end)
-    return btn
-end
+                nếu onClick thì pcall(onClick) end
+                phá vỡ
+            kết thúc
+        kết thúc
+    kết thúc)
+    nút quay lại
+kết thúc
 
-local function AddTab(name, icon, order, customContent)
-    local sf
-    if customContent then
+hàm cục bộ AddTab(name, icon, order, customContent)
+    khoa học viễn tưởng địa phương
+    nếu customContent thì
         sf = customContent
         sf.Parent = contentArea
         sf.Visible = false
-    else
+    khác
         sf = MakeTabFrame()
-    end
+    kết thúc
     local btn = MakeTabButton(name, icon, order)
     table.insert(tabs, btn)
     table.insert(tabContent, sf)
     tabBar.CanvasSize = UDim2.new(0, 0, 0, #tabs * 44 + 10)
-    return sf, btn
-end
-local codeTab      = AddTab("Code", "💻", 2)
-local savedCodeTab = AddTab("Code Đã Lưu", "💾", 1)
+    trả lại sf, btn
+kết thúc
+local codeTab = AddTab("Code", "💻", 2)
+local saveCodeTab = AddTab("Code Đã Lưu", "💾", 1)
 
-OpenFirstPage()   -- v4.6.2: mở trang ĐẦU TIÊN theo thứ tự rail (💾 Code Đã Lưu)
+OpenFirstPage() -- v4.6.2: mở trang START TIÊN theo thứ tự Rail (💾 Code Đã Lưu)
 
 S = {
-    dragMenu     = false,
-    dragging     = false,
-    dragStart    = nil,
-    startPos     = nil,
-    togDragging  = false,
+    dragMenu = false,
+    kéo lê = sai,
+    dragStart = nil,
+    startPos = nil,
+    togDragging = false,
     togDragStart = nil,
-    togStartPos  = nil,
-    togMoved     = false,
-    embedEnabled = true,     -- tab 5 có nút 🧩 để tắt hoàn toàn việc nhúng
-    embedGuessNew = false,   -- 🕵 nhận cả ScreenGui "lạ" mới xuất hiện (mạnh hơn nhưng dễ ăn GUI game)
+    togStartPos = nil,
+    togMoved = false,
+    embedEnabled = true, -- tab 5 có nút 🧩 để tắt toàn bộ công việc nhúng
+    embedGuessNew = false, -- 🕵 nhận cả ScreenGui "lạ" mới xuất hiện (mạnh hơn nhưng dễ ăn GUI game)
     parkCodeGuis = true,
-    embeds       = {},       -- registry: {host, gui, recs={{child,origParent,origPos,origSize}}, conns={}}
+    embeds = {}, -- registry: {host, gui, recs={{child,origParent,origPos,origSize}}, conns={}}
 }
 
-S.WRAP_MARK_OLD = "-- ===== AUTO-GENERATED SIZE WRAPPER"
-S.WRAP_MARK_NEW = "-- ===== AUTO-GENERATED FIT WRAPPER"
-function S.SanitizeCode(c)
-    if type(c) ~= "string" then return c end
+S.WRAP_MARK_OLD = "-- ===== KÍCH THƯỚC BAO BÌ ĐƯỢC TẠO TỰ ĐỘNG"
+S.WRAP_MARK_NEW = "-- ===== BỘ PHẬN BỌC VỪA TỰ ĐỘNG TẠO"
+hàm S.SanitizeCode(c)
+    nếu kiểu dữ liệu của c khác với "string" thì trả về c.
     if not c:find(S.WRAP_MARK_OLD, 1, true) then return c end
-    local out = (c:gsub(
+    đầu ra cục bộ = (c:gsub(
         "pcall%s*%(%s*function%s*%(%)%s*_ForceStretch%s*%(%s*g%s*%)%s*end%s*%)",
         ""))
-    return out
-end
+    trở lại
+kết thúc
 
-function S.Shimmed(n)
-    local v = S.shimmedFns and S.shimmedFns[n]
-    if v == nil then return false end
-    return rawget(_G, n) == v
-end
+hàm S.Shimmed(n)
+    cục bộ v = S.shimmedFns và S.shimmedFns[n]
+    nếu v == nil thì trả về false
+    trả về rawget(_G, n) == v
+kết thúc
 
-function D.SyncPageChips()
+hàm D.SyncPageChips()
     pcall(function()
-        if not D.hdrSwitches then return end
-        local state = {
-            embed = (S.embedEnabled == true),
-            guess = (S.embedGuessNew == true),
-            park  = (S.parkCodeGuis ~= false),
+        nếu không phải D.hdrSwitches thì trả về end
+        trạng thái cục bộ = {
+            nhúng = (S.embedEnabled == true),
+            đoán = (S.embedGuessNew == true),
+            công viên = (S.parkCodeGuis ~= false),
         }
         for k, s in pairs(D.hdrSwitches) do
-            local on = (state[k] == true)
+            cục bộ bật = (trạng thái[k] == true)
             s.track.BackgroundColor3 = on and (s.onColor or C.GREEN) or C.SURFACE3
-            s.knob.BackgroundColor3  = on and C.WHITE or C.GRAY
-            s.knob.Position = on and UDim2.new(1,-10,0,2) or UDim2.new(0,2,0,2)
-            s.icon.TextColor3 = on and C.DARK or C.GRAY
+            s.knob.BackgroundColor3 = on and C.WHITE or C.GRAY
+            s.knob.Position = on và UDim2.new(1,-10,0,2) hoặc UDim2.new(0,2,0,2)
+            s.icon.TextColor3 = bật và C.DARK hoặc C.GRAY
             if s.stroke then s.stroke.Color = on and D.Edge(s.onColor or C.GREEN) or C.HAIRLINE end
-        end
-    end)
-end
-local scripts = {}
-local waypoints = {}          -- khai báo sớm để khối lưu trữ bên dưới dùng được
-local featureTabs = {}        -- nt: khai báo sớm để Store.serialize() và nhãn trạng thái dùng được
-local featureTabIndex = 7   -- 1=Code Đã Lưu 2=Code 3=Script Hub 4=Hỗ Trợ 5=Thiết Lập 6=Tạo Tính Năng; tab tính năng của người dùng từ 7 trở đi
-local totalRuns, cancelled = 0, false
-local curThread, curIndicator = nil, nil
-local runActive = false       -- cờ trạng thái chạy (không dựa vào curThread nữa)
+        kết thúc
+    kết thúc)
+kết thúc
+tập lệnh cục bộ = {}
+local waypoints = {} -- khai báo sớm để lưu trữ kho lưu trữ bên dưới được sử dụng
+local featureTabs = {} -- nt: khai báo sớm để Store.serialize() và trạng thái sử dụng được
+local featureTabIndex = 7 -- 1=Code Đã Lưu 2=Code 3=Script Hub 4= Hỗ Trợ 5=Thiết Lập 6=Tạo Tính Năng; tab tính năng của người dùng từ 7 trở đi
+tổng số lần chạy cục bộ, đã hủy = 0, sai
+curThread cục bộ, curIndicator = nil, nil
+local runActive = false -- chạy trạng thái cờ (không dựa vào curThread nữa)
 
-local Store = {}
+Cửa hàng cục bộ = {}
 
-Store.SAVE_FILE      = "banana_cat_saved.json"
-Store.SAVE_VERSION   = 3
-Store.mode           = "none"   -- "file" | "memory" | "empty" | "none"
-Store.lastError      = nil
-Store.lastSavedAt    = nil
-Store.saveCount      = 0
-Store.loadedScripts  = 0
-Store.loadedWp       = 0
-Store.loadedFeatures = {}     -- dữ liệu thô đọc từ đĩa; TAB5 sẽ dựng thành tab thật
-Store.restoreFeatures = nil   -- TAB5 gán hàm dựng lại tab tính năng vào đây
-Store.restoreWaypoints = nil  -- TAB3 gán RebuildWaypoints vào đây (TAB2 cần mà chưa tồn tại)
-Store.statusLbl      = nil      -- tab "Code Đã Lưu" gán nhãn trạng thái vào đây
-Store.reloadBtn      = nil
-Store._scheduled     = false
-Store.refreshStatus  = nil      -- tab "Code Đã Lưu" gán hàm cập nhật nhãn vào đây
+Store.SAVE_FILE = "banana_cat_saved.json"
+Store.SAVE_VERSION = 3
+Store.mode = "none" -- "file" | "memory" | "empty" | "none"
+Store.lastError = nil
+Store.lastSavedAt = nil
+Store.saveCount = 0
+Store.loadedScripts = 0
+Store.loadedWp = 0
+Store.loadedFeatures = {} -- đọc dữ liệu thô từ đĩa; TAB5 sẽ xây dựng tab thật sự
+Store.restoreFeatures = nil -- TAB5 gán chức năng xây dựng lại tab vào đây
+Store.restoreWaypoints = nil -- TAB3 gán RebuildWaypoints vào đây (TAB2 cần mà chưa tồn tại)
+Store.statusLbl = nil -- tab "Code Đã Lưu" gán nhãn trạng thái vào đây
+Store.reloadBtn = nil
+Store._scheduled = false
+Store.refreshStatus = nil -- tab "Code Đã lưu" gán chức năng cập nhật nhãn vào đây
 
-function Store.canWrite()
+hàm Store.canWrite()
     if type(writefile) ~= "function" or type(readfile) ~= "function" then return false end
-    if S.Shimmed("writefile") or S.Shimmed("readfile") then return false end
-    return true
-end
+    nếu S.Shimmed("writefile") hoặc S.Shimmed("readfile") thì trả về false.
+    trả về giá trị đúng
+kết thúc
 
-function Store.isFinite(n)
+hàm Store.isFinite(n)
     return type(n) == "number" and n == n and n ~= math.huge and n ~= -math.huge
-end
+kết thúc
 
-function Store.write(data)
+hàm Store.write(data)
     local okEnc, json = pcall(function() return HttpService:JSONEncode(data) end)
-    if not okEnc then
+    nếu không phải okEnc thì
         Store.mode = "memory"
-        Store.lastError = "Không mã hoá được JSON: " .. tostring(json)
-        _G.BananaCatHub_SavedData = data
-        return false
-    end
+        Store.lastError = "Không thể mã hóa JSON: " .. tostring(json)
+        _G.BananaCatHub_SavedData = dữ liệu
+        trả về false
+    kết thúc
 
-    if not Store.canWrite() then
+    nếu không thể ghi vào Store.canWrite() thì
         Store.mode = "memory"
-        Store.lastError = "Executor không có writefile — chỉ giữ được trong phiên chơi này"
-        _G.BananaCatHub_SavedData = data
-        return false
-    end
+        Store.lastError = "Executor no writefile — chỉ được lưu trong phiên bản trò chơi này"
+        _G.BananaCatHub_SavedData = dữ liệu
+        trả về false
+    kết thúc
 
     local okW, errW = pcall(writefile, Store.SAVE_FILE, json)
-    if not okW then
+    nếu không okW thì
         Store.mode = "memory"
-        Store.lastError = "Ghi file thất bại: " .. tostring(errW)
-        _G.BananaCatHub_SavedData = data
-        return false
-    end
+        Store.lastError = "Tập tin Ghi bị lỗi: " .. tostring(errW)
+        _G.BananaCatHub_SavedData = dữ liệu
+        trả về false
+    kết thúc
 
     Store.mode = "file"
     Store.lastError = nil
     Store.saveCount = Store.saveCount + 1
     pcall(function() Store.lastSavedAt = os.date("%H:%M:%S") end)
-    _G.BananaCatHub_SavedData = data
-    return true
-end
+    _G.BananaCatHub_SavedData = dữ liệu
+    trả về giá trị đúng
+kết thúc
 
-function Store.read()
-    if Store.canWrite() then
+hàm Store.read()
+    nếu Store.canWrite() thì
         local hasFile = true
-        if type(isfile) == "function" then
+        nếu kiểu dữ liệu (isfile) == "function" thì
             local okI, r = pcall(isfile, Store.SAVE_FILE)
-            hasFile = (okI and r == true)
-        end
-        if hasFile then
+            hasFile = (okI và r == true)
+        kết thúc
+        nếu có tệp tin thì
             local okR, txt = pcall(readfile, Store.SAVE_FILE)
-            if okR and type(txt) == "string" and #txt > 0 then
+            nếu okR và type(txt) == "string" và #txt > 0 thì
                 local okD, data = pcall(function() return HttpService:JSONDecode(txt) end)
-                if okD and type(data) == "table" then
+                nếu okD và kiểu dữ liệu == "table" thì
                     Store.mode = "file"
                     Store.lastError = nil
-                    return data
-                end
-                Store.lastError = "File lưu bị hỏng (JSON không đọc được) — đã bỏ qua"
-            end
-        end
-    end
+                    dữ liệu trả về
+                kết thúc
+                Store.lastError = "Việc lưu tệp bị hỏng (JSON không đọc được) — đã bị bỏ qua"
+            kết thúc
+        kết thúc
+    kết thúc
     if Store.lastError and Store.lastError:find("bị hỏng", 1, true) then
         Store.mode = "none"
-        return nil
-    end
-    if type(_G.BananaCatHub_SavedData) == "table" then
+        trả về nil
+    kết thúc
+    nếu kiểu dữ liệu (_G.BananaCatHub_SavedData) == "table" thì
         Store.mode = "memory"
-        return _G.BananaCatHub_SavedData
-    end
+        trả về _G.BananaCatHub_SavedData
+    kết thúc
     Store.mode = "none"
-    return nil
-end
+    trả về nil
+kết thúc
 
-function Store.serialize()
+hàm Store.serialize()
     local sOut = {}
     for _, s in ipairs(scripts) do
         table.insert(sOut, {
-            name     = tostring(s.name or ""),
-            code     = tostring(s.code or ""),
-            expanded = (s.expanded == true),
+            tên = tostring(s.name hoặc ""),
+            mã = tostring(s.code hoặc ""),
+            mở rộng = (s.expanded == true),
         })
-    end
-    local wOut = {}
+    kết thúc
+    cục bộ wOut = {}
     for _, w in ipairs(waypoints) do
-        local pos = w and w.pos
-        if pos and Store.isFinite(pos.X) and Store.isFinite(pos.Y) and Store.isFinite(pos.Z) then
+        vị trí cục bộ = w và w.pos
+        nếu pos và Store.isFinite(pos.X) và Store.isFinite(pos.Y) và Store.isFinite(pos.Z) thì
             table.insert(wOut, {name = tostring(w.name or ""), x = pos.X, y = pos.Y, z = pos.Z})
-        end
-    end
-    local fOut = {}
+        kết thúc
+    kết thúc
+    cục bộ fOut = {}
     for _, f in ipairs(featureTabs) do
-        table.insert(fOut, {
-            name = tostring(f.name or ""),
+        bảng.chèn(fOut, {
+            tên = tostring(f.name hoặc ""),
             icon = tostring(f.icon or "⚙️"),
-            code = tostring(f.code or ""),
+            mã = tostring(f.code hoặc ""),
         })
-    end
-    return {
-        version   = Store.SAVE_VERSION,
-        scripts   = sOut,
-        waypoints = wOut,
-        features  = fOut,
-        settings  = {
-            embedEnabled  = (S.embedEnabled == true),
+    kết thúc
+    trở lại {
+        phiên bản = Store.SAVE_VERSION,
+        scripts = sOut,
+        điểm tham chiếu = wOut,
+        các tính năng = fOut,
+        cài đặt = {
+            embedEnabled = (S.embedEnabled == true),
             embedGuessNew = (S.embedGuessNew == true),
-            parkCodeGuis  = (S.parkCodeGuis ~= false),   -- v4.4i
+            parkCodeGuis = (S.parkCodeGuis ~= false), -- v4.4i
             hubFavs = (function()
-                local out = {}
-                if type(S.hubFavs) == "table" then
+                đầu ra cục bộ = {}
+                nếu kiểu dữ liệu (S.hubFavs) == "table" thì
                     for nm, v in pairs(S.hubFavs) do if v then out[#out + 1] = tostring(nm) end end
-                end
-                return out
-            end)(),
+                kết thúc
+                trở lại
+            kết thúc)(),
         },
     }
-end
+kết thúc
 
-function Store.save()
+hàm Store.save()
     local ok = Store.write(Store.serialize())
     if Store.refreshStatus then pcall(Store.refreshStatus) end
-    return ok
-end
+    trả về ok
+kết thúc
 
 function Store.saveSoon()
-    if Store._scheduled then return end
+    nếu Store._scheduled thì trả về end
     Store._scheduled = true
     task.delay(0.3, function()
         Store._scheduled = false
         Store.save()
-    end)
-end
+    kết thúc)
+kết thúc
 
-function Store.load()
-    local data = Store.read()
-    if type(data) ~= "table" then
-        Store.mode = Store.canWrite() and "empty" or "none"
+hàm Store.load()
+    dữ liệu cục bộ = Store.read()
+    nếu kiểu dữ liệu (type) khác "table" thì
+        Store.mode = Store.canWrite() và "empty" hoặc "none"
         Store.loadedScripts, Store.loadedWp = 0, 0
         Store.loadedFeatures = {}
-        return
-    end
+        trở lại
+    kết thúc
 
     local fileVer = tonumber(data.version) or 1
-    if fileVer > Store.SAVE_VERSION then
+    nếu fileVer > Store.SAVE_VERSION thì
         Store.lastError = string.format(
-            "File lưu là version %d, script này chỉ hiểu tới v%d — một số mục có thể không nạp",
+            "File save là phiên bản %d, tập lệnh này chỉ hiểu v%d — một số mục không thể tải",
             fileVer, Store.SAVE_VERSION)
-    end
+    kết thúc
 
-    if type(data.settings) == "table" then
-        S.embedEnabled  = (data.settings.embedEnabled ~= false)
+    nếu kiểu dữ liệu (data.settings) == "table" thì
+        S.embedEnabled = (data.settings.embedEnabled ~= false)
         S.embedGuessNew = (data.settings.embedGuessNew == true)
-        S.parkCodeGuis  = (data.settings.parkCodeGuis ~= false)
-        if type(data.settings.hubFavs) == "table" then
+        S.parkCodeGuis = (data.settings.parkCodeGuis ~= false)
+        nếu type(data.settings.hubFavs) == "table" thì
             S.hubFavs = {}
             for _, nm in ipairs(data.settings.hubFavs) do S.hubFavs[tostring(nm)] = true end
-        end
-    end
+        kết thúc
+    kết thúc
 
     local sOut = {}
-    if type(data.scripts) == "table" then
+    nếu kiểu dữ liệu (data.scripts) == "table" thì
         for _, s in ipairs(data.scripts) do
-            if type(s) == "table" and type(s.code) == "string" and #s.code > 0 then
+            nếu type(s) == "table" và type(s.code) == "string" và #s.code > 0 thì
                 table.insert(sOut, {
-                    name     = (type(s.name) == "string" and #s.name > 0) and s.name or ("Script " .. (#sOut + 1)),
-                    code     = S.SanitizeCode(s.code),
-                    expanded = (s.expanded == true),
+                    tên = (loại(s.name) == "chuỗi" và #s.name > 0) và s.name hoặc ("Script " .. (#sOut + 1)),
+                    mã = S.SanitizeCode(s.code),
+                    mở rộng = (s.expanded == true),
                 })
-            end
-        end
-    end
+            kết thúc
+        kết thúc
+    kết thúc
 
-    local wOut = {}
-    if type(data.waypoints) == "table" then
+    cục bộ wOut = {}
+    nếu kiểu dữ liệu (data.waypoints) == "table" thì
         for _, w in ipairs(data.waypoints) do
-            if type(w) == "table" and Store.isFinite(w.x) and Store.isFinite(w.y) and Store.isFinite(w.z) then
-                table.insert(wOut, {
-                    name = (type(w.name) == "string" and #w.name > 0) and w.name or ("WP " .. (#wOut + 1)),
-                    pos  = Vector3.new(w.x, w.y, w.z),
+            nếu type(w) == "table" và Store.isFinite(wx) và Store.isFinite(wy) và Store.isFinite(wz) thì
+                bảng.chèn(wOut, {
+                    tên = (loại(w.name) == "chuỗi" và #w.name > 0) và w.name hoặc ("WP " .. (#wOut + 1)),
+                    pos = Vector3.new(wx, wy, wz),
                 })
-            end
-        end
-    end
+            kết thúc
+        kết thúc
+    kết thúc
 
-    local fOut = {}
-    if type(data.features) == "table" then
+    cục bộ fOut = {}
+    nếu kiểu dữ liệu (data.features) == "table" thì
         for _, f in ipairs(data.features) do
-            if type(f) == "table" and type(f.code) == "string" and #f.code > 0 then
-                table.insert(fOut, {
-                    name = (type(f.name) == "string" and #f.name > 0) and f.name or ("Tính Năng " .. (#fOut + 1)),
+            nếu type(f) == "table" và type(f.code) == "string" và #f.code > 0 thì
+                bảng.chèn(fOut, {
+                    tên = (type(f.name) == "string" và #f.name > 0) và f.name hoặc ("Chiều Năng " .. (#fOut + 1)),
                     icon = (type(f.icon) == "string" and #f.icon > 0) and f.icon or "⚙️",
-                    code = S.SanitizeCode(f.code),
+                    mã = S.SanitizeCode(f.code),
                 })
-            end
-        end
-    end
+            kết thúc
+        kết thúc
+    kết thúc
 
-    scripts   = sOut
-    waypoints = wOut
+    scripts = sOut
+    điểm tham chiếu = wOut
     Store.loadedFeatures = fOut
     Store.loadedScripts, Store.loadedWp = #sOut, #wOut
-end
+kết thúc
 
 Store.load()
 
 -- ----------------------------------------------------------------------------
-S.compatAdded  = S.compatAdded or {}   -- tên các hàm đã bù (để báo lại cho người dùng)
-S.compatTried  = false
-S.vfs          = S.vfs or {}           -- ổ đĩa ảo trong RAM (khi executor không có readfile/writefile)
-S.clipboardTxt = S.clipboardTxt or ""
-S.queued       = S.queued or {}        -- queue_on_teleport: giữ lại, không tự chạy
-S.lastRunReport = nil                  -- báo cáo lần chạy cuối (nhãn 💻 + nút 💾 dùng chung)
-S.lastRunError  = nil
+S.compatAdded = S.compatAdded or {} -- tên các hàm đã bù (để cảnh báo lại cho người dùng)
+S.compatTried = false
+S.vfs = S.vfs hoặc {} -- drive disk Virtual in RAM (khi bộ thực thi không có readfile/writefile)
+S.clipboardTxt = S.clipboardTxt hoặc ""
+S.queued = S.queued hoặc {} -- queue_on_teleport: giữ lại, không chạy
+S.lastRunReport = nil -- báo cáo lần chạy cuối cùng (nhãn 💻 + nút 💾 dùng chung)
+S.lastRunError = nil
 S.lastNormalizeNote = nil
 S.lastParkedCount = 0
 S.lastParkedNames = {}
 
-function S.HasGlobal(n)
-    local ok, v = pcall(function() return rawget(_G, n) end)
-    return ok and v ~= nil
-end
+hàm S.HasGlobal(n)
+    cục bộ ok, v = pcall(function() return rawget(_G, n) end)
+    trả về ok và v ~= nil
+kết thúc
 
-function S.SetGlobal(n, v)
-    if S.HasGlobal(n) then return false end          -- KHONG de ham that cua executor
+hàm S.SetGlobal(n, v)
+    if S.HasGlobal(n) then return false end -- KHONG de ham that cua executor
     local ok = pcall(function() rawset(_G, n, v) end)
-    if ok then
+    nếu được thì
         S.compatAdded[#S.compatAdded + 1] = n
-        S.shimmedFns = S.shimmedFns or {}
+        S.shimmedFns = S.shimmedFns hoặc {}
         S.shimmedFns[n] = rawget(_G, n)
-    end
-    return ok
-end
+    kết thúc
+    trả về ok
+kết thúc
 
-function S.VRead(p)
-    local f = S.vfs[tostring(p)]
-    if f == nil then error("File not found: " .. tostring(p)) end
-    return f
-end
-function S.VWrite(p, c)  S.vfs[tostring(p)] = tostring(c); return true end
+hàm S.VRead(p)
+    cục bộ f = S.vfs[tostring(p)]
+    if f == nil then error("Không tìm thấy tệp: " .. tostring(p)) end
+    trả về f
+kết thúc
+function S.VWrite(p, c) S.vfs[tostring(p)] = tostring(c); return true end
 function S.VAppend(p, c) S.vfs[tostring(p)] = (S.vfs[tostring(p)] or "") .. tostring(c); return true end
-function S.VExists(p)    return S.vfs[tostring(p)] ~= nil end
-function S.VDel(p)       S.vfs[tostring(p)] = nil; return true end
-function S.VList(dir)
+hàm S.VExists(p) trả về S.vfs[tostring(p)] ~= nil kết thúc
+function S.VDel(p) S.vfs[tostring(p)] = nil; return true end
+hàm S.VList(dir)
     dir = tostring(dir or ""):gsub("[/\\]+$", "")
-    local out = {}
+    đầu ra cục bộ = {}
     for k in pairs(S.vfs) do
         if dir == "" or k:sub(1, #dir) == dir then out[#out + 1] = k end
-    end
-    return out
-end
+    kết thúc
+    trở lại
+kết thúc
 
-function S.CompatRequest(opts)
+hàm S.CompatRequest(opts)
     if type(opts) ~= "table" then opts = {Url = tostring(opts)} end
-    local url = tostring(opts.Url or opts.url or "")
-    local body, status, good = "", 0, false
+    URL cục bộ = tostring(opts.Url hoặc opts.url hoặc "")
+    cơ quan địa phương, trạng thái, tốt = "", 0, sai
     pcall(function()
         local r = game:GetService("HttpService"):RequestAsync({
-            Url = url,
-            Method = tostring(opts.Method or opts.method or "GET"):upper(),
-            Headers = opts.Headers or opts.headers,
-            Body = opts.Body or opts.body,
+            URL = URL,
+            Phương thức = tostring(opts.Method hoặc opts.method hoặc "GET"):upper(),
+            Tiêu đề = opts.Headers hoặc opts.headers,
+            Body = opts.Body hoặc opts.body,
         })
-        body, status, good = tostring(r.Body or ""), tonumber(r.StatusCode) or 200, (r.Success == true)
-    end)
-    if body == "" then
+        thân, trạng thái, tốt = tostring(r.Body hoặc ""), tonumber(r.StatusCode) hoặc 200, (r.Success == true)
+    kết thúc)
+    nếu body == "" thì
         local okHttp, fetched = pcall(function() return game:HttpGet(url) end)
-        if okHttp then
-            body, status, good = tostring(fetched or ""), 200, true
-        end
-    end
+        nếu okHttp thì
+            thân, trạng thái, tốt = tostring(fetched hoặc ""), 200, true
+        kết thúc
+    kết thúc
     return {StatusCode = status, StatusMessage = "", Body = body, Success = good, Headers = {}}
-end
+kết thúc
 
-function S.CompatDrawing()
-    local D = {}
+hàm S.CompatDrawing()
+    cục bộ D = {}
     D.Fonts = {UI = 0, System = 0, Plex = 1, Monospace = 2}
     D.new = function(cls)
         local o = {__class = tostring(cls or ""), Visible = false, ZIndex = 1, Transparency = 1}
-        return setmetatable(o, {
+        trả về setmetatable(o, {
             __index = function(t, k)
-                if k == "Remove" or k == "Destroy" then
+                nếu k == "Xóa" hoặc k == "Hủy" thì
                     return function(self) rawset(self, "Visible", false) end
-                end
-                return rawget(t, k)
-            end,
+                kết thúc
+                trả về rawget(t, k)
+            kết thúc,
             __newindex = function(t, k, v) rawset(t, k, v) end,
         })
-    end
-    return D
-end
+    kết thúc
+    trả về D
+kết thúc
 
-function S.EnsureCompat()
+hàm S.EnsureCompat()
     if S.compatTried then return S.compatAdded end
     S.compatTried = true
     pcall(function()
@@ -1349,36 +1378,36 @@ function S.EnsureCompat()
         S.SetGlobal("checkcaller", function() return false end)
         S.SetGlobal("isourclosure", function() return false end)
         S.SetGlobal("is_synapse_function", function() return false end)
-        S.SetGlobal("setclipboard",  function(t) S.clipboardTxt = tostring(t); return true end)
-        S.SetGlobal("toclipboard",   function(t) S.clipboardTxt = tostring(t); return true end)
+        S.SetGlobal("setclipboard", function(t) S.clipboardTxt = tostring(t); return true end)
+        S.SetGlobal("toclipboard", function(t) S.clipboardTxt = tostring(t); return true end)
         S.SetGlobal("set_clipboard", function(t) S.clipboardTxt = tostring(t); return true end)
-        S.SetGlobal("readfile",   function(p) return S.VRead(p) end)
-        S.SetGlobal("writefile",  function(p, c) return S.VWrite(p, c) end)
+        S.SetGlobal("readfile", function(p) return S.VRead(p) end)
+        S.SetGlobal("writefile", function(p, c) return S.VWrite(p, c) end)
         S.SetGlobal("appendfile", function(p, c) return S.VAppend(p, c) end)
-        S.SetGlobal("isfile",     function(p) return S.VExists(p) end)
-        S.SetGlobal("delfile",    function(p) return S.VDel(p) end)
-        S.SetGlobal("listfiles",  function(d) return S.VList(d) end)
+        S.SetGlobal("isfile", function(p) return S.VExists(p) end)
+        S.SetGlobal("delfile", function(p) return S.VDel(p) end)
+        S.SetGlobal("listfiles", function(d) return S.VList(d) end)
         S.SetGlobal("makefolder", function() return true end)
-        S.SetGlobal("isfolder",   function() return true end)
-        S.SetGlobal("delfolder",  function() return true end)
+        S.SetGlobal("isfolder", function() return true end)
+        S.SetGlobal("delfolder", function() return true end)
         S.SetGlobal("getcustomasset", function(_, p) return tostring(p) end)
-        S.SetGlobal("getsynasset",    function(_, p) return tostring(p) end)
-        S.SetGlobal("request",      function(o) return S.CompatRequest(o) end)
+        S.SetGlobal("getsynasset", function(_, p) return tostring(p) end)
+        S.SetGlobal("request", function(o) return S.CompatRequest(o) end)
         S.SetGlobal("http_request", function(o) return S.CompatRequest(o) end)
         S.SetGlobal("http", {request = function(o) return S.CompatRequest(o) end})
-        S.SetGlobal("HttpRequest",  function(o) return S.CompatRequest(o) end)
-        S.SetGlobal("hookfunction",      function(_, nw) return nw end)
-        S.SetGlobal("hookmetamethod",    function() return function() end end)
-        S.SetGlobal("getrawmetatable",   function(o) return getmetatable(o) or {} end)
-        S.SetGlobal("setrawmetatable",   function(o, m) pcall(setmetatable, o, m); return o end)
-        S.SetGlobal("setreadonly",       function() return true end)
-        S.SetGlobal("isreadonly",        function() return false end)
-        S.SetGlobal("newcclosure",       function(f) return f end)
+        S.SetGlobal("HttpRequest", function(o) return S.CompatRequest(o) end)
+        S.SetGlobal("hookfunction", function(_, nw) return nw end)
+        S.SetGlobal("hookmetamethod", function() return function() end end)
+        S.SetGlobal("getrawmetatable", function(o) return getmetatable(o) or {} end)
+        S.SetGlobal("setrawmetatable", function(o, m) pcall(setmetatable, o, m); return o end)
+        S.SetGlobal("setreadonly", function() return true end)
+        S.SetGlobal("isreadonly", function() return false end)
+        S.SetGlobal("newcclosure", function(f) return f end)
         S.SetGlobal("getnamecallmethod", function() return "" end)
         S.SetGlobal("setnamecallmethod", function() return true end)
-        S.SetGlobal("getconnections",    function() return {} end)
-        S.SetGlobal("fireclickdetector",   function() return true end)
-        S.SetGlobal("firetouchinterest",   function() return true end)
+        S.SetGlobal("getconnections", function() return {} end)
+        S.SetGlobal("fireclickdetector", function() return true end)
+        S.SetGlobal("firetouchinterest", function() return true end)
         S.SetGlobal("fireproximityprompt", function() return true end)
         S.SetGlobal("gethui", function() return targetGui end)
         S.SetGlobal("Drawing", S.CompatDrawing())
@@ -1387,256 +1416,256 @@ function S.EnsureCompat()
         S.SetGlobal("iswindowactive", function() return true end)
         S.SetGlobal("queue_on_teleport", function(_, src)
             S.queued[#S.queued + 1] = tostring(src); return true end)
-    end)
-    if #S.compatAdded > 0 then
+    kết thúc)
+    nếu #S.compatAdded > 0 thì
         pcall(function() print("[taodepzai v5.0 NOIR] " .. S.CompatNote()) end)
-    end
-    return S.compatAdded
-end
+    kết thúc
+    trả về S.compatAdded
+kết thúc
 
-function S.CompatNote()
-    local n = #S.compatAdded
-    if n == 0 then return "" end
-    local sample = {}
+hàm S.CompatNote()
+    cục bộ n = #S.compatAdded
+    nếu n == 0 thì trả về "" kết thúc
+    mẫu cục bộ = {}
     for i = 1, math.min(4, n) do sample[#sample + 1] = S.compatAdded[i] end
-    return "🩹 đã bù " .. n .. " hàm executor còn thiếu (" .. table.concat(sample, ", ")
-        .. (n > 4 and "…" or "") .. ")"
-end
+    return "🩹 đã bù " .. n .. " hàm thi hành còn thiếu (" .. table.concat(sample, ", ")
+        .. (n > 4 và "..." hoặc "") .. ")"
+kết thúc
 
-function S.NormalizeRunnable(c)
+hàm S.NormalizeRunnable(c)
     S.lastNormalizeNote = nil
-    if type(c) ~= "string" then return "" end
+    nếu kiểu dữ liệu (c) ~= "string" thì trả về ""
     c = c:gsub("\239\187\191", ""):gsub("\226\128\139", "")
     c = c:gsub("\226\128\142", ""):gsub("\226\128\143", "")
     local t = c:match("^%s*(.-)%s*$") or ""
-    local q = t:match('^["\'](.-)["\']$')      -- dán cả dấu nháy bao quanh link
-    if q and q ~= "" then t = q end
-    if t:match("^https?://") then
-        if t:find('[%c"\\]') then
-            S.lastNormalizeNote = "⚠️ link có ký tự lạ -> chạy nguyên văn"
-            return c
-        end
-        S.lastNormalizeNote = "🔗 link trần -> tự bọc loadstring(game:HttpGet(...))()"
+    local q = t:match('^["\'](.-)["\']$') -- phong cách cả dấu chớp bao quanh link
+    nếu q và q ≈ "" thì t = q kết thúc
+    nếu t:match("^https?://") thì
+        nếu t:find('[%c"\\]') thì
+            S.lastNormalizeNote = "⚠️ link có ký tự lạ -> chạy văn bản"
+            trả về c
+        kết thúc
+        S.lastNormalizeNote = "🔗 link trần -> tự bọc Loadstring(game:HttpGet(...))()"
         return 'loadstring(game:HttpGet("' .. t .. '"))()'
-    end
+    kết thúc
     local u = t:match('^game:HttpGet%s*%(%s*"(https?://.-)"%s*%)$')
-        or t:match('^HttpGet%s*%(%s*"(https?://.-)"%s*%)$')
-    if u then
-        S.lastNormalizeNote = "🔗 HttpGet trần -> tự bọc loadstring(...)()"
+        hoặc t:match('^HttpGet%s*%(%s*"(https?://.-)"%s*%)$')
+    nếu bạn thì
+        S.lastNormalizeNote = "🔗 HttpGet trần -> chuỗi tải tự bọc(...)()"
         return 'loadstring(game:HttpGet("' .. u .. '"))()'
-    end
-    if t:match("^loadstring%s*%(") and t:sub(-2) ~= "()" then
-        S.lastNormalizeNote = "➕ loadstring thiếu dấu () -> đã thêm để chạy được"
-        return t .. "()"
-    end
-    return c
-end
+    kết thúc
+    nếu t:match("^loadstring%s*%(") và t:sub(-2) ~= "()" thì
+        S.lastNormalizeNote = "➕ chuỗi tải thiếu dấu () -> đã thêm để chạy"
+        trả về t .. "()"
+    kết thúc
+    trả về c
+kết thúc
 
-function S.RunReportText()
+hàm S.RunReportText()
     local r = S.lastRunReport
-    if not r then return "" end
-    if r.fail > 0 and r.ok == 0 then
-        local e = tostring(r.err or "không rõ"):gsub("%s+", " ")
-        if #e > 160 then e = e:sub(1, 160) .. "…" end
-        return "❌ Không chạy được: " .. e .. " · mở F9 xem đầy đủ"
-    end
-    local t = "✅ Đã chạy xong (" .. r.ok .. " lần)"
-    if r.fail > 0 then t = t .. " · ⚠️ " .. r.fail .. " lần lỗi" end
-    if r.guis and r.guis > 0 then
-        local nm = (r.names and r.names[1]) and (" '" .. r.names[1] .. "'") or ""
+    nếu không phải r thì trả về "" kết thúc
+    nếu r.fail > 0 và r.ok == 0 thì
+        local e = tostring(r.err hoặc "không rõ"):gsub("%s+", " ")
+        nếu #e > 160 thì e = e:sub(1, 160) .. "…" kết thúc
+        return "❌ Không thể chạy: " .. e .. " · mở F9 xem đầy đủ"
+    kết thúc
+    local t = " ✅Đã chạy xong (" .. r.ok .. " lần)"
+    if r.fail > 0 thì t = t .. " · ⚠️ " .. r.fail .. " lần lỗi" end
+    nếu r.guis và r.guis > 0 thì
+        cục bộ nm = (r.names và r.names[1]) và (" '" .. r.names[1] .. "'") hoặc ""
         t = t .. " · 🧩 " .. r.guis .. " GUI đã vào tab 'GUI Ngoài'" .. nm .. " (bấm ↩ trả ra màn hình)"
-    elseif r.parked then
+    nếu r.parked thì
         t = t .. " · " .. r.parked
-    end
-    if r.note then t = t .. " · " .. r.note end
+    kết thúc
+    nếu r.note thì t = t .. " · " .. r.note end
     if r.compat and r.compat ~= "" then t = t .. " · " .. r.compat end
-    return t
-end
+    trả lại t
+kết thúc
 
-local function ExecOnce(code, name)
+hàm cục bộ ExecOnce(code, name)
     if #name>0 then print("👤 Chạy bởi:", name) end
-    code = S.SanitizeCode(code)          -- v4.4b: cắt wrapper "tự dãn kích thước" độc hại của bản cũ
-    code = S.NormalizeRunnable(code)     -- v4.7: link trần / thiếu () / BOM -> chạy được
-    S.EnsureCompat()                     -- v4.7: bù hàm executor còn thiếu (không đè hàm thật)
-    local ok, err = pcall(function()
+    code = S.SanitizeCode(code) -- v4.4b: cut Wrapper "tự động kích thước" độc hại của bản cũ
+    code = S.NormalizeRunnable(code) -- v4.7: link trần / thiếu () / BOM -> chạy được
+    S.EnsureCompat() -- v4.7: Thiếu hàm thực thi bù (không ghi đè hàm thật)
+    cục bộ ok, err = pcall(function()
         local fn, lerr = loadstring(code)
-        if not fn then error(lerr) end
+        nếu không phải fn thì lỗi (lerr) kết thúc
         fn()
-    end)
-    if ok then
+    kết thúc)
+    nếu được thì
         S.lastRunError = nil
-    else
+    khác
         S.lastRunError = tostring(err)
         pcall(function() warn("[taodepzai v5.0 NOIR] ❌ '" .. tostring(name) .. "' lỗi: " .. tostring(err)) end)
-    end
-    return ok, err
-end
+    kết thúc
+    trả về ok, err
+kết thúc
 
-local function Cancel()
+hàm cục bộ Cancel()
     pcall(function() if S.AbortRunCapture then S.AbortRunCapture() end end)
-    cancelled=true
+    bị hủy bỏ=đúng
     runActive=false
     if curThread then pcall(task.cancel, curThread); curThread=nil end
-    if curIndicator then curIndicator.BackgroundColor3=C.BLUE; curIndicator=nil end
-end
+    nếu curIndicator thì curIndicator.BackgroundColor3=C.BLUE; curIndicator=nil kết thúc
+kết thúc
 
-local function RunCode(code, name, ind, times, delay, noPark)
-    Cancel()
-    ReleaseHubFocus()   -- v4.4b: nhả focus TextBox, nếu không game chặn hết input (không đi/không bắn)
-    if #code==0 then return false, "⚠️ Vui lòng nhập code!" end
-    cancelled=false
+hàm cục bộ RunCode(code, name, ind, times, delay, noPark)
+    Hủy bỏ()
+    ReleaseHubFocus() -- v4.4b: free focus TextBox, if not game block input (không đi/không bắn)
+    nếu #code==0 thì trả về false, "⚠️ Vui lòng nhập mã!" kết thúc
+    đã hủy bỏ = sai
     if ind then curIndicator=ind; ind.BackgroundColor3=C.RED end
-    local okC, failC = 0, 0
-    curThread=task.spawn(function()
+    cục bộ okC, failC = 0, 0
+    curThread = task.spawn(function())
         runActive=true
-        S.lastParkedCount, S.lastParkedNames = 0, {}   -- v4.7: đếm GUI của RIÊNG lần chạy này
+        S.lastParkedCount, S.lastParkedNames = 0, {} -- v4.7: GUI đếm của RIÊNG lần chạy này
         S.lastRunError = nil
         local skipPark, skipWhy = (noPark == true), (noPark == true and "nút script nhanh" or nil)
-        if not skipPark and S.ShouldSkipPark then
+        nếu không phải skipPark và S.ShouldSkipPark thì
             local s2, w2 = S.ShouldSkipPark(code, name)
-            if s2 then skipPark, skipWhy = true, w2 end
-        end
-        local cap = nil
-        if skipPark then
-            S.lastParkNote = "🪟 GUI để NGOÀI màn hình game (công cụ cửa sổ riêng) — không đưa vào menu"
+            nếu s2 thì skipPark, skipWhy = true, w2 end
+        kết thúc
+        giới hạn địa phương = không
+        nếu bỏ qua bãi đậu xe thì
+            S.lastParkNote = "🪟 GUI để NGOÀI màn hình trò chơi (công cụ riêng cửa sổ) — không được đưa vào menu"
             pcall(function()
                 print("[taodepzai v5.0 NOIR] 🛠 '" .. tostring(name) .. "': GUI ở NGOÀI màn hình game như cũ"
-                    .. " (lý do không đưa vào menu: " .. tostring(skipWhy) .. ")")
-            end)
-        else
+                    .. " (lý do không đưa vào menu: " .. tostring(skip Why) .. ")")
+            kết thúc)
+        khác
             S.lastParkNote = nil
             cap = S.BeginRunCapture()
-        end
+        kết thúc
         for i=1,times do
-            if cancelled then break end
-            if i>1 and delay>0 then
-                local e=0
-                while e<delay do
-                    if cancelled then break end
+            nếu bị hủy thì dừng lại
+            nếu i>1 và độ trễ>0 thì
+                cục bộ e=0
+                trong khi e<delay thì
+                    nếu bị hủy thì dừng lại
                     task.wait(0.1); e+=0.1
-                end
-                if cancelled then break end
-            end
-            local ok, err = ExecOnce(code, name)
-            if ok then okC+=1 else failC+=1; warn("❌ Lần",i,err) end
-            if cap then
+                kết thúc
+                nếu bị hủy thì dừng lại
+            kết thúc
+            cục bộ ok, err = ExecOnce(code, name)
+            if ok then okC+=1 else failC+=1; warn("❌ góc",i,err) end
+            nếu có thì
                 S.EndRunCapture(cap, (#name>0 and name or "Script"))
-                S.lastParkedCount = cap.parked or 0    -- v4.7: để báo "GUI đang nằm ở đâu"
-                S.lastParkedNames = cap.names or {}
-                cap = nil
-            end
-        end
+                S.lastParkedCount = cap.parked hoặc 0 -- v4.7: để báo "GUI đang nằm ở đâu"
+                S.lastParkedNames = cap.names hoặc {}
+                mũ = không
+            kết thúc
+        kết thúc
         if cap then S.EndRunCapture(cap, (#name>0 and name or "Script")) cap = nil end
         S.lastRunReport = {
-            name   = name,
-            ok     = okC,
-            fail   = failC,
-            err    = S.lastRunError,
-            parked = (skipPark and S.lastParkNote or nil),
-            guis   = S.lastParkedCount,
-            names  = S.lastParkedNames,
-            note   = S.lastNormalizeNote,
+            tên = tên,
+            ok = okC,
+            thất bại = thất bạiC,
+            err = S.lastRunError,
+            parked = (skipPark và S.lastParkNote hoặc nil),
+            guis = S.lastParkedCount,
+            names = S.lastParkedNames,
+            note = S.lastNormalizeNote,
             compat = S.CompatNote(),
         }
         totalRuns+=okC+failC
         if ind then ind.BackgroundColor3=C.GREEN; if curIndicator==ind then curIndicator=nil end end
         runActive=false
         curThread=nil
-    end)
-    return true, nil
-end
+    kết thúc)
+    trả về true, nil
+kết thúc
 
-local function Label(parent, text, y)
+hàm cục bộ Label(parent, text, y)
     local isRule = (tostring(text):find("━") ~= nil)
-    return New("TextLabel", {
-        Size=UDim2.new(1,-16,0,14), Position=UDim2.new(0,8,0,y or 0),
-        Text=text, BackgroundTransparency=1,
-        TextColor3=(isRule and C.BORDER or C.MUTED),   -- v4.5: chữ phụ / đường kẻ trên nền tối
+    trả về New("TextLabel", {
+        Kích thước=UDim2.new(1,-16,0,14), Vị trí=UDim2.new(0,8,0,y hoặc 0),
+        Văn bản=văn bản, Độ trong suốt nền=1,
+        TextColor3=(isRule and C.BORDER or C.MUTED), -- v4.5: chữ phụ / đường yêu trên nền tối
         Font=Enum.Font.GothamMedium, TextSize=10, TextXAlignment=Enum.TextXAlignment.Left, ZIndex=6,
-    }, parent)
-end
+    }, cha)
+kết thúc
 
-local function Button(parent, text, x, y, w, h, color)
-    local base = color or C.SURFACE3
+hàm cục bộ Button(parent, text, x, y, w, h, color)
+    cơ sở cục bộ = màu hoặc C.SURFACE3
     local btn = New("TextButton", {
-        Size=UDim2.new(0,w or 100,0,h or 24), Position=UDim2.new(0,x or 8,0,y or 0),
-        Text=text, BackgroundColor3=base, BackgroundTransparency=0.08,
+        Kích thước = UDim2.new(0, w hoặc 100, 0, h hoặc 24), Vị trí = UDim2.new(0, x hoặc 8, 0, y hoặc 0),
+        Văn bản=văn bản, Màu nền 3=màu cơ bản, Độ trong suốt nền=0.08,
         TextColor3=D.BestText(base), Font=Enum.Font.GothamBold, TextSize=10, BorderSizePixel=0, ZIndex=6,
-    }, parent)
-    Corner(btn, UDim.new(0,8))
+    }, cha)
+    Góc(btn, UDim.new(0,8))
     Stroke(btn, D.Edge(base), 1.1)
     D.Shade(btn, Color3.fromRGB(255,255,255), Color3.fromRGB(182,187,201), 90)
     D.Tactile(btn, 0.08)
-    return btn
-end
+    nút quay lại
+kết thúc
 
-function S.Debounce(key, secs, fn)
-    S._dbt = S._dbt or {}
-    local n = (S._dbt[key] or 0) + 1
+hàm S.Debounce(key, secs, fn)
+    S._dbt = S._dbt hoặc {}
+    cục bộ n = (S._dbt[key] hoặc 0) + 1
     S._dbt[key] = n
     task.delay(secs or 0.18, function()
-        if S._dbt[key] ~= n then return end   -- đã có phím mới hơn -> lượt này bỏ qua
+        if S._dbt[key] ~= n then return end -- đã có phím mới hơn -> lượt xem này bỏ qua
         S._dbt[key] = nil
         pcall(fn)
-    end)
-end
+    kết thúc)
+kết thúc
 
-local y = 8
+cục bộ y = 8
 Label(codeTab, "💻 Nhập Code Tùy Chỉnh", y)
 y = y + 14
 Label(codeTab, "👤 Tên Script", y)
 y = y + 14
 
 local nameIn = New("TextBox", {
-    Size=UDim2.new(1,-16,0,26), Position=UDim2.new(0,8,0,y), Text="",
+    Kích thước=UDim2.new(1,-16,0,26), Vị trí=UDim2.new(0,8,0,y), Văn bản="",
     PlaceholderText="Nhập tên script...", PlaceholderColor3=Color3.fromRGB(122, 130, 148),
     BackgroundColor3=Color3.fromRGB(26, 29, 38), BackgroundTransparency=0, TextColor3=Color3.fromRGB(233, 237, 245),
     Font=Enum.Font.GothamMedium, TextSize=12, BorderSizePixel=0, ClearTextOnFocus=false,
     Active=true, Selectable=true, ZIndex=10, TextXAlignment=Enum.TextXAlignment.Left,
 }, codeTab)
-Corner(nameIn, UDim.new(0,5))
+Góc(nameIn, UDim.new(0,5))
 Stroke(nameIn, Color3.fromRGB(100,120,200), 1.5)
 New("UIPadding", {PaddingLeft=UDim.new(0,6)}, nameIn)
 
 y = y + 32
-Label(codeTab, "💻 Code (Lua)", y)
+Nhãn(codeTab, "💻 Mã (Lua)", y)
 y = y + 14
 
 local codeIn = New("TextBox", {
-    Size=UDim2.new(1,-16,0,80), Position=UDim2.new(0,8,0,y), Text="",
-    PlaceholderText="-- Nhập code Lua tại đây...", PlaceholderColor3=Color3.fromRGB(122, 130, 148),
+    Kích thước=UDim2.new(1,-16,0,80), Vị trí=UDim2.new(0,8,0,y), Văn bản="",
+    PlaceholderText="-- Nhập mã Lua tại đây...", PlaceholderColor3=Color3.fromRGB(122, 130, 148),
     BackgroundColor3=Color3.fromRGB(28, 31, 41), BackgroundTransparency=0, TextColor3=Color3.fromRGB(233, 237, 245),
     Font=Enum.Font.Code, TextSize=11, BorderSizePixel=0, ClearTextOnFocus=false,
     MultiLine=true, TextWrapped=true, TextXAlignment=Enum.TextXAlignment.Left, TextYAlignment=Enum.TextYAlignment.Top,
     Active=true, Selectable=true, ZIndex=10,
 }, codeTab)
-Corner(codeIn, UDim.new(0,5))
+Góc(codeIn, UDim.new(0,5))
 Stroke(codeIn, Color3.fromRGB(100,120,200), 1.5)
 New("UIPadding", {PaddingLeft=UDim.new(0,6), PaddingTop=UDim.new(0,4)}, codeIn)
 
 y = y + 86
-Label(codeTab, "🔁 Cài đặt lặp", y)
+Label(codeTab, "🔁 Cài đặt", y)
 y = y + 14
 Label(codeTab, "Số lần lặp:", y)
 
 local repIn = New("TextBox", {
-    Size=UDim2.new(0,55,0,24), Position=UDim2.new(0,8,0,y+12), Text="1",
+    Kích thước=UDim2.new(0,55,0,24), Vị trí=UDim2.new(0,8,0,y+12), Văn bản="1",
     PlaceholderColor3=Color3.fromRGB(122, 130, 148), BackgroundColor3=Color3.fromRGB(26, 29, 38), BackgroundTransparency=0,
     TextColor3=Color3.fromRGB(233, 237, 245), Font=Enum.Font.GothamMedium, TextSize=12, BorderSizePixel=0,
     ClearTextOnFocus=false, Active=true, Selectable=true, ZIndex=10,
 }, codeTab)
-Corner(repIn, UDim.new(0,5))
+Góc(repIn, UDim.new(0,5))
 Stroke(repIn, Color3.fromRGB(180,180,200), 1.2)
 
 Label(codeTab, "Thời gian chờ:", y+36)
 
 local delIn = New("TextBox", {
-    Size=UDim2.new(0,55,0,24), Position=UDim2.new(0,8,0,y+50), Text="0",
+    Kích thước=UDim2.new(0,55,0,24), Vị trí=UDim2.new(0,8,0,y+50), Văn bản="0",
     PlaceholderColor3=Color3.fromRGB(122, 130, 148), BackgroundColor3=Color3.fromRGB(26, 29, 38), BackgroundTransparency=0,
     TextColor3=Color3.fromRGB(233, 237, 245), Font=Enum.Font.GothamMedium, TextSize=12, BorderSizePixel=0,
     ClearTextOnFocus=false, Active=true, Selectable=true, ZIndex=10,
 }, codeTab)
-Corner(delIn, UDim.new(0,5))
+Góc(delIn, UDim.new(0,5))
 Stroke(delIn, Color3.fromRGB(180,180,200), 1.2)
 
 local unitBtn = New("TextButton", {
@@ -1644,13 +1673,13 @@ local unitBtn = New("TextButton", {
     BackgroundColor3=Color3.fromRGB(26, 29, 38), BackgroundTransparency=0, TextColor3=C.DARK,
     Font=Enum.Font.GothamBold, TextSize=9, BorderSizePixel=0, ZIndex=10,
 }, codeTab)
-Corner(unitBtn,UDim.new(0,4)); Stroke(unitBtn)
+Góc(unitBtn,UDim.new(0,4)); Đường viền(unitBtn)
 
 local ddFrame = New("Frame", {
-    Size=UDim2.new(0,55,0,48), Position=UDim2.new(0,75,0,y+74),
+    Kích thước=UDim2.new(0,55,0,48), Vị trí=UDim2.new(0,75,0,y+74),
     BackgroundColor3=Color3.fromRGB(26, 29, 38), BackgroundTransparency=0, BorderSizePixel=0, Visible=false, ZIndex=15,
 }, codeTab)
-Corner(ddFrame,UDim.new(0,4)); Stroke(ddFrame)
+Góc(ddFrame,UDim.new(0,4)); Đường viền(ddFrame)
 
 local secOpt = New("TextButton", {
     Size=UDim2.new(1,0,0,24), Text="Giây", BackgroundColor3=Color3.fromRGB(28, 31, 41),
@@ -1668,27 +1697,27 @@ secOpt.Activated:Connect(function() unitBtn.Text="Giây ▾"; ddFrame.Visible=fa
 minOpt.Activated:Connect(function() unitBtn.Text="Phút ▾"; ddFrame.Visible=false end)
 
 trackConn(UserInputService.InputBegan:Connect(function(i,gp)
-    if gp then return end
-    if i.UserInputType==Enum.UserInputType.MouseButton1 or i.UserInputType==Enum.UserInputType.Touch then
+    nếu gp thì trả về end
+    nếu i.UserInputType == Enum.UserInputType.MouseButton1 hoặc i.UserInputType == Enum.UserInputType.Touch thì
         local f = Hit.inObject(unitBtn, i.Position.X, i.Position.Y)
-            or Hit.inObject(ddFrame, i.Position.X, i.Position.Y)
+            hoặc Hit.inObject(ddFrame, i.Position.X, i.Position.Y)
         if not f then ddFrame.Visible=false end
-    end
-end))
+    kết thúc
+kết thúc))
 
 y = y + 82
 
-local runBtn = Button(codeTab, "▶ Chạy Code", 8, y, 336, 26, Color3.fromRGB(0,160,90))
-local stopBtn = Button(codeTab, "⏹ Dừng", 350, y, 126, 26, C.RED)
+local runBtn = Button(codeTab, "▶ Chạy Mã", 8, y, 336, 26, Color3.fromRGB(0,160,90))
+local stopBtn = Button(codeTab, "⏹ cột", 350, y, 126, 26, C.RED)
 y = y + 32
 local saveBtn = Button(codeTab, "💾 Lưu Vào Danh Sách", 8, y, 468, 26, C.BLUE)
 y = y + 32
 
 local statusLbl = Label(codeTab, "", y)
-statusLbl.TextColor3=Color3.fromRGB(255, 205, 64); statusLbl.TextSize=9; statusLbl.ZIndex=6
+statusLbl.TextColor3=Color3.fromRGB(255, 205, 64); statusLbl.TextSize=9; trạng tháiLbl.ZIndex=6
 y = y + 14
 
-local countLbl = Label(codeTab, "🔄 Tổng số lần đã chạy: 0", y)
+local countLbl = Label(codeTab, "🔄 Tổng số lần chạy: 0", y)
 countLbl.TextColor3=C.GREEN; countLbl.TextSize=9; countLbl.ZIndex=6
 
 codeTab.CanvasSize = UDim2.new(0, 0, 0, y + 30)
@@ -1700,107 +1729,107 @@ runBtn.Activated:Connect(function()
     local d=math.max(tonumber(delIn.Text)or 0,0)
     if unitBtn.Text:find("Phút") then d=d*60 end
     local ok,err=RunCode(codeIn.Text,nameIn.Text,nil,t,d)
-    if not ok then
-        statusLbl.Text=err or "❌ Lỗi không xác định"
-    else
+    nếu không ổn thì
+        statusLbl.Text=err hoặc "❌ Lỗi không xác định"
+    khác
         statusLbl.Text="⏳ Đang thực thi..."
         task.spawn(function()
-            while runActive do
+            trong khi runActive thực hiện
                 if cancelled then statusLbl.Text="⏹️ Đã dừng"; return end
                 task.wait(0.1)
-            end
-            if not cancelled then
+            kết thúc
+            nếu không bị hủy bỏ thì
                 local rep7 = S.RunReportText()
-                statusLbl.Text = (rep7 ~= "") and rep7
-                    or ("✅ Hoàn thành!" .. (S.lastParkNote and (" · " .. S.lastParkNote) or ""))
-                statusLbl.TextColor3 = (S.lastRunReport and S.lastRunReport.fail > 0
-                    and S.lastRunReport.ok == 0) and C.RED or Color3.fromRGB(255, 205, 64)
-            end
-            countLbl.Text="🔄 Tổng số lần đã chạy: "..totalRuns
+                statusLbl.Text = (rep7 ~= "") và rep7
+                    hoặc ("✅ Hoàn thành!" .. (S.lastParkNote và (" · " .. S.lastParkNote) hoặc ""))
+                statusLbl.TextColor3 = (S.lastRunReport và S.lastRunReport.fail > 0
+                    và S.lastRunReport.ok == 0) và C.RED hoặc Color3.fromRGB(255, 205, 64)
+            kết thúc
+            countLbl.Text="🔄 Tổng số lần chạy: "..totalRuns
             task.delay(1.5, function()
-                if statusLbl and statusLbl.Parent and (S.lastParkNote or S.lastRunReport) then
+                nếu statusLbl và statusLbl.Parent và (S.lastParkNote hoặc S.lastRunReport) thì
                     local rep7 = S.RunReportText()
                     if rep7 ~= "" then statusLbl.Text = rep7 end
-                end
-            end)
-        end)
-    end
-end)
+                kết thúc
+            kết thúc)
+        kết thúc)
+    kết thúc
+kết thúc)
 
-local RebuildScripts
+Tập lệnh xây dựng lại cục bộ
 
 saveBtn.Activated:Connect(function()
-    local n=nameIn.Text
+    cục bộ n=nameIn.Text
     local c=codeIn.Text
-    if #c==0 then statusLbl.Text="⚠️ Vui lòng nhập code!"; return end
-    if #n==0 then n="Script "..(#scripts+1) end
-    local bn=n
+    if #c==0 thì statusLbl.Text="⚠️ Vui lòng nhập mã!"; kết thúc trở lại
+    nếu #n==0 thì n="Script "..(#scripts+1) end
+    cục bộ bn=n
     local cnt=1
-    while true do
-        local ex=false
+    trong khi đúng vậy
+        cục bộ ex=false
         for _,s in ipairs(scripts) do if s.name==n then ex=true; break end end
-        if not ex then break end
+        nếu không phải ex thì dừng lại
         cnt+=1; n=bn.." ("..cnt..")"
-    end
+    kết thúc
     table.insert(scripts,{name=n, code=c, expanded=false})
-    if RebuildScripts then RebuildScripts() end
+    nếu RebuildScripts thì RebuildScripts() kết thúc
     Store.saveSoon()
-    statusLbl.Text="✅ Đã lưu vào Tab 'Code Đã Lưu'! (đã ghi xuống đĩa)"
-end)
+    statusLbl.Text=" ✅ Đã lưu vào Tab 'Code Đã Lưu'! (đã ghi xuống đĩa)"
+kết thúc)
 
-local sy = 8
+sy cục bộ = 8
 Label(savedCodeTab, "💾 Danh Sách Script Đã Lưu", sy)
 sy = sy + 18
 
 local searchIn = New("TextBox", {
-    Size=UDim2.new(1,-16,0,26), Position=UDim2.new(0,8,0,sy), Text="",
-    PlaceholderText="🔍 Tìm kiếm script...", PlaceholderColor3=Color3.fromRGB(122, 130, 148),
+    Kích thước=UDim2.new(1,-16,0,26), Vị trí=UDim2.new(0,8,0,sy), Văn bản="",
+    PlaceholderText="🔍Tìm kiếm tập lệnh...", PlaceholderColor3=Color3.fromRGB(122, 130, 148),
     BackgroundColor3=Color3.fromRGB(26, 29, 38), BackgroundTransparency=0, TextColor3=Color3.fromRGB(233, 237, 245),
     Font=Enum.Font.GothamMedium, TextSize=12, BorderSizePixel=0, ClearTextOnFocus=false,
     Active=true, Selectable=true, ZIndex=10, TextXAlignment=Enum.TextXAlignment.Left,
 }, savedCodeTab)
-Corner(searchIn, UDim.new(0,5))
+Góc(searchIn, UDim.new(0,5))
 Stroke(searchIn, Color3.fromRGB(180,180,200), 1.2)
 New("UIPadding", {PaddingLeft=UDim.new(0,6)}, searchIn)
 sy = sy + 32
 
 Store.statusLbl = New("TextLabel", {
-    Size=UDim2.new(1,-110,0,20), Position=UDim2.new(0,8,0,sy),
-    Text="💾 ...", BackgroundTransparency=1, TextColor3=C.GRAY,
+    Kích thước=UDim2.new(1,-110,0,20), Vị trí=UDim2.new(0,8,0,sy),
+    Văn bản="💾 ...", Độ trong suốt nền=1, Màu chữ 3=XÁM,
     Font=Enum.Font.GothamMedium, TextSize=9,
     TextXAlignment=Enum.TextXAlignment.Left, TextYAlignment=Enum.TextYAlignment.Center,
     TextTruncate=Enum.TextTruncate.AtEnd, ZIndex=7,
 }, savedCodeTab)
 
 Store.reloadBtn = New("TextButton", {
-    Size=UDim2.new(0,94,0,20), Position=UDim2.new(1,-102,0,sy),
+    Kích thước=UDim2.new(0,94,0,20), Vị trí=UDim2.new(1,-102,0,sy),
     Text="🔄 Nạp lại", BackgroundColor3=C.BLUE, BackgroundTransparency=0.1,
     TextColor3=C.WHITE, Font=Enum.Font.GothamBold, TextSize=9, BorderSizePixel=0, ZIndex=8,
 }, savedCodeTab)
-Corner(Store.reloadBtn, UDim.new(0,5))
+Góc(Store.reloadBtn, UDim.new(0,5))
 Stroke(Store.reloadBtn, Color3.fromRGB(0,90,170), 1)
 
 Store.refreshStatus = function()
     if not Store.statusLbl or not Store.statusLbl.Parent then return end
-    local ns, nw, nf = #scripts, #waypoints, #featureTabs
-    if Store.lastError then
+    cục bộ ns, nw, nf = #scripts, #waypoints, #featureTabs
+    nếu Store.lastError thì
         Store.statusLbl.TextColor3=Color3.fromRGB(255, 160, 90)
         Store.statusLbl.Text = string.format("⚠️ %d script · %d WP · %d tab — %s", ns, nw, nf, Store.lastError)
     elseif Store.mode == "file" then
         Store.statusLbl.TextColor3=Color3.fromRGB(58, 214, 140)
         Store.statusLbl.Text = string.format("💾 %d script · %d WP · %d tab · %s%s", ns, nw, nf, Store.SAVE_FILE,
-            Store.lastSavedAt and (" · lưu lúc " .. Store.lastSavedAt) or "")
+            Store.lastSavedAt và (" · lưu lúc ".. Store.lastSavedAt) hoặc "")
     elseif Store.mode == "memory" then
         Store.statusLbl.TextColor3=Color3.fromRGB(255, 205, 64)
-        Store.statusLbl.Text = string.format("⚠️ %d script · %d WP · %d tab — chỉ giữ trong phiên chơi này (executor thiếu writefile)", ns, nw, nf)
+        Store.statusLbl.Text = string.format("⚠️ %d script · %d WP · %d tab — chỉ giữ trong phiên bản trò chơi này (thiếu tập tin ghi)", ns, nw, nf)
     elseif Store.mode == "empty" then
         Store.statusLbl.TextColor3 = C.GRAY
-        Store.statusLbl.Text = string.format("💾 Chưa lưu gì · sẽ ghi vào %s khi bạn bấm Lưu", Store.SAVE_FILE)
-    else
+        Store.statusLbl.Text = string.format("💾 Chưa lưu gì · sẽ ghi vào %s khi bạn nhấn Lưu", Store.SAVE_FILE)
+    khác
         Store.statusLbl.TextColor3 = C.GRAY
-        Store.statusLbl.Text = "💾 Chưa lưu gì (executor thiếu writefile — chỉ giữ trong phiên chơi)"
-    end
-end
+        Store.statusLbl.Text = "💾 Chưa lưu gì (người thực thi thiếu tệp ghi — chỉ giữ trong phiên bản trò chơi)"
+    kết thúc
+kết thúc
 
 S.DoReload = function()
     Store.load()
@@ -1808,14 +1837,14 @@ S.DoReload = function()
     S.Rebuild()
     if Store.restoreWaypoints then pcall(Store.restoreWaypoints) end
     if Store.restoreFeatures then pcall(Store.restoreFeatures) end
-    flash(Store.reloadBtn, "✅ Đã nạp", 1.4)
-end
+    flash(Store.reloadBtn, " ✅ Đã tải", 1.4)
+kết thúc
 Store.reloadBtn.Activated:Connect(S.DoReload)
 
 sy = sy + 24
 
 local scriptList = New("Frame", {
-    Size=UDim2.new(1,-16,0,0), Position=UDim2.new(0,8,0,sy),
+    Kích thước=UDim2.new(1,-16,0,0), Vị trí=UDim2.new(0,8,0,sy),
     BackgroundTransparency=1, BorderSizePixel=0, ZIndex=6,
 }, savedCodeTab)
 New("UIListLayout", {SortOrder=Enum.SortOrder.LayoutOrder, Padding=UDim.new(0,6)}, scriptList)
@@ -1823,22 +1852,22 @@ New("UIListLayout", {SortOrder=Enum.SortOrder.LayoutOrder, Padding=UDim.new(0,6)
 RebuildScripts = function()
     for _,c in ipairs(scriptList:GetChildren()) do
         if not c:IsA("UIListLayout") then c:Destroy() end
-    end
+    kết thúc
 
-    local term=searchIn.Text:lower()
+    thuật ngữ cục bộ = searchIn.Text:lower()
     local disp={}
     for _,d in ipairs(scripts) do
         if term=="" or d.name:lower():find(term,1,true) then table.insert(disp,d) end
-    end
+    kết thúc
 
-    if #disp==0 then
-        New("TextLabel", {
-            Size=UDim2.new(1,0,0,40),
-            Text=term~="" and "📭 Không tìm thấy script phù hợp" or "📭 Chưa có script nào được lưu",
+    nếu #disp==0 thì
+        Mới("TextLabel", {
+            Kích thước = UDim2.new(1, 0, 0, 40),
+            Text=term~="" và "📭 Không tìm thấy tập lệnh phù hợp" hoặc "📭 Không có tập lệnh nào được lưu",
             BackgroundTransparency=1, TextColor3=C.GRAY, Font=Enum.Font.GothamMedium, TextSize=11,
             TextXAlignment=Enum.TextXAlignment.Center, TextYAlignment=Enum.TextYAlignment.Center, ZIndex=7,
         }, scriptList)
-    end
+    kết thúc
 
     local totalHeight = 0
 
@@ -1846,154 +1875,156 @@ RebuildScripts = function()
         local isExpanded = d.expanded or false
         local rowH = isExpanded and 160 or 42
 
-        local row = New("Frame", {
+        hàng cục bộ = New("Khung", {
             Size=UDim2.new(1,0,0,rowH), BackgroundColor3=Color3.fromRGB(26, 29, 38),
             BackgroundTransparency=0.1, BorderSizePixel=0, ZIndex=6,
             ClipsDescendants=true,
         }, scriptList)
-        Corner(row,UDim.new(0,6)); Stroke(row)
+        Góc(hàng,UDim.new(0,6)); Đường viền(hàng)
 
         local arrowBtn = New("TextButton", {
-            Size=UDim2.new(0,24,0,24), Position=UDim2.new(0,6,0,9),
-            Text=isExpanded and "▲" or "▼",
+            Kích thước=UDim2.new(0,24,0,24), Vị trí=UDim2.new(0,6,0,9),
+            Văn bản = isExpanded và "▲" hoặc "▼",
             BackgroundColor3=Color3.fromRGB(32, 36, 47), BackgroundTransparency=0,
             TextColor3=C.BLUE, Font=Enum.Font.GothamBold, TextSize=10, BorderSizePixel=0, ZIndex=8,
-        }, row)
-        Corner(arrowBtn, UDim.new(0,4))
+        }, hàng ngang)
+        Góc(arrowBtn, UDim.new(0,4))
 
         local nameLbl = New("TextLabel", {
-            Size=UDim2.new(1,-175,0,42), Position=UDim2.new(0,36,0,0),
-            Text=d.name, BackgroundTransparency=1, TextColor3=C.DARK,
+            Kích thước=UDim2.new(1,-175,0,42), Vị trí=UDim2.new(0,36,0,0),
+            Văn bản=d.name, Độ trong suốt nền=1, Màu văn bản3=C.DARK,
             Font=Enum.Font.GothamBold, TextSize=11, TextXAlignment=Enum.TextXAlignment.Left,
             TextTruncate=Enum.TextTruncate.AtEnd, ZIndex=8,
-        }, row)
+        }, hàng ngang)
 
         local delScriptBtn = New("TextButton", {
-            Size=UDim2.new(0,58,0,26), Position=UDim2.new(1,-132,0,8),
-            Text="🗑 Xóa", BackgroundColor3=C.RED, BackgroundTransparency=0.1,
+            Kích thước=UDim2.new(0,58,0,26), Vị trí=UDim2.new(1,-132,0,8),
+            Văn bản="🗑 x", Màu nền 3=Đỏ, Độ trong suốt nền=0.1,
             TextColor3=C.WHITE, Font=Enum.Font.GothamBold, TextSize=10, BorderSizePixel=0, ZIndex=8,
-        }, row)
-        Corner(delScriptBtn, UDim.new(0,5))
+        }, hàng ngang)
+        Góc(delScriptBtn, UDim.new(0,5))
 
         local runScriptBtn = New("TextButton", {
-            Size=UDim2.new(0,62,0,26), Position=UDim2.new(1,-68,0,8),
-            Text="▶ Chạy", BackgroundColor3=C.GREEN, BackgroundTransparency=0.1,
+            Kích thước=UDim2.new(0,62,0,26), Vị trí=UDim2.new(1,-68,0,8),
+            Văn bản="▶ Chạy", Màu nền3=Xanh lá cây, Độ trong suốt nền=0.1,
             TextColor3=C.WHITE, Font=Enum.Font.GothamBold, TextSize=10, BorderSizePixel=0, ZIndex=8,
-        }, row)
-        Corner(runScriptBtn, UDim.new(0,5))
+        }, hàng ngang)
+        Góc(runScriptBtn, UDim.new(0,5))
 
-        if isExpanded then
+        nếu isExpanded thì
             local codeBoxFrame = New("ScrollingFrame", {
-                Size=UDim2.new(1,-12,0,82), Position=UDim2.new(0,6,0,42),
+                Kích thước=UDim2.new(1,-12,0,82), Vị trí=UDim2.new(0,6,0,42),
                 BackgroundColor3=Color3.fromRGB(24, 27, 35), BackgroundTransparency=0,
                 BorderSizePixel=0, ZIndex=8, ScrollBarThickness=4,
                 CanvasSize=UDim2.new(0,0,0,0),
-                AutomaticCanvasSize=Enum.AutomaticSize.Y,
+                Kích thước Canvas tự động = Enum.Kích thước tự động.Y,
                 ScrollingDirection=Enum.ScrollingDirection.Y,
                 ScrollingEnabled=true,
                 VerticalScrollBarInset=Enum.ScrollBarInset.ScrollBar,
-            }, row)
-            Corner(codeBoxFrame, UDim.new(0,5))
+            }, hàng ngang)
+            Góc(codeBoxFrame, UDim.new(0,5))
             Stroke(codeBoxFrame, Color3.fromRGB(190,195,210), 1)
 
             local codeLbl = New("TextBox", {
-                Size=UDim2.new(1,-8,0,0), Position=UDim2.new(0,4,0,4),
-                AutomaticSize=Enum.AutomaticSize.Y,
-                Text=d.code, TextColor3=Color3.fromRGB(226, 230, 240), BackgroundTransparency=1,
+                Kích thước=UDim2.new(1,-8,0,0), Vị trí=UDim2.new(0,4,0,4),
+                Kích thước tự động = Enum.Kích thước tự động.Y,
+                Văn bản=d.code, Màu văn bản3=Màu3.fromRGB(226, 230, 240), Độ trong suốt nền=1,
                 Font=Enum.Font.Code, TextSize=10, TextXAlignment=Enum.TextXAlignment.Left,
                 TextYAlignment=Enum.TextYAlignment.Top, MultiLine=true, TextWrapped=true,
                 ClearTextOnFocus=false, TextEditable=false, Active=true, ZIndex=9,
             }, codeBoxFrame)
 
             local copyBtn = New("TextButton", {
-                Size=UDim2.new(0,120,0,24), Position=UDim2.new(0,6,0,128),
-                Text="📋 Sao Chép Code", BackgroundColor3=C.BLUE, BackgroundTransparency=0.1,
+                Kích thước=UDim2.new(0,120,0,24), Vị trí=UDim2.new(0,6,0,128),
+                Văn bản="📋 Mã Sao Chép", Màu nền 3=Xanh lam, Độ trong suốt nền=0.1,
                 TextColor3=C.WHITE, Font=Enum.Font.GothamBold, TextSize=10, BorderSizePixel=0, ZIndex=8,
-            }, row)
-            Corner(copyBtn, UDim.new(0,5))
+            }, hàng ngang)
+            Góc(copyBtn, UDim.new(0,5))
 
             copyBtn.Activated:Connect(function()
-                if S.CopyToClipboard(d.code) then
-                    flash(copyBtn, "✅ Đã Sao Chép!", 1.5)
-                else
+                nếu S.CopyToClipboard(d.code) thì
+                    flash(copyBtn, " ✅ Đã Sao Chép!", 1.5)
+                khác
                     codeLbl:CaptureFocus()
                     codeLbl.SelectionStart = 1
                     codeLbl.CursorPosition = #d.code + 1
-                    flash(copyBtn, "⚠️ Đã Bôi Đen Code", 1.5)
-                end
-            end)
-        end
+                    flash(copyBtn, "⚠️ Đã Bội Đen Code", 1.5)
+                kết thúc
+            kết thúc)
+        kết thúc
 
         arrowBtn.Activated:Connect(function()
-            d.expanded = not d.expanded
+            d.expanded = không phải d.expanded
             RebuildScripts()
             Store.saveSoon()
-        end)
+        kết thúc)
 
         runScriptBtn.Activated:Connect(function()
             local prev = runScriptBtn.Text
-            local prevColor = runScriptBtn.TextColor3
+            cục bộ prevColor = runScriptBtn.TextColor3
             RunCode(d.code, d.name, runScriptBtn, 1, 0)
             runScriptBtn.Text = "⏳ ..."
             task.spawn(function()
-                local waited = 0
+                cục bộ chờ = 0
                 while runActive and waited < 60 do task.wait(0.1); waited = waited + 0.1 end
-                task.wait(0.4)                       -- chờ chụp/đậu GUI xong hẳn
+                task.wait(0.4) -- chờ chụp/đậu GUI hoàn tất
                 local rep = S.lastRunReport
                 local txt = S.RunReportText()
-                local bad = rep and rep.fail > 0 and rep.ok == 0
-                if bad then
+                cục bộ xấu = rep và rep.fail > 0 và rep.ok == 0
+                nếu xấu thì
                     runScriptBtn.Text = "❌ lỗi"
                     runScriptBtn.TextColor3 = C.RED
                 elseif rep and (rep.guis or 0) > 0 then
                     runScriptBtn.Text = "🧩 vào tab"
-                elseif rep and rep.parked then
+                nếu rep và rep.parked thì
                     runScriptBtn.Text = "🪟 ngoài MH"
-                else
-                    runScriptBtn.Text = "✅ xong"
-                end
+                khác
+                    runScriptBtn.Text = " ✅ xong"
+                kết thúc
                 pcall(function()
-                    if Store.statusLbl and Store.statusLbl.Parent then
+                    nếu Store.statusLbl và Store.statusLbl.Parent thì
                         Store.statusLbl.Text = "▶ '" .. tostring(d.name) .. "' · " .. (txt ~= "" and txt or "xong")
                         Store.statusLbl.TextColor3 = bad and C.RED or C.GRAY
-                    end
-                end)
+                    kết thúc
+                kết thúc)
                 task.delay(2.2, function()
-                    if runScriptBtn and runScriptBtn.Parent then
+                    nếu runScriptBtn và runScriptBtn.Parent thì
                         runScriptBtn.Text = prev
                         runScriptBtn.TextColor3 = prevColor
-                    end
-                end)
-            end)
-        end)
+                    kết thúc
+                kết thúc)
+            kết thúc)
+        kết thúc)
 
         delScriptBtn.Activated:Connect(function()
             local origIdx = nil
             for idx, s in ipairs(scripts) do
                 if s == d then origIdx = idx; break end
-            end
-            if origIdx then
+            kết thúc
+            nếu origIdx thì
                 table.remove(scripts, origIdx)
                 RebuildScripts()
                 Store.saveSoon()
-            end
-        end)
+            kết thúc
+        kết thúc)
 
-        totalHeight = totalHeight + rowH + 6
-    end
+        tổng chiều cao = tổng chiều cao + hàngH + 6
+    kết thúc
 
     local listH = math.max(totalHeight, 40)
     scriptList.Size = UDim2.new(1,-16,0,listH)
     savedCodeTab.CanvasSize = UDim2.new(0, 0, 0, sy + listH + 30)
     if Store.refreshStatus then Store.refreshStatus() end
-end
+kết thúc
 
 searchIn:GetPropertyChangedSignal("Text"):Connect(function() S.Debounce("savedSearch", 0.18, RebuildScripts) end)
 RebuildScripts()
 
-local supportTab = AddTab("Hỗ Trợ", "🛠", 5)     -- v4.15: 4 -> 5 để nhường chỗ cho 👥 Người Chơi
+local supportTab = AddTab("Chiến thuật", "🛠", 5) -- v4.15: 4 -> 5 để nhường chỗ cho 👥 Người Chơi
+S.AnaUi = S.AnaUi hoặc {}
+S.AnaUi.supportTabIndex = #tabContent
 
-local posY = 8
+vị trí cục bộ Y = 8
 
 Label(supportTab, "⚡ Script Nhanh - Nhấn để chạy ngay", posY)
 posY = posY + 16
@@ -2006,147 +2037,165 @@ local quickScripts = {
 
 for _, s in ipairs(quickScripts) do
     local btn = New("TextButton", {
-        Size=UDim2.new(1,-16,0,28), Position=UDim2.new(0,8,0,posY), Text="",
+        Kích thước=UDim2.new(1,-16,0,28), Vị trí=UDim2.new(0,8,0,posY), Văn bản="",
         BackgroundColor3=s.cl, BackgroundTransparency=0.3, BorderSizePixel=0, ZIndex=6,
     }, supportTab)
-    Corner(btn, UDim.new(0,5))
+    Góc(btn, UDim.new(0,5))
     Stroke(btn, s.cl, 1.2)
-    New("TextLabel", {
-        Size=UDim2.new(1,-10,1,0), Position=UDim2.new(0,10,0,0), Text=s.n.."\n"..s.d,
+    Mới("TextLabel", {
+        Kích thước=UDim2.new(1,-10,1,0), Vị trí=UDim2.new(0,10,0,0), Văn bản=sn."\n"..sd,
         BackgroundTransparency=1, TextColor3=C.WHITE, Font=Enum.Font.GothamBold, TextSize=10,
         TextXAlignment=Enum.TextXAlignment.Left, TextYAlignment=Enum.TextYAlignment.Center, ZIndex=7,
     }, btn)
-    btn.Activated:Connect(function() RunCode(s.c, s.n, nil, 1, 0, true) end)
+    btn.Activated:Connect(function() RunCode(sc, sn, nil, 1, 0, true) end)
     posY = posY + 32
-end
+kết thúc
 
 posY = posY + 6
-Label(supportTab, "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━", posY)
+Label(supportTab, "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━", posY)
 posY = posY + 16
 
-Label(supportTab, "🛠 Hỗ Trợ — Phân Tích Tọa Độ", posY)
+Label(supportTab, "🛠 Hỗ Trợ — Phân Tích Độ", posY)
 posY = posY + 18
-Label(supportTab, "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━", posY)
+Label(supportTab, "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━", posY)
 posY = posY + 16
 
 local analyzeObjectEnabled = false
 local highlightEnabled = true
 
 local objectAnalyzeBtn = Button(supportTab, "🎯 Phân Tích Vật Thể: TẮT", 8, posY, 372, 26, C.GRAY)
-local clearObjectBtn = Button(supportTab, "🧹 Xóa KQ", 386, posY, 90, 26, C.RED)
+local clearObjectBtn = Button(supportTab, "🧹 KQ", 386, posY, 90, 26, C.RED)
 posY = posY + 32
 
 local highlightToggleBtn = Button(supportTab, "💜 Highlight Tím: BẬT", 8, posY, 372, 26, C.PURPLE)
-local removeHighlightBtn = Button(supportTab, "❌ Xóa Highlight", 386, posY, 90, 26, C.RED)
+local removeHighlightBtn = Button(supportTab, "❌ bật Highlight", 386, posY, 90, 26, C.RED)
 posY = posY + 32
 
--- ---------- v4.8: PHÂN TÍCH ĐA NỀN TẢNG (📱 điện thoại + 🖥 máy tính) ----------
-S.AnaUi = S.AnaUi or {}
-S.AnaUi.devLbl = Label(supportTab, "📱/🖥 Đang nhận diện thiết bị...", posY)
+--------- v4.8: PHÂN TÍCH ĐA NỀN TẢNG (📱 điện thoại + 🖥 máy tính) ----------
+S.AnaUi = S.AnaUi hoặc {}
+S.AnaUi.devLbl = Label(supportTab, "📱/🖥 Đang nhận dạng thiết bị...", posY)
 S.AnaUi.devLbl.TextSize = 9
 S.AnaUi.devLbl.TextColor3 = C.ACCENT
 posY = posY + 16
 S.AnaUi.centerBtn = Button(supportTab, "⊕ Vật thể ở GIỮA màn hình", 8, posY, 232, 26, C.BLUE)
-S.AnaUi.nearBtn   = Button(supportTab, "🧭 Vật thể GẦN nhất", 246, posY, 230, 26, C.ORANGE)
+S.AnaUi.nearBtn = Button(supportTab, "🧭 Vật thể GẦN nhất", 246, posY, 230, 26, C.ORANGE)
 posY = posY + 30
 S.AnaUi.skipGuiBtn = Button(supportTab, "🛡 Phân tích xuyên HUD game: BẬT", 8, posY, 300, 24, C.GREEN)
-S.AnaUi.scanFbBtn  = Button(supportTab, "🧭 Quét dự phòng: BẬT", 314, posY, 162, 24, C.GREEN)
+S.AnaUi.scanFbBtn = Button(supportTab, "🧭 Quét dự phòng: BẬT", 314, posY, 162, 24, C.GREEN)
 posY = posY + 28
-S.AnaUi.whyLbl = Label(supportTab, "🔎 Lý do: — (bật 🎯 Phân Tích Vật Thể rồi chạm/chuột phải vào vật)", posY)
+S.AnaUi.centerAimBtn = Button(supportTab, "🔴 Ngắm tâm: TẮT", 8, posY, 232, 24, C.GRAY)
+S.AnaUi.aimButtonMoveEnabled = sai
+S.AnaUi.aimMoveBtn = Button(supportTab, "🔒Kéo nút: TẮT", 246, posY, 230, 24, C.GRAY)
+posY = posY + 28
+S.AnaUi.aimMoveBtn.Activated:Connect(function()
+    local moveEnabled = not (S.AnaUi.aimButtonMoveEnabled == true)
+    S.AnaUi.aimButtonMoveEnabled = moveEnabled
+    nếu không được kích hoạt di chuyển thì
+        S.AnaUi.aimButtonDragging = sai
+        S.AnaUi.aimButtonDragInput = không
+        S.AnaUi.aimButtonDragMoved = sai
+        S.AnaUi.aimButtonSuppressUntil = 0
+    kết thúc
+    S.AnaUi.aimMoveBtn.Text = moveEnabled và "🔓 Kéo nút: BẬT" hoặc "🔒 Kéo nút: TẮT"
+    D.SetBg(S.AnaUi.aimMoveBtn, moveEnabled và C.ORANGE hoặc C.GRAY)
+    S.AnaSay(moveEnabled và "🔓 Đã mở khóa: kéo nút 🔎 để thay đổi vị trí" hoặc "🔒 Đã khóa vị trí nút 🔎")
+kết thúc)
+S.AnaUi.whyLbl = Label(supportTab, "🔎 Lý do: — (bật 🎯 Phân Tích Vật Thể rồi Chạm/chuột phải vào vật)", posY)
 S.AnaUi.whyLbl.TextSize = 9
 posY = posY + 16
 
-Label(supportTab, "💡 Bật rồi NHẤP CHUỘT PHẢI (lệt) vào vật thể để chọn (chuột trái vẫn bắn/đi bình thường)", posY)
-Label(supportTab, "    Click xuyên qua nút HUD/menu của game sẽ được tự động bỏ qua, không hit nhầm vật phía sau", posY+14)
-posY = posY + 30
+Label(supportTab, "💡 Kích hoạt “Kéo nút” viền xung tâm, đóng menu rồi kéo nút 🔎 đến chỗ muốn.", posY)
+Label(supportTab, " Tắt “Kéo nút” để khóa; 🔎 để phân tích vật đang ở tâm.", posY+14)
+Label(supportTab, " Nút HUD/menu của trò chơi vẫn là tùy chọn phân tích xuyên suốt HUD ở trên.", posY+28)
+posY = posY + 44
 
-local objResultPanel = New("Frame", {
-    Size=UDim2.new(1,-16,0,190),
-    Position=UDim2.new(0,8,0,posY),
+cục bộ objResultPanel = New("Frame", {
+    Kích thước = UDim2.new(1, -16, 0, 190),
+    Vị trí = UDim2.new(0, 8, 0, posY),
     BackgroundColor3=Color3.fromRGB(20, 25, 35),
-    BackgroundTransparency=0,
+    Độ trong suốt nền = 0,
     BorderSizePixel=0,
-    ZIndex=6,
-    Visible=false,
+    Chỉ số Z = 6,
+    Hiển thị = false,
 }, supportTab)
-Corner(objResultPanel, UDim.new(0,6))
+Góc(objResultPanel, UDim.new(0,6))
 Stroke(objResultPanel, C.PURPLE, 1.5)
 
-New("TextLabel", {   -- (objTitleLbl: bien local khong dung -> bo de tiet kiem slot local)
-    Size=UDim2.new(1,-16,0,16), Position=UDim2.new(0,8,0,4),
+New("TextLabel", { -- (objTitleLbl: bien local không dung -> bo de tiet kiem slot local)
+    Kích thước=UDim2.new(1,-16,0,16), Vị trí=UDim2.new(0,8,0,4),
     Text="🎯 VẬT THỂ ĐƯỢC CHỌN", BackgroundTransparency=1,
     TextColor3=Color3.fromRGB(180, 130, 255),
     Font=Enum.Font.GothamBold, TextSize=10,
     TextXAlignment=Enum.TextXAlignment.Left, ZIndex=7,
 }, objResultPanel)
 
-local objNameLbl = New("TextLabel", {
-    Size=UDim2.new(1,-16,0,16), Position=UDim2.new(0,8,0,22),
-    Text="Name: ...", BackgroundTransparency=1,
+cục bộ objNameLbl = New("TextLabel", {
+    Kích thước=UDim2.new(1,-16,0,16), Vị trí=UDim2.new(0,8,0,22),
+    Văn bản="Tên: ...", Độ trong suốt nền=1,
     TextColor3=Color3.fromRGB(255, 255, 100),
     Font=Enum.Font.Code, TextSize=10,
     TextXAlignment=Enum.TextXAlignment.Left, ZIndex=7,
 }, objResultPanel)
 
-local objClassLbl = New("TextLabel", {
-    Size=UDim2.new(1,-16,0,16), Position=UDim2.new(0,8,0,38),
-    Text="Class: ...", BackgroundTransparency=1,
+cục bộ objClassLbl = New("TextLabel", {
+    Kích thước=UDim2.new(1,-16,0,16), Vị trí=UDim2.new(0,8,0,38),
+    Văn bản="Lớp: ...", Độ trong suốt nền=1,
     TextColor3=Color3.fromRGB(200, 200, 255),
     Font=Enum.Font.Code, TextSize=10,
     TextXAlignment=Enum.TextXAlignment.Left, ZIndex=7,
 }, objResultPanel)
 
 local objPosLbl = New("TextLabel", {
-    Size=UDim2.new(1,-16,0,16), Position=UDim2.new(0,8,0,54),
-    Text="Position: ...", BackgroundTransparency=1,
+    Kích thước=UDim2.new(1,-16,0,16), Vị trí=UDim2.new(0,8,0,54),
+    Văn bản="Vị trí: ...", Độ trong suốt nền=1,
     TextColor3=Color3.fromRGB(255, 180, 180),
     Font=Enum.Font.Code, TextSize=10,
     TextXAlignment=Enum.TextXAlignment.Left, ZIndex=7,
 }, objResultPanel)
 
-local objSizeLbl = New("TextLabel", {
-    Size=UDim2.new(1,-16,0,16), Position=UDim2.new(0,8,0,70),
-    Text="Size: ...", BackgroundTransparency=1,
+cục bộ objSizeLbl = New("TextLabel", {
+    Kích thước=UDim2.new(1,-16,0,16), Vị trí=UDim2.new(0,8,0,70),
+    Văn bản="Kích thước: ...", Độ trong suốt nền=1,
     TextColor3=Color3.fromRGB(180, 255, 180),
     Font=Enum.Font.Code, TextSize=10,
     TextXAlignment=Enum.TextXAlignment.Left, ZIndex=7,
 }, objResultPanel)
 
-local objRotLbl = New("TextLabel", {
-    Size=UDim2.new(1,-16,0,16), Position=UDim2.new(0,8,0,86),
-    Text="Rotation: ...", BackgroundTransparency=1,
+cục bộ objRotLbl = New("TextLabel", {
+    Kích thước=UDim2.new(1,-16,0,16), Vị trí=UDim2.new(0,8,0,86),
+    Văn bản="Xoay: ...", Độ trong suốt nền=1,
     TextColor3=Color3.fromRGB(180, 220, 255),
     Font=Enum.Font.Code, TextSize=10,
     TextXAlignment=Enum.TextXAlignment.Left, ZIndex=7,
 }, objResultPanel)
 
-local objLookLbl = New("TextLabel", {
-    Size=UDim2.new(1,-16,0,16), Position=UDim2.new(0,8,0,102),
-    Text="Look: ...", BackgroundTransparency=1,
+cục bộ objLookLbl = New("TextLabel", {
+    Kích thước=UDim2.new(1,-16,0,16), Vị trí=UDim2.new(0,8,0,102),
+    Văn bản="Nhìn này: ...", Độ trong suốt nền=1,
     TextColor3=Color3.fromRGB(220, 200, 255),
     Font=Enum.Font.Code, TextSize=10,
     TextXAlignment=Enum.TextXAlignment.Left, ZIndex=7,
 }, objResultPanel)
 
-local objMatLbl = New("TextLabel", {
-    Size=UDim2.new(1,-16,0,16), Position=UDim2.new(0,8,0,118),
-    Text="Material: ...", BackgroundTransparency=1,
+cục bộ objMatLbl = New("TextLabel", {
+    Kích thước=UDim2.new(1,-16,0,16), Vị trí=UDim2.new(0,8,0,118),
+    Văn bản="Chất liệu: ...", Độ trong suốt nền=1,
     TextColor3=Color3.fromRGB(255, 220, 180),
     Font=Enum.Font.Code, TextSize=10,
     TextXAlignment=Enum.TextXAlignment.Left, ZIndex=7,
 }, objResultPanel)
 
-local objColorLbl = New("TextLabel", {
-    Size=UDim2.new(1,-16,0,16), Position=UDim2.new(0,8,0,134),
-    Text="Color: ...", BackgroundTransparency=1,
+cục bộ objColorLbl = New("TextLabel", {
+    Kích thước=UDim2.new(1,-16,0,16), Vị trí=UDim2.new(0,8,0,134),
+    Văn bản="Màu sắc: ...", Độ trong suốt nền=1,
     TextColor3=Color3.fromRGB(255, 180, 220),
     Font=Enum.Font.Code, TextSize=10,
     TextXAlignment=Enum.TextXAlignment.Left, ZIndex=7,
 }, objResultPanel)
 
-local objPathLbl = New("TextLabel", {
-    Size=UDim2.new(1,-16,0,16), Position=UDim2.new(0,8,0,150),
-    Text="Path: ...", BackgroundTransparency=1,
+cục bộ objPathLbl = New("TextLabel", {
+    Kích thước=UDim2.new(1,-16,0,16), Vị trí=UDim2.new(0,8,0,150),
+    Văn bản="Đường dẫn: ...", Độ trong suốt nền=1,
     TextColor3=Color3.fromRGB(180, 255, 220),
     Font=Enum.Font.Code, TextSize=9,
     TextXAlignment=Enum.TextXAlignment.Left, ZIndex=7,
@@ -2154,53 +2203,53 @@ local objPathLbl = New("TextLabel", {
 }, objResultPanel)
 
 local copyObjBtn = New("TextButton", {
-    Size=UDim2.new(0,120,0,20), Position=UDim2.new(0,8,0,168),
-    Text="📋 Copy Tọa Độ", BackgroundColor3=C.BLUE, BackgroundTransparency=0.1,
+    Kích thước=UDim2.new(0,120,0,20), Vị trí=UDim2.new(0,8,0,168),
+    Text="📋 Sao chép độ cao", BackgroundColor3=C.BLUE, BackgroundTransparency=0.1,
     TextColor3=C.WHITE, Font=Enum.Font.GothamBold, TextSize=9, BorderSizePixel=0, ZIndex=8,
 }, objResultPanel)
-Corner(copyObjBtn, UDim.new(0,4))
+Góc(copyObjBtn, UDim.new(0,4))
 
-local copyPathBtn = New("TextButton", {
-    Size=UDim2.new(0,120,0,20), Position=UDim2.new(0,134,0,168),
-    Text="📋 Copy Path", BackgroundColor3=C.PURPLE, BackgroundTransparency=0.1,
+copyPathBtn cục bộ = Mới ("TextButton", {
+    Kích thước=UDim2.new(0,120,0,20), Vị trí=UDim2.new(0,134,0,168),
+    Văn bản="📋 Sao chép đường dẫn", Màu nền 3 = Tím, Độ trong suốt nền = 0.1,
     TextColor3=C.WHITE, Font=Enum.Font.GothamBold, TextSize=9, BorderSizePixel=0, ZIndex=8,
 }, objResultPanel)
-Corner(copyPathBtn, UDim.new(0,4))
+Góc(copyPathBtn, UDim.new(0,4))
 
 posY = posY + 198
 
-Label(supportTab, "📍 Tọa Độ Hiện Tại (Real-time)", posY)
+Label(supportTab, "📍 thoải mái hiện tại (thời gian thực)", posY)
 posY = posY + 16
 
 local coordDisplay = New("Frame", {
-    Size=UDim2.new(1,-16,0,290),
-    Position=UDim2.new(0,8,0,posY),
+    Kích thước=UDim2.new(1,-16,0,290),
+    Vị trí = UDim2.new(0, 8, 0, posY),
     BackgroundColor3=Color3.fromRGB(30, 35, 45),
-    BackgroundTransparency=0,
+    Độ trong suốt nền = 0,
     BorderSizePixel=0,
-    ZIndex=6,
+    Chỉ số Z = 6,
 }, supportTab)
-Corner(coordDisplay, UDim.new(0,6))
+Góc(coordDisplay, UDim.new(0,6))
 Stroke(coordDisplay, C.BLUE, 1.5)
 
-local function CreateCoordRow(parent, yPos, labelText, labelColor, valueDefault)
-    New("TextLabel", {
-        Size=UDim2.new(0,90,0,16), Position=UDim2.new(0,8,0,yPos),
-        Text=labelText, BackgroundTransparency=1, TextColor3=labelColor,
+hàm cục bộ CreateCoordRow(parent, yPos, labelText, labelColor, valueDefault)
+    Mới("TextLabel", {
+        Kích thước=UDim2.new(0,90,0,16), Vị trí=UDim2.new(0,8,0,yPos),
+        Văn bản=nhãn văn bản, Độ trong suốt nền=1, Màu văn bản=màu nhãn,
         Font=Enum.Font.GothamBold, TextSize=10,
         TextXAlignment=Enum.TextXAlignment.Left, ZIndex=7,
-    }, parent)
-    return New("TextLabel", {
-        Size=UDim2.new(1,-100,0,16), Position=UDim2.new(0,100,0,yPos),
-        Text=valueDefault or "...", BackgroundTransparency=1,
+    }, cha)
+    trả về New("TextLabel", {
+        Kích thước=UDim2.new(1,-100,0,16), Vị trí=UDim2.new(0,100,0,yPos),
+        Văn bản=giá trị mặc định hoặc "...", Độ trong suốt nền=1,
         TextColor3=Color3.fromRGB(255,255,255),
         Font=Enum.Font.Code, TextSize=10,
         TextXAlignment=Enum.TextXAlignment.Left, ZIndex=7,
-    }, parent)
-end
+    }, cha)
+kết thúc
 
-New("TextLabel", {
-    Size=UDim2.new(1,-16,0,14), Position=UDim2.new(0,8,0,4),
+Mới("TextLabel", {
+    Kích thước=UDim2.new(1,-16,0,14), Vị trí=UDim2.new(0,8,0,4),
     Text="📍 POSITION (DƯỚI CHÂN)", BackgroundTransparency=1,
     TextColor3=Color3.fromRGB(255, 200, 100),
     Font=Enum.Font.GothamBold, TextSize=9,
@@ -2211,65 +2260,65 @@ local xValLbl = CreateCoordRow(coordDisplay, 20, "X:", Color3.fromRGB(255,100,10
 local yValLbl = CreateCoordRow(coordDisplay, 36, "Y:", Color3.fromRGB(100,255,100), "0.000")
 local zValLbl = CreateCoordRow(coordDisplay, 52, "Z:", Color3.fromRGB(100,150,255), "0.000")
 
-New("TextLabel", {
-    Size=UDim2.new(1,-16,0,14), Position=UDim2.new(0,8,0,72),
-    Text="📦 SIZE", BackgroundTransparency=1,
+Mới("TextLabel", {
+    Kích thước=UDim2.new(1,-16,0,14), Vị trí=UDim2.new(0,8,0,72),
+    Văn bản="📦 KÍCH THƯỚC", Độ trong suốt nền=1,
     TextColor3=Color3.fromRGB(255, 200, 100),
     Font=Enum.Font.GothamBold, TextSize=9,
     TextXAlignment=Enum.TextXAlignment.Left, ZIndex=7,
 }, coordDisplay)
 
-local sizeXValLbl = CreateCoordRow(coordDisplay, 88, "Size X:", Color3.fromRGB(255,150,150), "0.000")
-local sizeYValLbl = CreateCoordRow(coordDisplay, 104, "Size Y:", Color3.fromRGB(150,255,150), "0.000")
-local sizeZValLbl = CreateCoordRow(coordDisplay, 120, "Size Z:", Color3.fromRGB(150,180,255), "0.000")
+local sizeXValLbl = CreateCoordRow(coordDisplay, 88, "Kích thước X:", Color3.fromRGB(255,150,150), "0.000")
+local sizeYValLbl = CreateCoordRow(coordDisplay, 104, "Kích thước Y:", Color3.fromRGB(150,255,150), "0.000")
+local sizeZValLbl = CreateCoordRow(coordDisplay, 120, "Kích thước Z:", Color3.fromRGB(150,180,255), "0.000")
 
-New("TextLabel", {
-    Size=UDim2.new(1,-16,0,14), Position=UDim2.new(0,8,0,140),
-    Text="🧭 ROTATION", BackgroundTransparency=1,
+Mới("TextLabel", {
+    Kích thước=UDim2.new(1,-16,0,14), Vị trí=UDim2.new(0,8,0,140),
+    Văn bản="🧭 XOAY", Độ trong suốt nền=1,
     TextColor3=Color3.fromRGB(255, 200, 100),
     Font=Enum.Font.GothamBold, TextSize=9,
     TextXAlignment=Enum.TextXAlignment.Left, ZIndex=7,
 }, coordDisplay)
 
-local rotPValLbl = CreateCoordRow(coordDisplay, 156, "Pitch (X):", Color3.fromRGB(255,150,150), "0.0°")
+local rotPValLbl = CreateCoordRow(coordDisplay, 156, "Góc nghiêng (X):", Color3.fromRGB(255,150,150), "0.0°")
 local rotYValLbl = CreateCoordRow(coordDisplay, 172, "Yaw (Y):", Color3.fromRGB(150,255,150), "0.0°")
 local rotRValLbl = CreateCoordRow(coordDisplay, 188, "Roll (Z):", Color3.fromRGB(150,180,255), "0.0°")
 
-New("TextLabel", {
-    Size=UDim2.new(1,-16,0,14), Position=UDim2.new(0,8,0,206),
-    Text="👁 LOOK / STATE / HP", BackgroundTransparency=1,
+Mới("TextLabel", {
+    Kích thước=UDim2.new(1,-16,0,14), Vị trí=UDim2.new(0,8,0,206),
+    Văn bản="👁 NHÌN / TRẠNG THÁI / HP", Độ trong suốt nền=1,
     TextColor3=Color3.fromRGB(255, 200, 100),
     Font=Enum.Font.GothamBold, TextSize=9,
     TextXAlignment=Enum.TextXAlignment.Left, ZIndex=7,
 }, coordDisplay)
 
 local lookValLbl = New("TextLabel", {
-    Size=UDim2.new(1,-16,0,16), Position=UDim2.new(0,8,0,222),
-    Text="Look: ...", BackgroundTransparency=1,
+    Kích thước=UDim2.new(1,-16,0,16), Vị trí=UDim2.new(0,8,0,222),
+    Văn bản="Nhìn này: ...", Độ trong suốt nền=1,
     TextColor3=Color3.fromRGB(200,220,255),
     Font=Enum.Font.Code, TextSize=10,
     TextXAlignment=Enum.TextXAlignment.Left, ZIndex=7,
 }, coordDisplay)
 
 local stateValLbl = New("TextLabel", {
-    Size=UDim2.new(1,-16,0,16), Position=UDim2.new(0,8,0,240),
-    Text="State: ...", BackgroundTransparency=1,
+    Kích thước=UDim2.new(1,-16,0,16), Vị trí=UDim2.new(0,8,0,240),
+    Văn bản="Trạng thái: ...", Độ trong suốt nền=1,
     TextColor3=Color3.fromRGB(200,255,200),
     Font=Enum.Font.Code, TextSize=10,
     TextXAlignment=Enum.TextXAlignment.Left, ZIndex=7,
 }, coordDisplay)
 
 local hpValLbl = New("TextLabel", {
-    Size=UDim2.new(1,-16,0,16), Position=UDim2.new(0,8,0,258),
-    Text="HP: ...", BackgroundTransparency=1,
+    Kích thước=UDim2.new(1,-16,0,16), Vị trí=UDim2.new(0,8,0,258),
+    Văn bản="HP: ...", Độ trong suốt nền=1,
     TextColor3=Color3.fromRGB(255,200,200),
     Font=Enum.Font.Code, TextSize=10,
     TextXAlignment=Enum.TextXAlignment.Left, ZIndex=7,
 }, coordDisplay)
 
 local placeLbl = New("TextLabel", {
-    Size=UDim2.new(1,-16,0,14), Position=UDim2.new(0,8,0,274),
-    Text="Place: ...", BackgroundTransparency=1,
+    Kích thước=UDim2.new(1,-16,0,14), Vị trí=UDim2.new(0,8,0,274),
+    Văn bản="Địa điểm: ...", Độ trong suốt nền=1,
     TextColor3=Color3.fromRGB(150, 200, 255),
     Font=Enum.Font.GothamMedium, TextSize=9,
     TextXAlignment=Enum.TextXAlignment.Left, ZIndex=7,
@@ -2280,155 +2329,161 @@ posY = posY + 298
 local lastPos = Vector3.new()
 local lastSize = Vector3.new()
 local lastRot = Vector3.new()
-local lastLook = Vector3.new()
+địa phương LastLook = Vector3.new()
 local lastState = ""
-local lastHp = -1
+cục bộ lastHp = -1
 
-local function GetRootPart()
+hàm cục bộ GetRootPart()
     local char = player.Character
-    if not char then return nil end
+    nếu không phải là ký tự thì trả về nil.
     local humanoid = char:FindFirstChildOfClass("Humanoid")
-    local rootPart = (humanoid and humanoid.RootPart)
-        or char:FindFirstChild("HumanoidRootPart")
-        or char.PrimaryPart
-        or char:FindFirstChild("UpperTorso")
-        or char:FindFirstChild("Torso")
-    return rootPart
-end
+    cục bộ rootPart = (humanoid và humanoid.RootPart)
+        hoặc char:FindFirstChild("HumanoidRootPart")
+        hoặc char.PrimaryPart
+        hoặc char:FindFirstChild("UpperTorso")
+        hoặc char:FindFirstChild("Torso")
+    trả về phần gốc
+kết thúc
 
-local function GetGroundPosition()
+hàm cục bộ GetGroundPosition()
     local char = player.Character
-    if not char then return nil end
-    local rootPart = GetRootPart()
-    if not rootPart then return nil end
+    nếu không phải là ký tự thì trả về nil.
+    rootPart cục bộ = GetRootPart()
+    nếu không phải rootPart thì trả về nil.
 
-    local origin = rootPart.Position
-    local direction = Vector3.new(0, -500, 0)
+    vị trí gốc cục bộ = rootPart.Position
+    hướng cục bộ = Vector3.new(0, -500, 0)
 
     local params = RaycastParams.new()
     params.FilterType = Enum.RaycastFilterType.Exclude
     params.FilterDescendantsInstances = {char}
     params.IgnoreWater = false
 
-    local result = workspace:Raycast(origin, direction, params)
-    if result then
-        return result.Position, result.Instance, result.Normal, result.Material
-    end
-    return nil
-end
+    kết quả cục bộ = workspace:Raycast(origin, direction, params)
+    nếu kết quả thì
+        Trả về result.Position, result.Instance, result.Normal, result.Material
+    kết thúc
+    trả về nil
+kết thúc
 
 local coordAcc = 0
-local coordLbls
-local function coordNA(all)
-    coordLbls = coordLbls or {xValLbl, yValLbl, zValLbl, sizeXValLbl, sizeYValLbl, sizeZValLbl,
+điều phối viên địa phương Lbls
+chức năng cục bộ coordNA(all)
+    coordLbls = coordLbls hoặc {xValLbl, yValLbl, zValLbl, sizeXValLbl, sizeYValLbl, sizeZValLbl,
                               rotPValLbl, rotYValLbl, rotRValLbl}
     for _, l in ipairs(coordLbls) do pcall(function() l.Text = "N/A" end) end
-    if all then
-        lookValLbl.Text = "Look: N/A"
-        stateValLbl.Text = "State: N/A"
-        hpValLbl.Text = "HP: N/A"
-    end
-end
+    nếu tất cả thì
+        lookValLbl.Text = "Xem: Không có sẵn"
+        stateValLbl.Text = "Tiểu bang: Không áp dụng"
+        hpValLbl.Text = "HP: Không có sẵn"
+    kết thúc
+kết thúc
 
-local coordUpdateConn = RunService.RenderStepped:Connect(function(stepDt)
-    coordAcc = coordAcc + (tonumber(stepDt) or 0.016)
-    if coordAcc < 0.05 then return end
+tọa độ cục bộUpdateConn = RunService.RenderStepped:Connect(function(stepDt)
+    coordAcc = coordAcc + (tonumber(stepDt) hoặc 0.016)
+    nếu coordAcc < 0.05 thì trả về end
     coordAcc = 0
-    if not (main and main.Visible) then return end
+    nếu không (main và main.Visible) thì trả về end
     if not (supportTab and supportTab.Visible) then return end
     local char = player.Character
-    if not char then
+    nếu không phải là ký tự thì
         coordNA(true)
-        return
-    end
+        trở lại
+    kết thúc
 
     local humanoid = char:FindFirstChildOfClass("Humanoid")
-    local rootPart = GetRootPart()
+    rootPart cục bộ = GetRootPart()
 
-    if not rootPart then
+    nếu không phải là rootPart thì
         coordNA()
-        return
-    end
+        trở lại
+    kết thúc
 
     local groundPos = GetGroundPosition()
     local displayPos = groundPos or rootPart.CFrame.Position
 
     local cf = rootPart.CFrame
-    local size = rootPart.Size
+    kích thước cục bộ = rootPart.Size
     local rx, ry, rz = cf:ToOrientation()
-    local look = cf.LookVector
+    giao diện cục bộ = cf.LookVector
 
-    if (displayPos - lastPos).Magnitude > 0.001 then
+    nếu (displayPos - lastPos).Magnitude > 0.001 thì
         lastPos = displayPos
         xValLbl.Text = string.format("%.3f", displayPos.X)
         yValLbl.Text = string.format("%.3f", displayPos.Y)
         zValLbl.Text = string.format("%.3f", displayPos.Z)
-    end
+    kết thúc
 
-    if (size - lastSize).Magnitude > 0.001 then
-        lastSize = size
+    nếu (kích thước - kích thước cuối).Magnitude > 0.001 thì
+        kích thước cuối cùng = kích thước
         sizeXValLbl.Text = string.format("%.3f", size.X)
         sizeYValLbl.Text = string.format("%.3f", size.Y)
         sizeZValLbl.Text = string.format("%.3f", size.Z)
-    end
+    kết thúc
 
     local newRot = Vector3.new(rx, ry, rz)
-    if (newRot - lastRot).Magnitude > 0.001 then
+    if (newRot - LastRot). Độ lớn > 0,001 thì
         lastRot = newRot
         rotPValLbl.Text = string.format("%.1f°", math.deg(rx))
         rotYValLbl.Text = string.format("%.1f°", math.deg(ry))
         rotRValLbl.Text = string.format("%.1f°", math.deg(rz))
-    end
+    kết thúc
 
-    if (look - lastLook).Magnitude > 0.001 then
+    nếu (look - lastLook).Magnitude > 0.001 thì
         lastLook = look
-        lookValLbl.Text = string.format("Look: %.3f, %.3f, %.3f", look.X, look.Y, look.Z)
-    end
+        lookValLbl.Text = string.format("Nhìn: %.3f, %.3f, %.3f", look.X, look.Y, look.Z)
+    kết thúc
 
-    if humanoid then
-        local state = humanoid:GetState()
-        if state ~= lastState then
-            lastState = state
-            stateValLbl.Text = "State: "..tostring(state):gsub("Enum.HumanoidStateType.", "")
-        end
+    nếu là hình người thì
+        trạng thái cục bộ = humanoid:GetState()
+        nếu trạng thái ~= trạng thái cuối cùng thì
+            Trạng thái cuối cùng = trạng thái
+            stateValLbl.Text = "Trạng thái: "..tostring(state):gsub("Enum.HumanoidStateType.", "")
+        kết thúc
 
         local hp = math.floor(humanoid.Health)
-        if hp ~= lastHp then
+        nếu hp ~= lastHp thì
             lastHp = hp
             hpValLbl.Text = string.format("HP: %d / %d", hp, math.floor(humanoid.MaxHealth))
-        end
-    else
-        stateValLbl.Text = "State: No Humanoid"
-        hpValLbl.Text = "HP: N/A"
-    end
+        kết thúc
+    khác
+        stateValLbl.Text = "Trạng thái: Không có hình người"
+        hpValLbl.Text = "HP: Không có sẵn"
+    kết thúc
 
-    if placeLbl.Text == "Place: ..." and (os.clock() - (D.placeTryAt or -99)) >= 10 then
+    if placeLbl.Text == "Địa điểm: ..." and (os.clock() - (D.placeTryAt or -99)) >= 10 then
         D.placeTryAt = os.clock()
         pcall(function()
-            local info = game:GetService("MarketplaceService"):GetProductInfo(game.PlaceId)
-            placeLbl.Text = "Place: "..game.PlaceId.." — "..info.Name
-        end)
-    end
-end)
+            thông tin cục bộ = game:GetService("MarketplaceService"):GetProductInfo(game.PlaceId)
+            placeLbl.Text = "Địa điểm: "..game.PlaceId.." — "..info.Name
+        kết thúc)
+    kết thúc
+kết thúc)
 trackConn(coordUpdateConn)
 
 local currentHighlight = nil
 
-local function RemoveCurrentHighlight()
-    if currentHighlight then
+hàm cục bộ RemoveCurrentHighlight()
+    nếu currentHighlight thì
         pcall(function() currentHighlight:Destroy() end)
         currentHighlight = nil
-    end
-end
+    kết thúc
+kết thúc
 
-local function CreateHighlight(target)
+hàm cục bộ CreateHighlight(target)
+    nếu không phải là mục tiêu thì
+        RemoveCurrentHighlight()
+        trở lại
+    kết thúc
+    nếu không phải target:IsA("BasePart") thì trả về end
+    nếu currentHighlight, currentHighlight.Parent và currentHighlight.Adornee bằng target thì
+        return -- không xây dựng lại Highlight mỗi lần làm ở cùng một mức độ
+    kết thúc
     RemoveCurrentHighlight()
-    if not target then return end
-    if not target:IsA("BasePart") then return end
 
     local hl = Instance.new("Highlight")
     hl.Name = "BananaCatHub_Highlight"
-    hl.Adornee = target
+    hl.Adornee = mục tiêu
     hl.FillColor = Color3.fromRGB(160, 60, 255)
     hl.FillTransparency = 0.7
     hl.OutlineColor = Color3.fromRGB(200, 100, 255)
@@ -2437,212 +2492,275 @@ local function CreateHighlight(target)
     hl.Parent = target
 
     currentHighlight = hl
-end
+kết thúc
 
-local function GetFullPath(obj)
+hàm cục bộ GetFullPath(obj)
     if not obj then return "nil" end
-    local parts = {}
+    các bộ phận cục bộ = {}
     local cur = obj
-    while cur and cur ~= game do
+    trong khi cur và cur ~= game do
         table.insert(parts, 1, cur.Name)
         cur = cur.Parent
-    end
+    kết thúc
     return table.concat(parts, ".")
-end
+kết thúc
 
 -- ----------------------------------------------------------------------------
-S.AnaCfg = S.AnaCfg or {
-    skipGameGui  = true,   -- 🛡 bỏ qua HUD/nền của game khi phân tích (nguyên nhân số 1)
-    scanFallback = true,   -- 🧭 tia trượt thì quét vật gần tia (game dùng CanQuery=false)
-    ignoreWater  = true,   -- 🌊 không để mặt nước ăn tia
-    holdTime     = 0.4,    -- 📱 giữ ngón bao nhiêu giây thì = "chuột phải"
-    holdMove     = 18,     -- 📱 ngón xê dịch tối đa (px) mà vẫn tính là "giữ"
-    maxDist      = 10000,  -- tầm tia
+S.AnaCfg = S.AnaCfg hoặc {
+    SkipGameGui = true, -- 🛡 bỏ qua HUD/nền của game khi phân tích (nguyên nhân số 1)
+    scanFallback = true, -- 🧭 tia trượt thì quét vật gần tia (game dùng CanQuery=false)
+    lờWater = true, -- 🌊 không để mặt nước ăn tia
+    holdTime = 0,4, -- 📱 cầm ngón tay bao nhiêu giây thì = "chuột phải"
+    holdMove = 18, -- 📱 ngón xê dịch tối đa (px) mà vẫn tính là "giữ"
+    maxDist = 10000, -- tầm tia
 }
-S.AnaUi   = S.AnaUi or {}
-S.AnaLast = S.AnaLast or {ok = false, why = nil, name = nil, how = nil}
+S.AnaUi = S.AnaUi hoặc {}
+S.AnaLast = S.AnaLast hoặc {ok = false, why = nil, name = nil, how = nil}
 S.AnaNote = nil
 S.AnaWhyScan = nil
 
-function S.AnaCam()
+hàm S.AnaCam()
     local cam = workspace.CurrentCamera
     if not cam then pcall(function() cam = camera end) end
-    return cam
-end
+    camera trả về
+kết thúc
 
-function S.AnaSay(msg)
+hàm S.AnaSay(msg)
     S.AnaLast.why = tostring(msg or "")
     pcall(function()
         local l = S.AnaUi.whyLbl
         if l and l.Parent then l.Text = "🔎 " .. tostring(msg) end
-    end)
+    kết thúc)
     pcall(function() print("[taodepzai v5.0 NOIR] 🔎 " .. tostring(msg)) end)
-end
+kết thúc
 
-function S.DeviceText()
-    local touch, mouse = false, false
+hàm S.DeviceText()
+    cảm ứng cục bộ, chuột = false, false
     pcall(function() touch = (UserInputService.TouchEnabled == true) end)
     pcall(function() mouse = (UserInputService.MouseEnabled == true) end)
     local hold = string.format("%.2f", S.AnaCfg.holdTime)
-    if touch and mouse then
-        return "🖥📱 Máy có cảm ứng: CHUỘT PHẢI hoặc GIỮ NGÓN " .. hold .. "s lên vật · hoặc bấm ⊕ Giữa màn hình"
-    elseif touch then
+    nếu dùng cảm ứng và chuột thì
+        return "🖥📱 Máy có cảm ứng: CHUỘT PHẢI hoặc GIỮ NGÓN " .. hold .. "s lên vật · hoặc ấn ⊕ Giữa màn hình"
+    nếu chạm thì
         return "📱 Điện thoại: GIỮ NGÓN " .. hold .. "s lên vật (chạm nhanh vẫn đi/bắn bình thường) · hoặc ⊕ Giữa màn hình"
-    elseif mouse then
+    nếu chuột thì
         return "🖥 Máy tính: CHUỘT PHẢI vào vật (chuột trái vẫn chơi bình thường) · hoặc ⊕ Giữa màn hình"
-    end
-    return "🎮 Chưa rõ thiết bị: dùng ⊕ Giữa màn hình hoặc 🧭 Gần nhất — nền tảng nào cũng chạy"
-end
+    kết thúc
+    return "🎮 Chưa xác định thiết bị: sử dụng ⊕ Giữa màn hình hoặc 🧭 Gần nhất — bất kỳ nền tảng nào cũng chạy"
+kết thúc
 
-function S.RefreshDevLabel()
+hàm S.RefreshDevLabel()
     pcall(function()
         local l = S.AnaUi.devLbl
         if l and l.Parent then l.Text = S.DeviceText() end
-    end)
-end
+    kết thúc)
+kết thúc
 
-function S.GuiBlockAt(x, y)
-    local hard, soft = nil, nil
+hàm S.GuiBlockAt(x, y)
+    cục bộ cứng, mềm = nil, nil
     local vpx, vpy = 1280, 720
     pcall(function()
         local cam2 = S.AnaCam()
         if cam2 then vpx, vpy = cam2.ViewportSize.X, cam2.ViewportSize.Y end
-    end)
+    kết thúc)
     local bigArea = vpx * vpy * 0.36
-    local conts = {}
+    cont cục bộ = {}
     pcall(function() conts[#conts+1] = playerGui end)
     pcall(function() conts[#conts+1] = game:GetService("CoreGui") end)
     for _, cont in ipairs(conts) do
         local ok, objs = pcall(function() return cont:GetGuiObjectsAtPosition(x, y) end)
-        if ok and type(objs) == "table" then
+        nếu ok và type(objs) == "table" thì
             for _, o in ipairs(objs) do
-                local area, trans, isAct = 0, 1, false
-                pcall(function() area = o.AbsoluteSize.X * o.AbsoluteSize.Y end)
-                pcall(function() trans = o.BackgroundTransparency end)
-                pcall(function() isAct = (o.Active == true) end)
-                local interactive = (o:IsA("GuiButton") or o:IsA("TextBox"))
-                local tag = tostring(o.Name) .. " (" .. tostring(o.ClassName) .. ")"
-                if interactive and area < bigArea then
-                    hard = hard or tag
-                elseif interactive or isAct or trans < 0.5 then
-                    soft = soft or tag
-                end
-            end
-        end
-    end
-    return hard, soft
-end
+                local isAimDot = false
+                pcall(function()
+                    dấu chấm cục bộ = S.AnaUi và S.AnaUi.aimDot
+                    isAimDot = dot and (o == dot or o:IsDescendantOf(dot)) or false
+                kết thúc)
+                nếu không phải là isAimDot thì
+                    khu vực địa phương, chuyển đổi, isAct = 0, 1, false
+                    pcall(function() area = o.AbsoluteSize.X * o.AbsoluteSize.Y end)
+                    pcall(function() trans = o.BackgroundTransparency end)
+                    pcall(function() isAct = (o.Active == true) end)
+                    tương tác cục bộ = (o:IsA("GuiButton") hoặc o:IsA("TextBox"))
+                    thẻ cục bộ = tostring(o.Name) .. " (" .. tostring(o.ClassName) .. ")"
+                    nếu tương tác và khu vực < bigArea thì
+                        cứng = cứng hoặc thẻ
+                    elseif interactive or isAct or trans < 0.5 then
+                        mềm = mềm mại hoặc thẻ
+                    kết thúc
+                kết thúc
+            kết thúc
+        kết thúc
+    kết thúc
+    trả lại cứng, mềm
+kết thúc
 
-function S.PickByRayScan(ray, filterList)
-    local maxD = 220
-    local okOp, parts = pcall(function()
-        local op = OverlapParams.new()
-        op.FilterType = Enum.RaycastFilterType.Exclude
-        op.FilterDescendantsInstances = filterList or {}
-        op.MaxParts = 80
-        return workspace:GetPartBoundsInRadius(ray.Origin + ray.Direction * (maxD / 2), maxD / 2, op)
-    end)
-    if not okOp or type(parts) ~= "table" or #parts == 0 then
-        return nil, "không quét được vật nào quanh tia (game có thể chặn quét)"
-    end
-    local best, bestD = nil, math.huge
+hàm S.PickByRayScan(ray, filterList)
+    nếu không phải tia hoặc không phải tia.Nguồn gốc hoặc không phải tia.Hướng thì
+        trả về con số 0, "không có hợp lệ quan sát tia"
+    kết thúc
+    local dir = ray.Direction
+    local dirMagnitude = dir.Magnitude
+    nếu dirMagnitude < 0,001 thì trả về 0, kết thúc "tia Viewno không có hướng hợp lệ"
+    dir = dir / dirMagnitude
+    local maxD = tonumber(S.AnaCfg and S.AnaCfg.maxDist) or 10000
+    if maxD ~= maxD or maxD == math.huge or maxD <= 0 then maxD = 10000 end
+    maxD = math.clamp(maxD, 1, 10000)
+    hành lang địa phương = 6 -- nửa chiều rộng dự phòng xung quanh tia, tính bằng đinh tán
+    local okParams, op = pcall(function()
+        sự chồng lấn cục bộ = OverlapParams.new()
+        overlap.FilterType = Enum.RaycastFilterType.Exclude
+        overlap.FilterDescendantsInstances = filterList or {}
+        overlap.MaxParts = 512
+        sự chồng chéo trả về
+    kết thúc)
+    nếu không phải okParams hoặc không phải op thì
+        return nil, "không thể tạo bộ lọc vật liệu quét"
+    kết thúc
+
+    các phần cục bộ, đã thấy = {}, {}
+    tâm cục bộ = tia.Nguồn gốc + dir * (maxD / 2)
+    local up = (math.abs(dir.Y) > 0.98) and Vector3.new(0, 0, 1) or Vector3.new(0, 1, 0)
+    local boxCFrame = CFrame.lookAt(center, center + dir, up)
+    local okBox, boxParts = pcall(function()
+        return workspace:GetPartBoundsInBox(boxCFrame, Vector3.new(corridor * 2, corridor * 2, maxD), op)
+    kết thúc)
+    nếu okBox và loại(boxParts) == "table" thì
+        for _, pt in ipairs(boxParts) do
+            nếu pt và chưa được nhìn thấy[pt] thì
+                đã thấy[pt] = đúng
+                phần[#phần + 1] = pt
+            kết thúc
+        kết thúc
+    khác
+        -- Tương thích với môi trường thiếu GetPartBoundsInBox: quét từng đoạn dọc tia,
+        -- thay vì kiểm tra 220 stud đầu tiên như phiên bản cũ.
+        local stepLen = 180
+        đối với startD = 0, maxD, stepLen thì làm
+            độ dài cục bộ = math.min(stepLen, maxD - startD)
+            nếu độ dài > 0 thì
+                mẫu cục bộ = tia gốc + dir * (startD + length / 2)
+                local okRadius, around = pcall(function()
+                    return workspace:GetPartBoundsInRadius(sample, length / 2 + corridor, op)
+                kết thúc)
+                nếu okRadius và type(around) == "table" thì
+                    cho _, pt trong ipairs(xung quanh) làm
+                        nếu pt và chưa được nhìn thấy[pt] thì
+                            đã thấy[pt] = đúng
+                            phần[#phần + 1] = pt
+                        kết thúc
+                    kết thúc
+                kết thúc
+            kết thúc
+        kết thúc
+    kết thúc
+    nếu #parts == 0 thì
+        return nil, string.format("không tìm thấy vật thể xung quanh tia trong %.0f studs", maxD)
+    kết thúc
+
+    local best, bestSurfaceD, bestOffset = nil, math.huge, math.huge
     for _, pt in ipairs(parts) do
-        local okV, v = pcall(function() return pt.Position - ray.Origin end)
-        if okV and v then
-            local okT, t = pcall(function() return v:Dot(ray.Direction) end)
-            if okT and t and t > 0.5 then
-                local okD, d = pcall(function()
-                    local closest = ray.Origin + ray.Direction * t
-                    local dd = (pt.Position - closest).Magnitude
-                    local r = 0
-                    pcall(function() r = math.max(pt.Size.X, pt.Size.Y, pt.Size.Z) / 2 end)
-                    return math.max(0, dd - r)
-                end)
-                if okD and d and d < bestD then bestD, best = d, pt end
-            end
-        end
-    end
-    if not best then return nil, "quét " .. #parts .. " vật nhưng không vật nào nằm trước tia" end
-    return best, "quét dự phòng — vật này Raycast không thấy (CanQuery=false), lệch tia "
-        .. string.format("%.1f", bestD) .. "m"
-end
+        local okV, along, offset, radius = pcall(function()
+            local rel = pt.Position - ray.Origin
+            cục bộ t = rel:Dot(dir)
+            nếu t <= 0.5 hoặc t > maxD thì trả về nil.
+            cục bộ gần nhất = tia.Nguồn gốc + dir * t
+            Độ lệch ngang cục bộ = (Vị trí điểm - khoảng cách gần nhất).Độ lớn
+            local half = math.max(pt.Size.X, pt.Size.Y, pt.Size.Z) / 2
+            if lateral > math.max(corridor, half + 2) then return nil end
+            trả về t, bên, một nửa
+        kết thúc)
+        nếu okV và cùng nhau thì
+            bề mặt cục bộD = math.max(0, dọc theo - bán kính)
+            nếu surfaceD < bestSurfaceD thì
+                tốt nhất, bestSurfaceD, bestOffset = pt, surfaceD, offset
+            kết thúc
+        kết thúc
+    kết thúc
+    nếu không phải là tốt nhất thì
+        return nil, "quét " .. #parts .. " vật nhưng không vật nào nằm trên tia trong " .. string.format("%.0f", maxD) .. " studs"
+    kết thúc
+    return best, string.format("quét xa dự phòng · %.0f studs · trôi tâm %.1f studs", bestSurfaceD, bestOffset)
+kết thúc
 
-function S.NearestParts(n)
+hàm S.NearestParts(n)
     local char = player.Character
-    local root = char and char:FindFirstChild("HumanoidRootPart")
-    if not root then return nil, "chưa có nhân vật (đang ở lobby/menu?)" end
-    local ok, parts = pcall(function()
-        local op = OverlapParams.new()
+    cục bộ gốc = char và char:FindFirstChild("HumanoidRootPart")
+    nếu không root thì trả về nil, "chưa có nhân vật (đang ở sảnh/menu?)" end
+    cục bộ ổn, các bộ phận = pcall(function()
+        op cục bộ = OverlapParams.new()
         op.FilterType = Enum.RaycastFilterType.Exclude
         op.FilterDescendantsInstances = {char, gui}
         op.MaxParts = 120
         return workspace:GetPartBoundsInRadius(root.Position, 60, op)
-    end)
-    if not ok or type(parts) ~= "table" or #parts == 0 then
-        return nil, "không quét được vật nào trong 60 studs quanh bạn"
-    end
-    local list = {}
+    kết thúc)
+    nếu không ổn hoặc kiểu (các bộ phận) ~= "bảng" hoặc #bộ phận == 0 thì
+        return nil, "không quét được vật nào trong 60 studs xung quanh bạn"
+    kết thúc
+    danh sách cục bộ = {}
     for _, pt in ipairs(parts) do
         local okD, d = pcall(function() return (pt.Position - root.Position).Magnitude end)
-        if okD and d then list[#list+1] = {p = pt, d = d} end
-    end
-    table.sort(list, function(a, b) return a.d < b.d end)
-    local names = {}
+        nếu okD và d thì list[#list+1] = {p = pt, d = d} kết thúc
+    kết thúc
+    table.sort(list, function(a, b) return ad < bd end)
+    tên địa phương = {}
     for i = 1, math.min(n or 5, #list) do
         names[#names+1] = list[i].p.Name .. " (" .. string.format("%.1f", list[i].d) .. "m)"
-    end
+    kết thúc
     return (list[1] and list[1].p or nil), table.concat(names, " · "), #list
-end
+kết thúc
 
-function S.FillObjPanel(inst, hitPos, hitNormal, hitMat, how)
-    if not inst then return false end
+function S.FillObjPanel(inst, hitPos, hitNormal, hitMat, how, quiet)
+    nếu không phải là inst thì trả về false.
     objResultPanel.Visible = true
 
-    objNameLbl.Text = "Name: "..inst.Name
-    objClassLbl.Text = "Class: "..inst.ClassName
-    objPosLbl.Text = string.format("Position: %.3f, %.3f, %.3f", hitPos.X, hitPos.Y, hitPos.Z)
+    objNameLbl.Text = "Tên: "..inst.Name
+    objClassLbl.Text = "Lớp: "..inst.ClassName
+    objPosLbl.Text = string.format("Vị trí: %.3f, %.3f, %.3f", hitPos.X, hitPos.Y, hitPos.Z)
 
-    if inst:IsA("BasePart") then
-        local size = inst.Size
+    nếu inst:IsA("BasePart") thì
+        kích thước cục bộ = kích thước cài đặt
         local cf = inst.CFrame
         local rx, ry, rz = cf:ToOrientation()
-        local look = cf.LookVector
-        local color = inst.Color
-        local material = inst.Material
+        giao diện cục bộ = cf.LookVector
+        màu cục bộ = inst.Color
+        vật liệu địa phương = inst.Material
 
-        objSizeLbl.Text = string.format("Size: %.3f, %.3f, %.3f", size.X, size.Y, size.Z)
+        objSizeLbl.Text = string.format("Kích thước: %.3f, %.3f, %.3f", size.X, size.Y, size.Z)
         objRotLbl.Text = string.format("Rotation: P=%.1f° Y=%.1f° R=%.1f°",
             math.deg(rx), math.deg(ry), math.deg(rz))
-        objLookLbl.Text = string.format("Look: %.3f, %.3f, %.3f", look.X, look.Y, look.Z)
-        objMatLbl.Text = "Material: "..tostring(material):gsub("Enum.Material.", "")
-        objColorLbl.Text = string.format("Color: R=%d G=%d B=%d",
+        objLookLbl.Text = string.format("Nhìn: %.3f, %.3f, %.3f", look.X, look.Y, look.Z)
+        objMatLbl.Text = "Vật liệu: "..tostring(material):gsub("Enum.Material.", "")
+        objColorLbl.Text = string.format("Màu: R=%d G=%d B=%d",
             math.floor(color.R*255), math.floor(color.G*255), math.floor(color.B*255))
 
-        if highlightEnabled then CreateHighlight(inst) end
-    else
+        nếu highlightEnabled thì CreateHighlight(inst) end
+    khác
         objSizeLbl.Text = "Size: N/A (không phải BasePart)"
-        objRotLbl.Text = "Rotation: N/A"
-        objLookLbl.Text = "Look: N/A"
-        objMatLbl.Text = "Material: N/A"
-        objColorLbl.Text = "Color: N/A"
+        objRotLbl.Text = "Xoay: Không áp dụng"
+        objLookLbl.Text = "Hình ảnh: Không có sẵn"
+        objMatLbl.Text = "Vật liệu: Không có sẵn"
+        objColorLbl.Text = "Màu sắc: Không áp dụng"
         RemoveCurrentHighlight()
-    end
+    kết thúc
 
-    objPathLbl.Text = "Path: "..GetFullPath(inst)
+    objPathLbl.Text = "Đường dẫn: "..GetFullPath(inst)
     objResultPanel:SetAttribute("LastHitPos", tostring(hitPos))
     objResultPanel:SetAttribute("LastPath", GetFullPath(inst))
-    objResultPanel:SetAttribute("LastNormal", tostring(hitNormal))
-    objResultPanel:SetAttribute("LastMaterial", tostring(hitMat))
+    objResultPanel:SetAttribution("LastNormal", tostring(hitNormal))
+    objResultPanel:SetAttribution("LastMaterial", tostring(hitMat))
 
     S.AnaLast.ok = true
     S.AnaLast.name = tostring(inst.Name)
     S.AnaLast.how = tostring(how or "")
-    S.AnaSay(tostring(how or "🎯 tia bắn trúng") .. ": " .. inst.Name .. " (" .. inst.ClassName .. ")"
-        .. (S.AnaNote and (" · " .. S.AnaNote) or ""))
-    return true
-end
+    nếu không yên tĩnh thì
+        S.AnaSay(tostring(how or "🎯 tia bắn trúng") .. ": " .. inst.Name .. " (" .. inst.ClassName .. ")"
+            .. (S.AnaNote và (" · " .. S.AnaNote) hoặc ""))
+    kết thúc
+    trả về giá trị đúng
+kết thúc
 
-S.RefreshDevLabel()   -- v4.8: hiện đúng cách chọn vật của thiết bị đang dùng
+S.RefreshDevLabel() -- v4.8: hiện đúng cách chọn vật liệu của thiết bị đang dùng
 
 local function PickObjectAt(mousePos, isRightClick, ignoreHubGui)
     local x, y = mousePos.X, mousePos.Y
@@ -2650,28 +2768,28 @@ local function PickObjectAt(mousePos, isRightClick, ignoreHubGui)
     S.AnaNote = nil
     S.AnaWhyScan = nil
 
-    if not ignoreHubGui and Hit.onHub(x, y) then
-        S.AnaSay("⏭️ Điểm chạm nằm trên menu của hub — bấm ra ngoài game rồi thử lại")
-        return
-    end
+    nếu không bỏ qua HubGui và Hit.onHub(x, y) thì
+        S.AnaSay("⏭️ Điểm Đạt nằm trên menu của trung tâm — nhấn ra ngoài trận đấu và thử lại")
+        trở lại
+    kết thúc
     local hardGui, softGui = S.GuiBlockAt(x, y)
-    if hardGui then
-        S.AnaSay("🚫 Điểm chạm là NÚT của game (" .. hardGui .. ") — dời ra chỗ khác để không hit xuyên nút")
-        return
-    end
-    if softGui and not S.AnaCfg.skipGameGui then
-        S.AnaSay("🚫 HUD của game (" .. softGui .. ") đang chặn — BẬT '🛡 Phân tích xuyên HUD game' là dùng được")
-        return
-    end
-    if softGui then
-        S.AnaNote = "🛡 phân tích xuyên HUD của game (" .. softGui .. ")"
-    end
+    nếu hardGui thì
+        S.AnaSay("🚫 Điểm Đạt là NÚT của trò chơi (" .. hardGui .. ") — chuyển ra chỗ khác để không nhấn nút xuyên suốt")
+        trở lại
+    kết thúc
+    nếu softGui và không phải S.AnaCfg.skipGameGui thì
+        S.AnaSay("🚫 HUD của game (" .. softGui .. ") đang chặn — BẬT '🛡 Phân tích xuyên HUD game' được sử dụng")
+        trở lại
+    kết thúc
+    nếu softGui thì
+        S.AnaNote = "🛡 phân tích xuyên suốt HUD của game (" .. softGui .. ")"
+    kết thúc
 
     local cam2 = S.AnaCam()
-    if not cam2 then
+    nếu không phải cam2 thì
         S.AnaSay("⚠️ Game chưa có camera (Workspace.CurrentCamera = nil) — vào lại game rồi thử")
-        return
-    end
+        trở lại
+    kết thúc
     local unitRay = cam2:ViewportPointToRay(x, y)
     local params = RaycastParams.new()
     params.FilterType = Enum.RaycastFilterType.Exclude
@@ -2679,213 +2797,464 @@ local function PickObjectAt(mousePos, isRightClick, ignoreHubGui)
     if player.Character then table.insert(filterList, player.Character) end
     if gui then table.insert(filterList, gui) end
     params.FilterDescendantsInstances = filterList
-    params.IgnoreWater = S.AnaCfg.ignoreWater   -- v4.8: không để mặt nước ăn tia
+    params.IgnoreWater = S.AnaCfg.ignoreWater -- v4.8: không để mặt nước ăn tia
 
-    local result = workspace:Raycast(unitRay.Origin, unitRay.Direction * S.AnaCfg.maxDist, params)
-    if result and result.Material == Enum.Material.Water then
+    kết quả cục bộ = workspace:Raycast(unitRay.Origin, unitRay.Direction * S.AnaCfg.maxDist, params)
+    nếu kết quả và kết quả.Material == Enum.Material.Water thì
         local pw = RaycastParams.new()
         pw.FilterType = Enum.RaycastFilterType.Exclude
         pw.FilterDescendantsInstances = filterList
         pw.IgnoreWater = true
         local rw = workspace:Raycast(unitRay.Origin, unitRay.Direction * S.AnaCfg.maxDist, pw)
-        if rw and rw.Instance then
-            result = rw
+        nếu rw và rw.Instance thì
+            kết quả = rw
             S.AnaNote = "🌊 đã xuyên qua mặt nước để lấy vật bên dưới"
-        end
-    end
+        kết thúc
+    kết thúc
 
     local inst, hitPos, hitNormal, hitMat, how
-    if result and result.Instance then
-        inst, hitPos, hitNormal, hitMat = result.Instance, result.Position, result.Normal, result.Material
-        how = "🎯 tia bắn trúng"
-    elseif S.AnaCfg.scanFallback then
-        local part, why2 = S.PickByRayScan(unitRay, filterList)
-        if part then
+    nếu kết quả và kết quả.Instance thì
+        inst, hitPosition, hitNormal, hitMat = result.Instance, result.Position, result.Normal, result.Material
+        cách thức = "🎯 tia bắn trúng"
+    nếu S.AnaCfg.scanFallback thì
+        phần cục bộ, why2 = S.PickByRayScan(unitRay, filterList)
+        nếu một phần thì
             inst, hitPos, how = part, part.Position, "🧭 " .. tostring(why2)
             pcall(function() hitNormal = part.CFrame.LookVector end)
             pcall(function() hitMat = part.Material end)
-        else
+        khác
             S.AnaWhyScan = why2
-        end
-    end
+        kết thúc
+    kết thúc
     objResultPanel.Visible = true
 
-    if inst then
+    nếu inst thì
         S.FillObjPanel(inst, hitPos, hitNormal, hitMat, how)
-    else
-        local prevName = objNameLbl.Text
-        objNameLbl.Text = "⚠️ Không hit gì — giữ vật đang chọn"
-        S.AnaSay("⚠️ Không thấy vật ở điểm chạm"
-            .. (S.AnaWhyScan and (" (" .. S.AnaWhyScan .. ")") or " (tia đi vào khoảng không)")
+    khác
+        địa phương prevName = objNameLbl.Text
+        objNameLbl.Text = "⚠️ Không trúng gì — giữ vật đang chọn"
+        S.AnaSay("⚠️ Không tìm thấy vật ở điểm chạm"
+            .. (S.Ana WhyScan and (" (" .. S.Ana WhyScan .. ")") hoặc " (tia đi vào khoảng không)")
             .. " — thử ⊕ Giữa màn hình, 🧭 Gần nhất, hoặc lại gần vật hơn")
         task.delay(1.0, function()
-            if objNameLbl and objNameLbl.Parent and objNameLbl.Text == "⚠️ Không hit gì — giữ vật đang chọn" then
+            if objNameLbl và objNameLbl.Parent và objNameLbl.Text == "⚠️ Không trúng gì — giữ vật đang chọn" then
                 objNameLbl.Text = prevName
-            end
-        end)
-    end
-end
+            kết thúc
+        kết thúc)
+    kết thúc
+kết thúc
+
+hàm S.AnaAimEnsureDot()
+    nếu S.AnaUi.aimGui và S.AnaUi.aimGui.Parent thì trả về S.AnaUi.aimGui end
+    local aimGui = New("ScreenGui", {
+        Tên = "BananaCatHub_AnaAimDot",
+        IgnoreGuiInset = true,
+        ResetOnSpawn = false,
+        ZIndexBehavior = Enum.ZIndexBehavior.Global,
+        DisplayOrder = 10000,
+    }, targetGui)
+    S.AnaUi.aimGui = aimGui
+    aimGui:SetAttribute("BCHub_External", true)
+    local dot = New("Frame", {
+        Tên = "CenterAimDot",
+        AnchorPoint = Vector2.new(0.5, 0.5),
+        Vị trí = UDim2.new(0.5, 0, 0.5, 0),
+        Kích thước = UDim2.new(0, 8, 0, 8),
+        BackgroundColor3 = Color3.fromRGB(255, 35, 35),
+        BorderSizePixel = 0,
+        Đang hoạt động = false,
+        Có thể chọn = false,
+        Chỉ số Z = 10000,
+    }, aimGui)
+    Góc(dot, UDim.new(1, 0))
+    Mới("UIStroke", {
+        Màu = Màu3.fromRGB(8, 8, 8),
+        Độ dày = 1,5
+        Độ trong suốt = 0,
+        ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+    }, dấu chấm)
+    local actionBtn = New("TextButton", {
+        Tên = "CenterAimAnalyzeButton",
+        AnchorPoint = Vector2.new(0.5, 0.5),
+        Vị trí = S.AnaUi.aimButtonPosition hoặc UDim2.new(1, -34, 0.55, 0),
+        Kích thước = UDim2.new(0, 46, 0, 46),
+        Văn bản = "🔎",
+        BackgroundColor3 = Color3.fromRGB(220, 55, 55),
+        Độ trong suốt của nền = 0.08,
+        TextColor3 = Color3.fromRGB(255, 255, 255),
+        Phông chữ = Enum.Font.GothamBold,
+        Kích thước chữ = 21,
+        AutoButtonColor = true,
+        Đang hoạt động = đúng,
+        Có thể chọn = false,
+        BorderSizePixel = 0,
+        Chỉ số Z = 10000,
+    }, aimGui)
+    Góc(actionBtn, UDim.new(1, 0))
+    Mới("UIStroke", {
+        Màu = Color3.fromRGB(255, 235, 235),
+        Độ dày = 1,5
+        Độ trong suốt = 0,1
+        ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+    }, actionBtn)
+    local cam = S.AnaCam()
+    khung nhìn cục bộ = cam và cam.ViewportSize
+    nếu viewport và viewport.X > 0 và viewport.Y > 0 thì
+        local saved = actionBtn.Position
+        lề cục bộ = 29
+        local x = math.clamp(saved.X.Scale * viewport.X + saved.X.Offset, margin, math.max(margin, viewport.X - margin))
+        local y = math.clamp(saved.Y.Scale * viewport.Y + saved.Y.Offset, margin, math.max(margin, viewport.Y - margin))
+        actionBtn.Position = UDim2.new(x / viewport.X, 0, y / viewport.Y, 0)
+        S.AnaUi.aimButtonPosition = hành độngBtn.Position
+    kết thúc
+    actionBtn.InputBegan:Connect(function(input)
+        if type(S.AnaAimBeginButtonDrag) == "function" then
+            pcall(S.AnaAimBeginButtonDrag, input)
+        kết thúc
+    kết thúc)
+    actionBtn.Activated:Connect(function()
+        local dragged = S.AnaUi.aimButtonDragMoved == true
+        đàn áp cục bộUntil = S.AnaUi.aimButtonSuppressUntil hoặc 0
+        S.AnaUi.aimButtonDragMoved = sai
+        nếu được kéo hoặc os.clock() < suppressUntil thì trả về end
+        nếu kiểu (S.AnaAimAnalyzeOnce) == "function" thì
+            local ok = pcall(S.AnaAimAnalyzeOnce)
+            nếu không ổn thì
+                pcall(function()
+                    if S.AnaUi.supportTabIndex then SwitchTab(S.AnaUi.supportTabIndex) end
+                    if main then main.Visible = true end
+                    if togBtn then togBtn.Text = "✕" end
+                    S.AnaSay("⚠️ Không thể phân tích điểm nhìn")
+                kết thúc)
+            kết thúc
+        kết thúc
+    kết thúc)
+    S.AnaUi.aimGui = aimGui
+    S.AnaUi.aimDot = dot
+    S.AnaUi.aimActionBtn = hành độngBtn
+    trả về aimGui
+kết thúc
+
+hàm S.AnaAimStep()
+    nếu không phải S.AnaUi.centerAimOn hay không S.AnaUi.aimGui thì quay lại end
+    local showOverlay = not (main and main.Visible)
+    nếu S.AnaUi.aimGui.Enabled ~= showOverlay thì
+        S.AnaUi.aimGui.Enabled = showOverlay
+    kết thúc
+    nếu không hiển thị lớp phủ thì
+        S.AnaUi.aimButtonDragging = sai
+        S.AnaUi.aimButtonDragInput = không
+    kết thúc
+kết thúc
+
+hàm S.AnaAimBeginButtonDrag(input)
+    if not S.AnaUi.aimButtonMoveEnabled then return end
+    local inputType = input.UserInputType
+    if inputType ~= Enum.UserInputType.MouseButton1 and inputType ~= Enum.UserInputType.Touch then return end
+    btn địa phương = S.AnaUi.aimActionBtn
+    nếu không phải btn thì trả về end
+    local inputPos = input.Position
+    S.AnaUi.aimButtonDragging = true
+    S.AnaUi.aimButtonDragInput = đầu vào
+    S.AnaUi.aimButtonDragOrigin = Vector2.new(inputPos.X, inputPos.Y)
+    S.AnaUi.aimButtonDragCenter = btn.AbsolutePosition + btn.AbsoluteSize / 2
+    S.AnaUi.aimButtonDragMoved = sai
+    S.AnaUi.aimButtonSuppressUntil = 0
+kết thúc
+
+hàm S.AnaAimDragMove(đầu vào)
+    if not S.AnaUi.aimButtonDragging or not S.AnaUi.aimButtonMoveEnabled then return end
+    dragInput cục bộ = S.AnaUi.aimButtonDragInput
+    nếu không phải là dragInput thì trả về end
+    local inputType = dragInput.UserInputType
+    local isPointerMove = (inputType == Enum.UserInputType.MouseButton1 and input.UserInputType == Enum.UserInputType.MouseMovement)
+        hoặc (inputType == Enum.UserInputType.Touch và input == dragInput)
+    nếu không phải là isPointerMove thì trả về end
+    local cam = S.AnaCam()
+    khung nhìn cục bộ = cam và cam.ViewportSize
+    if not viewport or viewport.X <= 0 or viewport.Y <= 0 then return end
+    con trỏ cục bộ = Vector2.new(input.Position.X, input.Position.Y)
+    delta cục bộ = con trỏ - S.AnaUi.aimButtonDragOrigin
+    nếu delta.Magnitude < 5 thì trả về end
+    btn địa phương = S.AnaUi.aimActionBtn
+    nếu không phải btn thì trả về end
+    S.AnaUi.aimButtonDragMoved = true
+    local halfX = btn.AbsoluteSize.X / 2 + 6
+    local halfY = btn.AbsoluteSize.Y / 2 + 6
+    local x = math.clamp(S.AnaUi.aimButtonDragCenter.X + delta.X, halfX, math.max(halfX, viewport.X - halfX))
+    local y = math.clamp(S.AnaUi.aimButtonDragCenter.Y + delta.Y, HalfY, math.max(halfY, viewport.Y - HalfY))
+    btn.Position = UDim2.new(x / viewport.X, 0, y / viewport.Y, 0)
+    S.AnaUi.aimButtonPosition = btn.Position
+kết thúc
+
+hàm S.AnaAimEndButtonDrag(input)
+    if not S.AnaUi.aimButtonDragging then return end
+    dragInput cục bộ = S.AnaUi.aimButtonDragInput
+    nếu không phải là dragInput thì trả về end
+    local samePointer = input == dragInput
+        hoặc (dragInput.UserInputType == Enum.UserInputType.MouseButton1 và input.UserInputType == Enum.UserInputType.MouseButton1)
+    nếu không phải cùng một con trỏ thì trả về kết thúc
+    nếu S.AnaUi.aimButtonDragMoved thì
+        S.AnaUi.aimButtonSuppressUntil = os.clock() + 0,4
+    khác
+        S.AnaUi.aimButtonDragMoved = sai
+        S.AnaUi.aimButtonSuppressUntil = 0
+    kết thúc
+    S.AnaUi.aimButtonDragging = sai
+    S.AnaUi.aimButtonDragInput = không
+    S.AnaUi.aimButtonDragOrigin = không
+    S.AnaUi.aimButtonDragCenter = không
+kết thúc
+
+trackConn(UserInputService.InputChanged:Connect(function(input)
+    pcall(S.AnaAimDragMove, input)
+kết thúc))
+trackConn(UserInputService.InputEnded:Connect(function(input)
+    pcall(S.AnaAimEndButtonDrag, input)
+kết thúc))
+
+hàm S.AnaAimAnalyzeOnce()
+    nếu không phải S.AnaUi.centerAimOn thì trả về false.
+    S.AnaLast.ok = false
+    local cam = S.AnaCam()
+    nếu không phải là camera thì
+        S.AnaSay("⚠️ Camera chưa sẵn sàng để phân tích điểm giữa màn hình")
+    khác
+        kích thước khung nhìn cục bộ = kích thước khung nhìn của camera
+        PickObjectAt(Vector2.new(viewport.X * 0.5, viewport.Y * 0.5), false, true)
+    kết thúc
+
+    nếu S.AnaUi.supportTabIndex thì
+        SwitchTab(S.AnaUi.supportTabIndex)
+    kết thúc
+    if main then main.Visible = true end
+    nếu S.AnaLast và S.AnaLast.ok thì
+        supportTab.CanvasPosition = Vector2.new(0, math.max(0, objResultPanel.Position.Y.Offset - 24))
+    nếu S.AnaUi.whyLbl thì
+        supportTab.CanvasPosition = Vector2.new(0, math.max(0, S.AnaUi.whyLbl.Position.Y.Offset - 24))
+    kết thúc
+    if togBtn then togBtn.Text = "✕" end
+    ReleaseHubFocus()
+    Trả về S.AnaLast và S.AnaLast.ok == true
+kết thúc
+
+hàm S.AnaAimSet(on)
+    bật = (bật == đúng)
+    nếu on == (S.AnaUi.centerAimOn == true) thì trả về khi kết thúc
+    S.AnaUi.centerAimOn = bật
+    nếu bật thì
+        local okDot = pcall(S.AnaAimEnsureDot)
+        local okBind = false
+        nếu okDot thì
+            okBind = pcall(function()
+                RunService:UnbindFromRenderStep("BC_AnaAim")
+                RunService:BindToRenderStep("BC_AnaAim", Enum.RenderPriority.Camera.Value + 1, function()
+                    pcall(S.AnaAimStep)
+                kết thúc)
+            kết thúc)
+        kết thúc
+        nếu không phải okDot hoặc không phải okBind thì
+            S.AnaUi.centerAimOn = false
+            pcall(function() RunService:UnbindFromRenderStep("BC_AnaAim") end)
+            pcall(function() nếu S.AnaUi.aimGui thì S.AnaUi.aimGui:Destroy() kết thúc)
+            S.AnaUi.aimGui, S.AnaUi.aimDot, S.AnaUi.aimActionBtn = không, không, không
+            S.AnaUi.aimButtonDragging, S.AnaUi.aimButtonDragInput = false, nil
+            S.AnaUi.aimButtonDragOrigin, S.AnaUi.aimButtonDragCenter = không, không
+            S.AnaUi.aimButtonDragMoved, S.AnaUi.aimButtonSuppressUntil = false, 0
+        khác
+            if main then main.Visible = false end -- cái nhìn ngoài game, kết quả sẽ mở lại trong menu
+            if togBtn then togBtn.Text = "" end
+            ReleaseHubFocus()
+        kết thúc
+    khác
+        pcall(function() RunService:UnbindFromRenderStep("BC_AnaAim") end)
+        pcall(function() nếu S.AnaUi.aimGui thì S.AnaUi.aimGui:Destroy() kết thúc)
+        S.AnaUi.aimGui, S.AnaUi.aimDot, S.AnaUi.aimActionBtn = không, không, không
+        S.AnaUi.aimButtonDragging, S.AnaUi.aimButtonDragInput = false, nil
+        S.AnaUi.aimButtonDragOrigin, S.AnaUi.aimButtonDragCenter = không, không
+        S.AnaUi.aimButtonDragMoved, S.AnaUi.aimButtonSuppressUntil = false, 0
+    kết thúc
+
+    local active = (S.AnaUi.centerAimOn == true)
+    btn địa phương = S.AnaUi.centerAimBtn
+    nếu btn và btn.Parent thì
+        btn.Text = đang hoạt động và "🔴 Ngắm tâm: BẬT" hoặc "🔴 Ngắm tâm: TẮT"
+        D.SetBg(btn, active and C.RED or C.GRAY)
+    kết thúc
+    nếu hoạt động thì
+        S.AnaSay("🔴 Ngắm tâm đã bật · canh vật ở chấm đỏ rồi nhấn nút 🔎 để phân tích")
+    kết thúc
+    trả lại trạng thái hoạt động
+kết thúc
+
+S.AnaUi.centerAimBtn.Activated:Connect(function()
+    yêu cầu cục bộ = không (S.AnaUi.centerAimOn == true)
+    local active = S.AnaAimSet(requested)
+    nếu được yêu cầu nhưng chưa được kích hoạt thì
+        S.AnaSay("⚠️ Không thể bật chế độ xem tâm — không tạo được chấm đỏ/nút phân tích")
+    kết thúc
+kết thúc)
 
 trackConn(UserInputService.InputBegan:Connect(function(input, gp)
-    if gp then return end   -- Roblox đã xử lý input này (nút GUI / TextBox focus)
-    if not analyzeObjectEnabled then return end
+    if gp then return end -- Roblox đã xử lý đầu vào này (nút GUI / TextBox focus)
+    nếu không phân tích đối tượng được kích hoạt thì trả về kết thúc.
 
-    if input.UserInputType == Enum.UserInputType.MouseButton2 then
+    nếu input.UserInputType == Enum.UserInputType.MouseButton2 thì
         PickObjectAt(input.Position, true)
-        return
-    end
+        trở lại
+    kết thúc
 
-    if input.UserInputType == Enum.UserInputType.Touch then
+    nếu input.UserInputType == Enum.UserInputType.Touch thì
         local startTick = tick()
         local startPos = input.Position
         local holdConn, moveConn
         holdConn = UserInputService.InputEnded:Connect(function(e)
-            if e == input then
+            nếu e == input thì
                 holdConn:Disconnect()
-                if moveConn then moveConn:Disconnect() end
-                if tick() - startTick >= S.AnaCfg.holdTime then   -- v4.8: ngưỡng giữ ngón chỉnh được
+                nếu moveConn thì moveConn:Disconnect() kết thúc
+                if tick() - startTick >= S.AnaCfg.holdTime then -- v4.8: ngưỡng giữ ngón tay được điều chỉnh
                     task.spawn(function() PickObjectAt(input.Position, false) end)
-                end
-            end
-        end)
+                kết thúc
+            kết thúc
+        kết thúc)
         moveConn = UserInputService.InputChanged:Connect(function(e)
-            if e == input then
-                local d = (e.Position - startPos).Magnitude
-                if d > S.AnaCfg.holdMove then   -- v4.8: ngón tay trên mobile hay xê dịch -> nới 12px lên 18px
+            nếu e == input thì
+                local d = (e.Position - startPos).Độ lớn
+                if d > S.AnaCfg.holdMove then -- v4.8: ngón tay trên mobile hay xê dịch -> 12px lên 18px
                     holdConn:Disconnect()
                     moveConn:Disconnect()
-                end
-            end
-        end)
-        return
-    end
-end))
+                kết thúc
+            kết thúc
+        kết thúc)
+        trở lại
+    kết thúc
+kết thúc))
 
 objectAnalyzeBtn.Activated:Connect(function()
-    analyzeObjectEnabled = not analyzeObjectEnabled
-    if analyzeObjectEnabled then
+    analyzeObjectEnabled = không phân tích đối tượng được bật
+    nếu analyzeObjectEnabled thì
         objectAnalyzeBtn.Text = "🎯 Phân Tích Vật: BẬT"
-        D.SetBg(objectAnalyzeBtn, C.GREEN)   -- v4.5: đổi màu kèm chữ tương phản
+        D.SetBg(objectAnalyzeBtn, C.GREEN) -- v4.5: đổi màu kèm theo chữ tương phản
         S.RefreshDevLabel()
-        S.AnaSay("✅ Đã BẬT phân tích vật thể · " .. S.DeviceText())
-    else
+        S.AnaSay(" ✅ Đã BẬT phân tích vật thể · " .. S.DeviceText())
+    khác
         objectAnalyzeBtn.Text = "🎯 Phân Tích Vật: TẮT"
         D.SetBg(objectAnalyzeBtn, C.GRAY)
         RemoveCurrentHighlight()
-    end
-end)
+    kết thúc
+kết thúc)
 
 highlightToggleBtn.Activated:Connect(function()
-    highlightEnabled = not highlightEnabled
-    if highlightEnabled then
+    highlightEnabled = không được bật
+    nếu highlightEnabled thì
         highlightToggleBtn.Text = "💜 Highlight Tím: BẬT"
         D.SetBg(highlightToggleBtn, C.PURPLE)
-    else
+    khác
         highlightToggleBtn.Text = "💜 Highlight Tím: TẮT"
         D.SetBg(highlightToggleBtn, C.GRAY)
         RemoveCurrentHighlight()
-    end
-end)
+    kết thúc
+kết thúc)
 
 removeHighlightBtn.Activated:Connect(function()
     RemoveCurrentHighlight()
-end)
+kết thúc)
 
--- ---------- v4.8: ⊕ VẬT THỂ Ở GIỮA MÀN HÌNH (nền tảng nào cũng bấm được, khỏi cần chuột phải) ----------
+--------- v4.8: ⊕ VẬT THỂ Ở GIỮA HÌNH THỨC (nền tảng nào cũng có thể nhấn, từ cần chuột phải) ----------
 S.AnaUi.centerBtn.Activated:Connect(function()
     local vpx, vpy = 1280, 720
     pcall(function()
         local cam2 = S.AnaCam()
         if cam2 then vpx, vpy = cam2.ViewportSize.X, cam2.ViewportSize.Y end
-    end)
-    S.AnaSay("⊕ Đang ẩn menu 0.35s để lấy vật ở GIỮA màn hình...")
-    local prevEnabled = true
+    kết thúc)
+    S.AnaSay("⊕ Ẩn menu 0.35s để lấy vật ở GIỮA màn hình...")
+    cục bộ prevEnabled = true
     pcall(function() prevEnabled = gui.Enabled end)
-    pcall(function() gui.Enabled = false end)   -- ẩn menu để chính menu không che vật cần lấy
+    pcall(function() gui.Enabled = false end) -- ẩn menu để menu chính không có vật cần lấy
     task.wait(0.12)
     PickObjectAt(Vector2.new(vpx / 2, vpy / 2), true, true)
     task.wait(0.25)
     pcall(function() gui.Enabled = prevEnabled end)
-end)
+kết thúc)
 
--- ---------- v4.8: 🧭 VẬT GẦN NHẤT (cứu cánh cho game không cho chọn theo điểm chạm) ----------
+--------- v4.8: 🧭 VẬT GẦN NHẤT (cứu cánh cho game không chọn theo điểm chạm) ----------
 S.AnaUi.nearBtn.Activated:Connect(function()
-    local part, info, total = S.NearestParts(5)
-    if not part then
-        S.AnaSay("⚠️ Không tìm được vật gần bạn: " .. tostring(info))
-        return
-    end
-    local hp = nil
+    phần cục bộ, thông tin, tổng = S.NearestParts(5)
+    nếu không phải là một phần thì
+        S.AnaSay("⚠️ Không thể tìm được vật gần bạn: " .. tostring(info))
+        trở lại
+    kết thúc
+    cục bộ hp = nil
     pcall(function() hp = part.Position end)
     S.FillObjPanel(part, hp, nil, nil, "🧭 vật gần bạn nhất (trong " .. tostring(total) .. " vật quét được)")
     pcall(function()
         local l = S.AnaUi.whyLbl
         if l and l.Parent then l.Text = "🔎 Quanh bạn 60 studs: " .. tostring(info) end
-    end)
-end)
+    kết thúc)
+kết thúc)
 
--- ---------- v4.8: 2 công tắc cho game "khó" (đều mặc định BẬT) ----------
+--------- v4.8: 2 công tắc cho game "khóa" (đều mặc định BẬT) ----------
 S.AnaUi.skipGuiBtn.Activated:Connect(function()
     S.AnaCfg.skipGameGui = not S.AnaCfg.skipGameGui
     local on = S.AnaCfg.skipGameGui
-    S.AnaUi.skipGuiBtn.Text = on and "🛡 Phân tích xuyên HUD game: BẬT"
-                                 or "🛡 Xuyên HUD game: TẮT (như bản cũ)"
-    D.SetBg(S.AnaUi.skipGuiBtn, on and C.GREEN or C.GRAY)
+    S.AnaUi.skipGuiBtn.Text = on và "🛡 Phân tích xuyên HUD game: BẬT"
+                                 hoặc "🛡 Xuyên HUD game: TẮT (như bản cũ)"
+    D.SetBg(S.AnaUi.skipGuiBtn, bật và C.GREEN hoặc C.GRAY)
     S.AnaSay(on and "🛡 BẬT: bỏ qua HUD/nền bán trong suốt của game (khuyên dùng, nhất là 📱 mobile)"
-                or "🛡 TẮT: quay lại kiểu cũ — HUD của game sẽ CHẶN phân tích ở điểm chạm")
-end)
+                hoặc "🛡 BẮT ĐẦU: quay lại kiểu cũ — HUD của game sẽ CHẶN phân tích ở điểm chạm")
+kết thúc)
 S.AnaUi.scanFbBtn.Activated:Connect(function()
-    S.AnaCfg.scanFallback = not S.AnaCfg.scanFallback
+    S.AnaCfg.scanFallback = không phải S.AnaCfg.scanFallback
     local on = S.AnaCfg.scanFallback
-    S.AnaUi.scanFbBtn.Text = on and "🧭 Quét dự phòng: BẬT" or "🧭 Quét dự phòng: TẮT"
-    D.SetBg(S.AnaUi.scanFbBtn, on and C.GREEN or C.GRAY)
-    S.AnaSay(on and "🧭 BẬT: tia trượt sẽ tự quét vật gần tia — game đặt CanQuery=false vẫn phân tích được"
-                or "🧭 TẮT: chỉ dùng tia raycast (nhanh hơn, nhưng game khó sẽ không ra kết quả)")
-end)
+    S.AnaUi.scanFbBtn.Text = on và "🧭 Quét dự phòng: BẬT" hoặc "🧭 Quét dự phòng: TẮT"
+    D.SetBg(S.AnaUi.scanFbBtn, bật và C.GREEN hoặc C.GRAY)
+    S.AnaSay(on and "🧭 BẬT: tia trượt sẽ tự động quét vật gần tia — game đặt CanQuery=false vẫn phân tích được"
+                hoặc "🧭 BẮT ĐẦU: chỉ dùng tia raycast (nhanh hơn, nhưng game khó sẽ không ra kết quả)")
+kết thúc)
 
 clearObjectBtn.Activated:Connect(function()
     objResultPanel.Visible = false
     RemoveCurrentHighlight()
-end)
+kết thúc)
 
 copyObjBtn.Activated:Connect(function()
     local pos = objResultPanel:GetAttribute("LastHitPos")
-    if pos and pos ~= "" then
+    nếu pos và pos ~= "" thì
         S.CopyToClipboard(pos)
-        flash(copyObjBtn, "✅ Đã Copy!", 1.2)
-    end
-end)
+        flash(copyObjBtn, " ✅ Đã sao chép!", 1.2)
+    kết thúc
+kết thúc)
 
 copyPathBtn.Activated:Connect(function()
-    local path = objResultPanel:GetAttribute("LastPath")
-    if path and path ~= "" then
+    đường dẫn cục bộ = objResultPanel:GetAttribute("LastPath")
+    nếu đường dẫn và đường dẫn ~= "" thì
         S.CopyToClipboard(path)
-        flash(copyPathBtn, "✅ Đã Copy!", 1.2)
-    end
-end)
+        flash(copyPathBtn, " ✅ Đã sao chép!", 1.2)
+    kết thúc
+kết thúc)
 
 posY = posY + 6
 
-local copyCoordBtn = Button(supportTab, "📋 Copy Tọa Độ Dưới Chân", 8, posY, 468, 26, C.BLUE)
+local copyCoordBtn = Button(supportTab, "📋 Copy Chiều Dưới Chân", 8, posY, 468, 26, C.BLUE)
 posY = posY + 32
 
 copyCoordBtn.Activated:Connect(function()
     local groundPos = GetGroundPosition()
-    local rootPart = GetRootPart()
+    rootPart cục bộ = GetRootPart()
     local finalPos = groundPos or (rootPart and rootPart.CFrame.Position)
-    if not finalPos then return end
+    nếu không phải finalPos thì trả về end
     local text = string.format("%.3f, %.3f, %.3f", finalPos.X, finalPos.Y, finalPos.Z)
     S.CopyToClipboard(text)
-    flash(copyCoordBtn, "✅ Đã Copy: " .. text, 2)
-end)
+    flash(copyCoordBtn, " ✅ Đã Copy: " .. text, 2)
+kết thúc)
 
-Label(supportTab, "🚀 Teleport Tới Tọa Độ", posY)
+Label(supportTab, "🚀 Dịch chuyển đến nơi ở", posY)
 posY = posY + 14
 
 D.tpLblX = Label(supportTab, "X:", posY)
 D.tpLblX.Size = UDim2.new(0,14,0,14); D.tpLblX.Position = UDim2.new(0,8,0,posY)
 local tpXIn = New("TextBox", {
-    Size=UDim2.new(0,136,0,24), Position=UDim2.new(0,24,0,posY-2), Text="0",
+    Kích thước=UDim2.new(0,136,0,24), Vị trí=UDim2.new(0,24,0,posY-2), Văn bản="0",
     PlaceholderColor3=Color3.fromRGB(122, 130, 148),
     BackgroundColor3=Color3.fromRGB(26, 29, 38), BackgroundTransparency=0,
     TextColor3=Color3.fromRGB(233, 237, 245), Font=Enum.Font.Code, TextSize=11,
@@ -2896,7 +3265,7 @@ Corner(tpXIn, UDim.new(0,4)); Stroke(tpXIn, Color3.fromRGB(255,100,100), 1.2)
 D.tpLblY = Label(supportTab, "Y:", posY)
 D.tpLblY.Size = UDim2.new(0,14,0,14); D.tpLblY.Position = UDim2.new(0,166,0,posY)
 local tpYIn = New("TextBox", {
-    Size=UDim2.new(0,136,0,24), Position=UDim2.new(0,182,0,posY-2), Text="0",
+    Kích thước=UDim2.new(0,136,0,24), Vị trí=UDim2.new(0,182,0,posY-2), Văn bản="0",
     PlaceholderColor3=Color3.fromRGB(122, 130, 148),
     BackgroundColor3=Color3.fromRGB(26, 29, 38), BackgroundTransparency=0,
     TextColor3=Color3.fromRGB(233, 237, 245), Font=Enum.Font.Code, TextSize=11,
@@ -2907,7 +3276,7 @@ Corner(tpYIn, UDim.new(0,4)); Stroke(tpYIn, Color3.fromRGB(100,255,100), 1.2)
 D.tpLblZ = Label(supportTab, "Z:", posY)
 D.tpLblZ.Size = UDim2.new(0,14,0,14); D.tpLblZ.Position = UDim2.new(0,324,0,posY)
 local tpZIn = New("TextBox", {
-    Size=UDim2.new(0,136,0,24), Position=UDim2.new(0,340,0,posY-2), Text="0",
+    Kích thước=UDim2.new(0,136,0,24), Vị trí=UDim2.new(0,340,0,posY-2), Văn bản="0",
     PlaceholderColor3=Color3.fromRGB(122, 130, 148),
     BackgroundColor3=Color3.fromRGB(26, 29, 38), BackgroundTransparency=0,
     TextColor3=Color3.fromRGB(233, 237, 245), Font=Enum.Font.Code, TextSize=11,
@@ -2918,275 +3287,275 @@ Corner(tpZIn, UDim.new(0,4)); Stroke(tpZIn, Color3.fromRGB(100,150,255), 1.2)
 posY = posY + 30
 
 local fillCurrentBtn = Button(supportTab, "📍 Lấy Vị Trí Dưới Chân", 8, posY, 372, 24, C.ORANGE)
-local tpBtn = Button(supportTab, "🚀 Teleport", 386, posY, 90, 24, C.GREEN)
+local tpBtn = Button(supportTab, "🚀 Dịch chuyển tức thời", 386, posY, 90, 24, C.GREEN)
 posY = posY + 30
 
 fillCurrentBtn.Activated:Connect(function()
     local groundPos = GetGroundPosition()
-    local rootPart = GetRootPart()
+    rootPart cục bộ = GetRootPart()
     local p = groundPos or (rootPart and rootPart.CFrame.Position)
-    if not p then return end
-    tpXIn.Text = string.format("%.3f", p.X)
-    tpYIn.Text = string.format("%.3f", p.Y)
-    tpZIn.Text = string.format("%.3f", p.Z)
-end)
+    nếu không phải p thì trả về end
+    tpXIn.Text = string.format("%.3f", pX)
+    tpYIn.Text = string.format("%.3f", pY)
+    tpZIn.Text = string.format("%.3f", pZ)
+kết thúc)
 
 tpBtn.Activated:Connect(function()
-    local rootPart = GetRootPart()
-    if not rootPart then return end
+    rootPart cục bộ = GetRootPart()
+    nếu không phải là rootPart thì trả về end
     local x = tonumber(tpXIn.Text) or 0
     local y = tonumber(tpYIn.Text) or 0
     local z = tonumber(tpZIn.Text) or 0
     rootPart.CFrame = CFrame.new(Vector3.new(x, y, z))
-    flash(tpBtn, "✅ Đã Teleport!", 1.5)
-end)
+    flash(tpBtn, " ✅ Đã Teleport!", 1.5)
+kết thúc)
 
-S.SpeedMeter = S.SpeedMeter or {}
-do            -- do..end: main chunk gần cạn 200 slot local -> KHÔNG khai báo local ở scope chunk
-local SV = S.SpeedMeter
+S.SpeedMeter = S.SpeedMeter hoặc {}
+do -- do..end: main chunk gần cạn 200 slot local -> KHÔNG khai báo local ở phạm vi chunk
+cục bộ SV = S.SpeedMeter
 
-SV.on     = (SV.on == true)
-SV.live   = tonumber(SV.live) or 0        -- tốc độ hiện tại (studs/s, đã làm mượt)
-SV.max    = tonumber(SV.max)  or 0        -- đỉnh cao nhất đo được trong phiên
-SV.base   = tonumber(SV.base)             -- mặc định của game (studs/s) — nil = chưa dò được
-SV.src    = SV.src or "chưa dò"
-SV.ws     = tonumber(SV.ws) or 0          -- WalkSpeed hiện tại của Humanoid
+SV.on = (SV.on == true)
+SV.live = tonumber(SV.live) hoặc 0 -- tốc độ hiện tại (studs/s, đã làm mượt)
+SV.max = tonumber(SV.max) hoặc 0 -- đạt được đỉnh cao nhất trong phiên bản
+SV.base = tonumber(SV.base) -- mặc định của trò chơi (studs/s) — nil = chưa được dò tìm
+SV.src = SV.src hoặc "chưa dò"
+SV.ws = tonumber(SV.ws) or 0 -- Hiện tại WalkSpeed ​​của Humanoid
 SV._bound = (SV._bound == true)
 
-local function num(v)
+hàm cục bộ num(v)
     v = tonumber(v)
-    if v == nil or v ~= v then return nil end          -- NaN -> nil
-    return v
-end
-local function fmt(n) return string.format("%.1f", num(n) or 0) end
-local function say(msg) pcall(function() if D.hubStatus then D.hubStatus.Text = msg end end) end
+    if v == nil or v ~= v then return nil end -- NaN -> nil
+    trả về v
+kết thúc
+hàm cục bộ fmt(n) trả về chuỗi.format("%.1f", num(n) hoặc 0) kết thúc
+hàm cục bộ say(msg) pcall(function() if D.hubStatus then D.hubStatus.Text = msg end end) end
 
 local function move() return S.Move end
-local function myHum()
-    local m = move()
-    if m and m.Hum then
-        local ok, h = pcall(m.Hum)
-        if ok and h then return h end
-    end
+hàm cục bộ myHum()
+    cục bộ m = di chuyển()
+    nếu m và m.Hum thì
+        cục bộ ok, h = pcall(m.Hum)
+        nếu ổn và h thì trả về h kết thúc
+    kết thúc
     local ch = player.Character
-    if not ch then return nil end
+    nếu không phải ch thì trả về nil.
     local ok, h = pcall(function() return ch:FindFirstChildOfClass("Humanoid") end)
-    if ok and h then return h end
-    return ch:FindFirstChild("Humanoid")
-end
-local function myRoot()
-    local m = move()
-    if m and m.Root then
-        local ok, r = pcall(m.Root)
-        if ok and r then return r end
-    end
+    nếu ổn và h thì trả về h kết thúc
+    trả về ch:FindFirstChild("Humanoid")
+kết thúc
+hàm cục bộ myRoot()
+    cục bộ m = di chuyển()
+    nếu m và m.Root thì
+        cục bộ ok, r = pcall(m.Root)
+        nếu ổn và r thì trả về r kết thúc
+    kết thúc
     local ch = player.Character
-    return ch and ch:FindFirstChild("HumanoidRootPart") or nil
-end
-local function readWS(h)
-    if not h then return nil end
-    local ok, v = pcall(function() return h.WalkSpeed end)
-    if ok then local n = num(v); if n then return n end end
-    local m = move()
+    trả về ch và ch:FindFirstChild("HumanoidRootPart") hoặc nil
+kết thúc
+hàm cục bộ readWS(h)
+    nếu không phải h thì trả về nil.
+    cục bộ ok, v = pcall(function() return h.WalkSpeed ​​end)
+    nếu ok thì local n = num(v); nếu n thì trả về n kết thúc
+    cục bộ m = di chuyển()
     if m and m.comp then return num(m.comp(h, "WalkSpeed", nil)) end
-    return nil
-end
-local function readPos(r)
-    if not r then return nil end
-    local m = move()
-    local x, y, z
-    if m and m.comp then
-        local p
+    trả về nil
+kết thúc
+hàm cục bộ readPos(r)
+    nếu không phải r thì trả về nil.
+    cục bộ m = di chuyển()
+    tọa độ x, y, z cục bộ
+    nếu m và m.comp thì
+        địa phương p
         pcall(function() p = r.Position end)
         x, y, z = m.comp(p, "X", nil), m.comp(p, "Y", nil), m.comp(p, "Z", nil)
-    else
-        pcall(function() local p = r.Position; x, y, z = p.X, p.Y, p.Z end)
-    end
+    khác
+        pcall(function() local p = r.Position; x, y, z = pX, pY, pZ end)
+    kết thúc
     x, y, z = num(x), num(y), num(z)
     if x == nil or y == nil or z == nil then return nil end
-    return x, y, z
-end
+    trả về x, y, z
+kết thúc
 
--- ---------- dò tốc độ MẶC ĐỊNH của game ----------
-function SV.Detect()
-    local m = move()
+-- ---------- dòng tốc độ MẶC ĐỊNH của game ----------
+hàm SV.Detect()
+    cục bộ m = di chuyển()
     local h = myHum()
     local hws = readWS(h)
-    local baseWS = m and num(m._baseWS) or nil
+    baseWS cục bộ = m và num(m._baseWS) hoặc nil
     local applying = (m ~= nil) and (m.speed == true or m.runMode == true)
-    local src
-    if applying and baseWS then
+    nguồn cục bộ
+    nếu áp dụng và baseWS thì
         SV.base = baseWS
         src = "game (hub đã học khi 👟 bật)"
-    elseif hws and hws > 0 then
-        if (not applying) and SV._lastWS and math.abs(hws - SV._lastWS) > 0.01 then
+    nếu hws và hws > 0 thì
+        nếu (không áp dụng) và SV._lastWS và math.abs(hws - SV._lastWS) > 0.01 thì
             src = "game VỪA ĐỔI tốc độ → mặc định mới"
-        else
-            src = "game (WalkSpeed của nhân vật)"
-        end
+        khác
+            src = "game (WalkSpeed ​​của nhân vật)"
+        kết thúc
         SV.base = hws
-    elseif baseWS then
+    nếu baseWS thì
         SV.base = baseWS
         src = "hub (đã học)"
-    else
+    khác
         SV.base = 16
         src = "mặc định Roblox"
-    end
-    if hws and hws > 0 and not applying then SV._lastWS = hws end
-    if hws then SV.ws = hws end
+    kết thúc
+    nếu hws và hws > 0 và không áp dụng thì SV._lastWS = hws end
+    nếu hws thì SV.ws = hws end
     SV.src = src
-    return SV.base, SV.src
-end
+    trả về SV.base, SV.src
+kết thúc
 
--- ---------- đo tốc độ HIỆN TẠI + giữ đỉnh CAO NHẤT ----------
-function SV.Step(dt)
+---------đo tốc độ HIỆN TAI + giữ đỉnh CAO NHẤT ----------
+hàm SV.Step(dt)
     dt = num(dt)
-    if not dt or dt <= 0 then dt = 1 / 60 end
-    if dt > 0.5 then dt = 0.5 end
+    nếu dt khác hoặc dt <= 0 thì dt = 1 / 60
+    nếu dt > 0,5 thì dt = 0,5
     local h = myHum()
     local x, y, z = readPos(myRoot())
-    if x then
-        if SV._px then
+    nếu x thì
+        nếu SV._px thì
             local dx, dy, dz = x - SV._px, y - SV._py, z - SV._pz
             local d = math.sqrt(dx * dx + dy * dy + dz * dz)
-            if d <= 25 then                                  -- > 25 studs/frame = teleport/respawn/lag -> bỏ mẫu
-                local inst = d / dt
-                if d > 0.001 then                            -- chỉ tính mẫu CÓ dịch chuyển (đứng yên không phá số liệu)
-                    SV._n = (SV._n or 0) + 1
-                    SV.live = (SV._n <= 1) and inst or (SV.live + (inst - SV.live) * 0.35)
-                    if inst >= 0.5 and inst > SV.max then SV.max = inst end
-                end
-            end
-        end
+            nếu d <= 25 thì -- > 25 stud/khung hình = dịch chuyển/hồi sinh/lag -> bỏ mẫu
+                inst cục bộ = d / dt
+                if d > 0.001 then -- chỉ tính mẫu CÓ chuyển đổi (đứng yên không phá số liệu)
+                    SV._n = (SV._n hoặc 0) + 1
+                    SV.live = (SV._n <= 1) và inst hoặc (SV.live + (inst - SV.live) * 0.35)
+                    nếu inst >= 0.5 và inst > SV.max thì SV.max = inst
+                kết thúc
+            kết thúc
+        kết thúc
         SV._px, SV._py, SV._pz = x, y, z
-    else
+    khác
         SV._px = nil
         SV.live = 0
-    end
-    if h then SV.ws = readWS(h) or SV.ws end
+    kết thúc
+    nếu h thì SV.ws = readWS(h) hoặc SV.ws kết thúc
     SV.Detect()
     SV.Sync()
-    return SV.live
-end
+    trả về SV.live
+kết thúc
 
-local function setText(lbl, s)
-    if lbl and lbl.Text ~= s then lbl.Text = s end
-end
+hàm cục bộ setText(lbl, s)
+    if lbl and lbl.Text ≥ s then lbl.Text = s end
+kết thúc
 
--- ---------- vẽ số liệu ra widget + HUD ----------
-function SV.Sync()
-    local base = num(SV.base) or 0
-    local ratio = (base > 0) and (SV.ws / base) or 0
-    local scale = math.max(SV.max, base, 1)
-    local pct = SV.live / scale
-    if pct < 0 then pct = 0 elseif pct > 1 then pct = 1 end   -- KHÔNG dùng math.clamp (chỉ có trong Luau)
-    local bpct = base / scale
-    if bpct < 0 then bpct = 0 elseif bpct > 1 then bpct = 1 end
-    setText(SV.baseLbl, string.format("🎯 Mặc định game: %s studs/s · nguồn: %s", fmt(base), tostring(SV.src)))
-    setText(SV.wsLbl, string.format("🚶 WalkSpeed hiện tại: %s%s", fmt(SV.ws),
-        (ratio > 0) and string.format("  (×%.2f mặc định)", ratio) or ""))
+-- ---------- vẽ số ra widget + HUD ----------
+hàm SV.Sync()
+    cơ sở cục bộ = num(SV.base) hoặc 0
+    tỷ lệ cục bộ = (cơ sở > 0) và (SV.ws / cơ sở) hoặc 0
+    tỷ lệ cục bộ = math.max(SV.max, base, 1)
+    phần trăm cục bộ = SV.live / quy mô
+    if pct < 0 then pct = 0 elseif pct > 1 then pct = 1 end -- KHÔNG dùng math.clamp (chỉ có trong Luau)
+    bpct cục bộ = cơ sở / thang đo
+    nếu bpct < 0 thì bpct = 0, ngược lại nếu bpct > 1 thì bpct = 1
+    setText(SV.baseLbl, string.format("🎯 Trò chơi mặc định: %s studs/s · nguồn: %s", fmt(base), tostring(SV.src)))
+    setText(SV.wsLbl, string.format("🚶 WalkSpeed ​​hiện tại: %s%s", fmt(SV.ws),
+        (ratio > 0) và string.format(" (×%.2f default)", rate) hoặc ""))
     setText(SV.liveLbl, string.format("⚡ Tốc độ thật: %s studs/s", fmt(SV.live)))
     setText(SV.maxLbl, string.format("🏁 Cao nhất: %s studs/s", fmt(SV.max)))
-    if SV.btn then
-        setText(SV.btn, SV.on and "🎯 Định vị tốc độ: BẬT" or "🎯 Định vị tốc độ: TẮT")
-        if SV._btnOn ~= SV.on then
+    nếu SV.btn thì
+        setText(SV.btn, SV.on và "🎯 Định tốc độ: BẬT" hoặc "🎯 Định tốc độ: TẮT")
+        nếu SV._btnOn ~= SV.on thì
             SV._btnOn = SV.on
-            SV.btn.BackgroundColor3 = SV.on and C.GREEN or C.GRAY
-        end
-    end
-    if SV.barFill and SV._barPct ~= pct then
+            SV.btn.BackgroundColor3 = SV.on và C.GREEN hoặc C.GRAY
+        kết thúc
+    kết thúc
+    nếu SV.barFill và SV._barPct ~= pct thì
         SV._barPct = pct
         SV.barFill.Size = UDim2.new(pct, 0, 1, 0)
-    end
-    if SV.barBase and SV._barBase ~= bpct then
+    kết thúc
+    nếu SV.barBase và SV._barBase ~= bpct thì
         SV._barBase = bpct
         SV.barBase.Position = UDim2.new(bpct, -1, 0, 0)
-    end
-    if SV.hud then
+    kết thúc
+    nếu SV.hud thì
         if SV.hud.Visible ~= SV.on then SV.hud.Visible = SV.on end
-        setText(SV.hudLbl, string.format("🎯 %s (mặc định game) · 🚶 %s\n⚡ %s · 🏁 %s studs/s",
+        setText(SV.hudLbl, string.format("🎯 %s (mặc định trò chơi) · 🚶 %s\n⚡ %s · 🏁 %s đinh tán/s",
             fmt(base), fmt(SV.ws), fmt(SV.live), fmt(SV.max)))
-    end
-end
+    kết thúc
+kết thúc
 
-function SV.Status()
+hàm SV.Status()
     return string.format("🎯 %s · ⚡ %s · 🏁 %s", fmt(SV.base), fmt(SV.live), fmt(SV.max))
-end
+kết thúc
 
 -- ---------- bật/tắt vòng đo (chỉ chạy khi BẬT -> không tốn tài nguyên) ----------
-function SV.Bind(on)
-    if on and not SV._bound then
+hàm SV.Bind(on)
+    nếu đang bật và không phải SV._bound thì
         SV._bound = true
-        local ok = pcall(function()
-            RunService:BindToRenderStep("BC_SpeedMeter", Enum.RenderPriority.Camera.Value - 6, function(dt)
+        cục bộ ok = pcall(function()
+            RunService:BindToRenderStep("BC_SpeedMeter", Enum.RenderPriority.Camera.Value - 6, hàm(dt)
                 pcall(function() SV.Step(dt) end)
-            end)
-        end)
-        if not ok then SV._bound = false end
-    elseif (not on) and SV._bound then
+            kết thúc)
+        kết thúc)
+        nếu không ổn thì SV._bound = false kết thúc
+    nếu không bật và SV._bound thì
         SV._bound = false
         pcall(function() RunService:UnbindFromRenderStep("BC_SpeedMeter") end)
-    end
-    return SV._bound
-end
-function SV.Set(on)
+    kết thúc
+    trả về SV._bound
+kết thúc
+hàm SV.Set(on)
     SV.on = (on == true)
-    if SV.on then
+    nếu SV.on thì
         SV._px, SV._n = nil, 0
         SV.Detect()
         SV._lastWS = nil
         SV.Bind(true)
-        SV.Step(1 / 60)                 -- có số ngay, không phải đợi frame sau
-    else
+        SV.Step(1 / 60) -- có số ngay, không phải đợi khung sau
+    khác
         SV.Bind(false)
         SV._px, SV._n = nil, 0
-    end
+    kết thúc
     SV.Sync()
-    return SV.on
-end
+    trả về SV.on
+kết thúc
 function SV.Toggle() return SV.Set(not SV.on) end
-function SV.Reset()                     -- xoá đỉnh, vẫn đo tiếp
+function SV.Reset() -- xóa chất lượng, vẫn đo tiếp
     SV.max, SV.live = 0, 0
     SV._n = 0
     SV.Sync()
-    return SV.max
-end
+    trả về SV.max
+kết thúc
 
--- ---------- widget trong tab 🛠 Hỗ Trợ ----------
-Label(supportTab, "🎯 Định vị tốc độ game (mặc định · hiện tại · cao nhất)", posY)
+-- ---------- widget trong tab 🛠 Hỗ trợ ----------
+Label(supportTab, "🎯 Định vị trò chơi tốc độ (mặc định · hiện tại · cao nhất)", posY)
 posY = posY + 18
-SV.btn      = Button(supportTab, "🎯 Định vị tốc độ: TẮT", 8, posY, 300, 26, C.GRAY)
-SV.resetBtn = Button(supportTab, "🗑 Xoá đỉnh", 314, posY, 162, 26, C.RED)
+SV.btn = Button(supportTab, "🎯 Định tốc độ: TẮT", 8, posY, 300, 26, C.GRAY)
+SV.resetBtn = Button(supportTab, "🗑 Xóa đỉnh", 314, posY, 162, 26, C.RED)
 posY = posY + 30
-SV.baseLbl = Label(supportTab, "🎯 Mặc định game: — studs/s", posY)
+SV.baseLbl = Label(supportTab, "🎯 Trò chơi mặc định: — studs/s", posY)
 SV.baseLbl.TextColor3 = C.ACCENT
 SV.baseLbl.TextSize = 9
 posY = posY + 16
-SV.wsLbl = Label(supportTab, "🚶 WalkSpeed hiện tại: —", posY)
+SV.wsLbl = Label(supportTab, "🚶 WalkSpeed ​​hiện tại: —", posY)
 SV.wsLbl.TextSize = 9
 posY = posY + 16
 SV.liveLbl = Label(supportTab, "⚡ Tốc độ thật: 0.0 studs/s", posY)
 SV.liveLbl.TextColor3 = C.GREEN
 SV.liveLbl.TextSize = 9
 posY = posY + 16
-SV.maxLbl = Label(supportTab, "🏁 Cao nhất: 0.0 studs/s", posY)
+SV.maxLbl = Nhãn(supportTab, "🏁 Cao nhất: 0,0 đinh tán/s", posY)
 SV.maxLbl.TextColor3 = C.ORANGE
 SV.maxLbl.TextSize = 9
 posY = posY + 16
 
-local smBarBg = New("Frame", {
-    Size=UDim2.new(1,-16,0,10), Position=UDim2.new(0,8,0,posY),
+cục bộ smBarBg = New("Khung", {
+    Kích thước=UDim2.new(1,-16,0,10), Vị trí=UDim2.new(0,8,0,posY),
     BackgroundColor3=Color3.fromRGB(24, 28, 38), BackgroundTransparency=0.15,
     BorderSizePixel=0, ZIndex=6,
 }, supportTab)
 Corner(smBarBg, UDim.new(0,5)); Stroke(smBarBg, C.BORDER, 1)
 SV.barFill = New("Frame", {
-    Size=UDim2.new(0,0,1,0), Position=UDim2.new(0,0,0,0),
+    Kích thước=UDim2.new(0,0,1,0), Vị trí=UDim2.new(0,0,0,0),
     BackgroundColor3=C.BLUE, BackgroundTransparency=0.15, BorderSizePixel=0, ZIndex=7,
 }, smBarBg)
-Corner(SV.barFill, UDim.new(0,5))
-SV.barBase = New("Frame", {                -- vạch xanh = tốc độ MẶC ĐỊNH của game (mốc so sánh)
-    Size=UDim2.new(0,2,1,0), Position=UDim2.new(0.25,-1,0,0),
+Góc(SV.barFill, UDim.new(0,5))
+SV.barBase = New("Frame", { -- vạch xanh = tốc độ MẶC ĐỊNH của trò chơi (mốc so sánh)
+    Kích thước=UDim2.new(0,2,1,0), Vị trí=UDim2.new(0.25,-1,0,0),
     BackgroundColor3=C.GREEN, BackgroundTransparency=0, BorderSizePixel=0, ZIndex=8,
 }, smBarBg)
 posY = posY + 16
@@ -3195,18 +3564,18 @@ SV.hintLbl = Label(supportTab, "ℹ️ Chỉ ĐO, không sửa gì · Vạch xan
 SV.hintLbl.TextSize = 9
 posY = posY + 18
 
--- ---------- HUD nổi trong màn hình game (đóng menu vẫn thấy) ----------
+--------- HUD nổi trong trò chơi trên màn hình (đóng menu vẫn thấy) ----------
 SV.hud = New("Frame", {
-    Name = "BC_SpeedHud",
-    Size = UDim2.new(0, 214, 0, 44), Position = UDim2.new(0, 12, 0.5, -22),
+    Tên = "BC_SpeedHud",
+    Kích thước = UDim2.new(0, 214, 0, 44), Vị trí = UDim2.new(0, 12, 0.5, -22),
     BackgroundColor3 = Color3.fromRGB(16, 19, 26), BackgroundTransparency = 0.25,
     BorderSizePixel = 0, Visible = false, ZIndex = 24,
 }, gui)
 Corner(SV.hud, UDim.new(0,8)); Stroke(SV.hud, C.ACCENT, 1.4)
 SV.hudLbl = New("TextLabel", {
-    Size = UDim2.new(1,-12,1,0), Position = UDim2.new(0,6,0,0), Text = "🎯 ...",
+    Kích thước = UDim2.new(1,-12,1,0), Vị trí = UDim2.new(0,6,0,0), Văn bản = "🎯 ...",
     BackgroundTransparency = 1, TextColor3 = C.WHITE,
-    Font = Enum.Font.GothamBold, TextSize = 9,
+    Phông chữ = Enum.Font.GothamBold, Kích thước chữ = 9,
     TextXAlignment = Enum.TextXAlignment.Left, TextYAlignment = Enum.TextYAlignment.Center,
     ZIndex = 25, TextWrapped = true,
 }, SV.hud)
@@ -3214,24 +3583,24 @@ SV.hudLbl = New("TextLabel", {
 SV.btn.Activated:Connect(function()
     local on = SV.Set(not SV.on)
     say(on and ("🎯 định vị tốc độ: BẬT · mặc định game " .. fmt(SV.base) .. " studs/s")
-           or "🎯 định vị tốc độ: TẮT")
-end)
+           hoặc "🎯 định tốc độ: TẮT")
+kết thúc)
 SV.resetBtn.Activated:Connect(function()
     SV.Reset()
-    say("🎯 đã xoá đỉnh · cao nhất = 0")
-end)
+    say("🎯 đã xóa chất · cao nhất = 0")
+kết thúc)
 
 SV.Detect()
 SV.Sync()
-end
-Label(supportTab, "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━", posY)
+kết thúc
+Label(supportTab, "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━", posY)
 posY = posY + 16
 Label(supportTab, "💾 Waypoint Đã Lưu", posY)
 posY = posY + 14
 
 local wpNameIn = New("TextBox", {
-    Size=UDim2.new(1,-130,0,24), Position=UDim2.new(0,8,0,posY), Text="",
-    PlaceholderText="Tên waypoint...",
+    Kích thước=UDim2.new(1,-130,0,24), Vị trí=UDim2.new(0,8,0,posY), Văn bản="",
+    PlaceholderText=" Tên điểm tham chiếu...",
     PlaceholderColor3=Color3.fromRGB(122, 130, 148),
     BackgroundColor3=Color3.fromRGB(26, 29, 38), BackgroundTransparency=0,
     TextColor3=Color3.fromRGB(233, 237, 245), Font=Enum.Font.GothamMedium, TextSize=11,
@@ -3246,502 +3615,502 @@ saveWpBtn.Position = UDim2.new(1, -110, 0, posY)
 posY = posY + 32
 
 local wpListFrame = New("Frame", {
-    Size=UDim2.new(1,-16,0,0), Position=UDim2.new(0,8,0,posY),
+    Kích thước=UDim2.new(1,-16,0,0), Vị trí=UDim2.new(0,8,0,posY),
     BackgroundTransparency=1, BorderSizePixel=0, ZIndex=6,
 }, supportTab)
 New("UIListLayout", {SortOrder=Enum.SortOrder.LayoutOrder, Padding=UDim.new(0,4)}, wpListFrame)
 
-local RebuildWaypoints
+Điểm định vị RebuildWaypoints cục bộ
 
 saveWpBtn.Activated:Connect(function()
-    local rootPart = GetRootPart()
-    if not rootPart then return end
-    local name = wpNameIn.Text
+    rootPart cục bộ = GetRootPart()
+    nếu không phải là rootPart thì trả về end
+    tên cục bộ = wpNameIn.Text
     if #name == 0 then name = "WP "..(#waypoints+1) end
     table.insert(waypoints, {name = name, pos = rootPart.CFrame.Position})
     wpNameIn.Text = ""
-    if RebuildWaypoints then RebuildWaypoints() end
+    nếu RebuildWaypoints thì RebuildWaypoints() kết thúc
     Store.saveSoon()
-end)
+kết thúc)
 
 RebuildWaypoints = function()
     for _, c in ipairs(wpListFrame:GetChildren()) do
         if not c:IsA("UIListLayout") then c:Destroy() end
-    end
+    kết thúc
 
-    if #waypoints == 0 then
-        New("TextLabel", {
-            Size=UDim2.new(1,0,0,26),
-            Text="📭 Chưa có waypoint nào.",
+    nếu #waypoints == 0 thì
+        Mới("TextLabel", {
+            Kích thước = UDim2.new(1, 0, 0, 26),
+            Text="📭 Chưa có điểm tham chiếu nào.",
             BackgroundTransparency=1, TextColor3=C.GRAY,
             Font=Enum.Font.GothamMedium, TextSize=10,
             TextXAlignment=Enum.TextXAlignment.Center, ZIndex=7,
         }, wpListFrame)
         supportTab.CanvasSize = UDim2.new(0, 0, 0, posY + 40)
-        return
-    end
+        trở lại
+    kết thúc
 
-    local totalH = 0
+    tổng cục bộ H = 0
     for i, wp in ipairs(waypoints) do
-        local row = New("Frame", {
-            Size=UDim2.new(1,0,0,30),
+        hàng cục bộ = New("Khung", {
+            Kích thước = UDim2.new(1, 0, 0, 30),
             BackgroundColor3=Color3.fromRGB(26, 29, 38),
             BackgroundTransparency=0.1, BorderSizePixel=0, ZIndex=6,
         }, wpListFrame)
-        Corner(row, UDim.new(0,5)); Stroke(row)
+        Góc(hàng, UDim.new(0,5)); Nét(hàng)
 
-        New("TextLabel", {
-            Size=UDim2.new(1,-120,1,0), Position=UDim2.new(0,8,0,0),
-            Text=wp.name.." ("..string.format("%.0f, %.0f, %.0f", wp.pos.X, wp.pos.Y, wp.pos.Z)..")",
+        Mới("TextLabel", {
+            Kích thước=UDim2.new(1,-120,1,0), Vị trí=UDim2.new(0,8,0,0),
+            Văn bản=wp.name.." ("..string.format("%.0f, %.0f, %.0f", wp.pos.X, wp.pos.Y, wp.pos.Z)..")",
             BackgroundTransparency=1, TextColor3=C.DARK,
             Font=Enum.Font.GothamBold, TextSize=9,
             TextXAlignment=Enum.TextXAlignment.Left, ZIndex=7,
-        }, row)
+        }, hàng ngang)
 
         local goBtn = New("TextButton", {
-            Size=UDim2.new(0,50,0,22), Position=UDim2.new(1,-84,0,4),
-            Text="🚀 Tới", BackgroundColor3=C.GREEN, BackgroundTransparency=0.1,
+            Kích thước=UDim2.new(0,50,0,22), Vị trí=UDim2.new(1,-84,0,4),
+            Văn bản="🚀"", Màu nền 3 = Xanh lá cây, Độ trong suốt nền = 0.1,
             TextColor3=C.WHITE, Font=Enum.Font.GothamBold, TextSize=9,
             BorderSizePixel=0, ZIndex=8,
-        }, row)
-        Corner(goBtn, UDim.new(0,4))
+        }, hàng ngang)
+        Góc(goBtn, UDim.new(0,4))
         goBtn.Activated:Connect(function()
-            local rootPart = GetRootPart()
-            if not rootPart then return end
+            rootPart cục bộ = GetRootPart()
+            nếu không phải là rootPart thì trả về end
             rootPart.CFrame = CFrame.new(wp.pos)
-        end)
+        kết thúc)
 
         local delBtn = New("TextButton", {
-            Size=UDim2.new(0,26,0,22), Position=UDim2.new(1,-30,0,4),
-            Text="🗑", BackgroundColor3=C.RED, BackgroundTransparency=0.1,
+            Kích thước=UDim2.new(0,26,0,22), Vị trí=UDim2.new(1,-30,0,4),
+            Văn bản="🗑", Màu nền 3 = Đỏ đậm, Độ trong suốt nền = 0.1,
             TextColor3=C.WHITE, Font=Enum.Font.GothamBold, TextSize=10,
             BorderSizePixel=0, ZIndex=8,
-        }, row)
-        Corner(delBtn, UDim.new(0,4))
+        }, hàng ngang)
+        Góc(delBtn, UDim.new(0,4))
         delBtn.Activated:Connect(function()
             table.remove(waypoints, i)
             RebuildWaypoints()
             Store.saveSoon()
-        end)
+        kết thúc)
 
-        totalH = totalH + 34
-    end
+        tổngH = tổngH + 34
+    kết thúc
 
     wpListFrame.Size = UDim2.new(1,-16,0,totalH)
-    supportTab.CanvasSize = UDim2.new(0, 0, 0, posY + totalH + 20)
-end
+    supportTab.CanvasSize = UDim2.new(0, 0, 0, posY + TotalH + 20)
+kết thúc
 
 RebuildWaypoints()
 Store.restoreWaypoints = RebuildWaypoints
 
-local function NormalizeCode(c)
-    if type(c) ~= "string" then return "" end
-    c = S.SanitizeCode(c)   -- v4.4b: cắt wrapper "SIZE WRAPPER" cũ (nó đè layout GUI của game)
-    return S.NormalizeRunnable(c)
-end
+hàm cục bộ NormalizeCode(c)
+    nếu kiểu dữ liệu (c) ~= "string" thì trả về ""
+    c = S.SanitizeCode(c) -- v4.4b: cắt trình bao bọc cũ "SIZE WRAPPER" (nó ghi đè GUI của trò chơi)
+    trả về S.NormalizeRunnable(c)
+kết thúc
 
 local GAME_OWNED_GUI_NAMES = {
     Topbar = true, TopbarContainer = true, PlayerList = true, Chat = true,
     Backpack = true, DevConsoleUI = true, ScriptInvitationUI = true,
     FollowPromptUI = true, TouchControlsFrame = true, Main = true, ExMenu = true,
-    Notifications = true, PauseMenu = true, InGame = true, CoreGui = true,
+    Thông báo = true, Menu tạm dừng = true, Trong trò chơi = true, CoreGui = true,
 }
 
-local function ScanNewGuis(beforeGuis, mine, allowGuess)
-    local found, seen = {}, {}
-    local function take(g)
-        if not g or seen[g] then return end
-        seen[g] = true
+hàm cục bộ ScanNewGuis(beforeGuis, mine, allowGuess)
+    cục bộ được tìm thấy, đã thấy = {}, {}
+    hàm cục bộ take(g)
+        nếu không phải g hoặc đã thấy[g] thì trả về end
+        đã thấy[g] = đúng
         table.insert(found, g)
-    end
-    if mine then
+    kết thúc
+    nếu là của tôi thì
         for _, g in ipairs(mine) do
             if g:IsA("ScreenGui") or g:IsA("Folder") then take(g) end
-        end
-    end
-    local function scan(container)
-        if not container then return end
+        kết thúc
+    kết thúc
+    hàm cục bộ scan(container)
+        nếu không phải là container thì trả về end
         for _, g in ipairs(container:GetChildren()) do
-            if not beforeGuis[g] then
-                beforeGuis[g] = true
-                if allowGuess and (g:IsA("ScreenGui") or g:IsA("Folder")) and not GAME_OWNED_GUI_NAMES[g.Name] then
+            nếu không phải trước Guis[g] thì
+                trước khi Guis[g] = đúng
+                nếu allowGuess và (g:IsA("ScreenGui") hoặc g:IsA("Folder")) và không phải là GAME_OWNED_GUI_NAMES[g.Name] thì
                     local hasGuiChild = false
                     for _, c in ipairs(g:GetChildren()) do
                         if c:IsA("GuiObject") then hasGuiChild = true break end
-                    end
-                    if hasGuiChild then take(g) end
-                end
-            end
-        end
-    end
-    scan(playerGui)
+                    kết thúc
+                    nếu hasGuiChild thì lấy(g) kết thúc
+                kết thúc
+            kết thúc
+        kết thúc
+    kết thúc
+    quét (playerGui)
     if targetGui ~= playerGui then scan(targetGui) end
-    return found
-end
+    trả về đã tìm thấy
+kết thúc
 
-local function ForceStretchToParent(obj, maxDepth)
-    if not obj then return end
-    maxDepth = maxDepth or 0
+hàm cục bộ ForceStretchToParent(obj, maxDepth)
+    nếu không phải là obj thì trả về end
+    maxDepth = maxDepth hoặc 0
     pcall(function()
-        if obj:IsA("GuiObject") then
-            if obj:IsA("Frame") or obj:IsA("ScrollingFrame") or obj:IsA("CanvasGroup") then
-                local s = obj.Size
-                if s.X.Scale < 0.9 and s.X.Offset > 0 then
-                    obj.Size = UDim2.new(1, 0, s.Y.Scale > 0 and s.Y.Scale or 1, 0)
-                end
-                if obj.Position.X.Offset ~= 0 or obj.Position.Y.Offset ~= 0 then
+        nếu obj:IsA("GuiObject") thì
+            nếu obj:IsA("Frame") hoặc obj:IsA("ScrollingFrame") hoặc obj:IsA("CanvasGroup") thì
+                cục bộ s = obj.Size
+                nếu sXScale < 0,9 và sXOffset > 0 thì
+                    obj.Size = UDim2.new(1, 0, sYScale > 0 and sYScale or 1, 0)
+                kết thúc
+                nếu obj.Position.X.Offset ≥ 0 hoặc obj.Position.Y.Offset ≥ 0 thì
                     obj.Position = UDim2.new(0, 0, 0, 0)
-                end
-            end
-        end
-    end)
-    if maxDepth <= 0 then return end
+                kết thúc
+            kết thúc
+        kết thúc
+    kết thúc)
+    nếu maxDepth <= 0 thì trả về end
     for _, child in ipairs(obj:GetChildren()) do
         ForceStretchToParent(child, maxDepth - 1)
-    end
-end
+    kết thúc
+kết thúc
 
-function S.RegisterEmbed(host, gui, recs)
-    local entry = {host = host, gui = gui, recs = recs or {}, conns = {}}
+hàm S.RegisterEmbed(host, gui, recs)
+    mục nhập cục bộ = {host = host, gui = gui, recs = recs hoặc {}, conns = {}}
     pcall(function()
         entry.conns[#entry.conns+1] = gui:GetPropertyChangedSignal("Enabled"):Connect(function()
             pcall(function() host.Visible = gui.Enabled end)
-        end)
-    end)
+        kết thúc)
+    kết thúc)
     pcall(function()
         entry.conns[#entry.conns+1] = gui:GetPropertyChangedSignal("Parent"):Connect(function()
             pcall(function() host.Visible = (gui.Parent ~= nil) and gui.Enabled end)
-        end)
-    end)
+        kết thúc)
+    kết thúc)
     pcall(function()
         entry.conns[#entry.conns+1] = gui.Destroying:Connect(function()
             S.DropEmbed(entry, true)
-        end)
-    end)
+        kết thúc)
+    kết thúc)
     S.embeds[#S.embeds+1] = entry
-    return entry
-end
+    mục nhập trả lại
+kết thúc
 
-function S.FindEmbedByHost(host)
+hàm S.FindEmbedByHost(host)
     for i, e in ipairs(S.embeds) do
         if e.host == host then return e, i end
-    end
-    return nil
-end
+    kết thúc
+    trả về nil
+kết thúc
 
-function S.RemoveEmbedAt(i)
-    local e = S.embeds[i]
-    if not e then return end
+hàm S.RemoveEmbedAt(i)
+    cục bộ e = S.embeds[i]
+    nếu không phải e thì trả về end
     for _, c in ipairs(e.conns) do pcall(function() c:Disconnect() end) end
     table.remove(S.embeds, i)
-    return e
-end
+    trả về e
+kết thúc
 
-function S.DropEmbed(entry, keepQuiet)
+hàm S.DropEmbed(entry, keepQuiet)
     for i, e in ipairs(S.embeds) do
         if e == entry then S.RemoveEmbedAt(i); break end
-    end
+    kết thúc
     pcall(function() if entry.host and entry.host.Parent then entry.host:Destroy() end end)
-    if not keepQuiet then
-        print("[taodepzai v5.0 NOIR] Đã gỡ host nhúng khỏi tab")
-    end
-end
+    nếu không giữ im lặng thì
+        print("[taodepzai v5.0 NOIR] Đã gỡ bỏ máy chủ nhúng khỏi tab")
+    kết thúc
+kết thúc
 
-function S.RestoreEmbed(entry)
+hàm S.RestoreEmbed(entry)
     pcall(function() S.RestoreSnap(entry) end)
     entry.snap = nil
     for _, rec in ipairs(entry.recs or {}) do
         pcall(function()
-            if rec.obj and rec.origParent then
+            nếu rec.obj và rec.origParent thì
                 rec.obj.Parent = rec.origParent
-            end
-        end)
-    end
+            kết thúc
+        kết thúc)
+    kết thúc
     for i, e in ipairs(S.embeds) do
         if e == entry then S.RemoveEmbedAt(i); break end
-    end
+    kết thúc
     pcall(function() if entry.host and entry.host.Parent then entry.host:Destroy() end end)
-end
+kết thúc
 
-function S.PruneEmbeds()
+hàm S.PruneEmbeds()
     for i = #S.embeds, 1, -1 do
-        local e = S.embeds[i]
+        cục bộ e = S.embeds[i]
         local hostAlive = e.host and e.host.Parent
         local guiAlive = e.gui and e.gui.Parent
-        if not hostAlive or not guiAlive then
+        nếu không phải hostAlive hoặc không phải guiAlive thì
             if hostAlive then pcall(function() e.host:Destroy() end) end
             S.RemoveEmbedAt(i)
-        end
-    end
-end
+        kết thúc
+    kết thúc
+kết thúc
 
-function S.MeasureHost(host)
+hàm S.MeasureHost(host)
     local hx, hy = host.AbsolutePosition.X, host.AbsolutePosition.Y
     local minX, minY, maxX, maxY = math.huge, math.huge, -math.huge, -math.huge
-    local n = 0
+    cục bộ n = 0
     for _, ch in ipairs(host:GetChildren()) do
-        if ch:IsA("GuiObject") and ch.Visible ~= false then
+        nếu ch:IsA("GuiObject") và ch.Visible ~= false thì
             local p, sz = ch.AbsolutePosition, ch.AbsoluteSize
-            if p and sz then
-                minX = math.min(minX, p.X); minY = math.min(minY, p.Y)
-                maxX = math.max(maxX, p.X + sz.X); maxY = math.max(maxY, p.Y + sz.Y)
+            nếu p và sz thì
+                minX = math.min(minX, pX); minY = math.min(minY, pY)
+                maxX = math.max(maxX, pX + sz.X); maxY = math.max(maxY, pY + sz.Y)
                 n = n + 1
-            end
-        end
-    end
+            kết thúc
+        kết thúc
+    kết thúc
     if n == 0 or maxX <= minX or maxY <= minY then return nil end
     return { x = minX - hx, y = minY - hy, w = maxX - minX, h = maxY - minY }
-end
+kết thúc
 
-function S.SnapSubtree(list, node, isTop)
+hàm S.SnapSubtree(list, node, isTop)
     for _, c in ipairs(node:GetChildren()) do
-        if c:IsA("GuiObject") then
-            list[#list+1] = {
-                obj = c, top = isTop or nil,
-                Position = c.Position, Size = c.Size,
+        nếu c:Là một đối tượng GUI thì
+            danh sách[#list+1] = {
+                obj = c, top = isTop hoặc nil,
+                Vị trí = c.Vị trí, Kích thước = c.Kích thước,
                 TextSize = ((c.TextSize and c.TextSize > 0) and not c.TextScaled) and c.TextSize or nil,
             }
             S.SnapSubtree(list, c, false)
         elseif c:IsA("UICorner") then
             list[#list+1] = { obj = c, CornerRadius = c.CornerRadius }
         elseif c:IsA("UIPadding") then
-            list[#list+1] = { obj = c,
+            danh sách[#list+1] = { obj = c,
                 PadT = c.PaddingTop, PadB = c.PaddingBottom,
                 PadL = c.PaddingLeft, PadR = c.PaddingRight }
         elseif c:IsA("UIStroke") then
             list[#list+1] = { obj = c, Thick = c.Thickness }
-        end
-    end
-end
+        kết thúc
+    kết thúc
+kết thúc
 
-function S.RestoreSnap(entry)
-    if not entry.snap then return end
+hàm S.RestoreSnap(entry)
+    nếu không phải entry.snap thì trả về end
     for _, rec in ipairs(entry.snap) do
-        local o = rec.obj
-        if o and o.Parent then
+        cục bộ o = rec.obj
+        nếu o và o.Parent thì
             pcall(function()
                 if rec.Position then o.Position = rec.Position end
                 if rec.Size then o.Size = rec.Size end
                 if rec.TextSize then o.TextSize = rec.TextSize end
                 if rec.CornerRadius then o.CornerRadius = rec.CornerRadius end
-                if rec.PadT then
+                nếu rec.PadT thì
                     o.PaddingTop, o.PaddingBottom = rec.PadT, rec.PadB
                     o.PaddingLeft, o.PaddingRight = rec.PadL, rec.PadR
-                end
+                kết thúc
                 if rec.Thick then o.Thickness = rec.Thick end
-            end)
-        end
-    end
-end
+            kết thúc)
+        kết thúc
+    kết thúc
+kết thúc
 
-function S.FitEmbedded(entry)
-    local host, gui = entry.host, entry.gui
-    if not host or not host.Parent then return end
-    local function mulUDim(u, k)
-        return UDim2.new(u.X.Scale, math.floor(u.X.Offset * k + 0.5),
-                         u.Y.Scale, math.floor(u.Y.Offset * k + 0.5))
-    end
-    local function mulUDimShift(u, k, dx, dy)
-        return UDim2.new(u.X.Scale, math.floor(u.X.Offset * k + 0.5) + dx,
-                         u.Y.Scale, math.floor(u.Y.Offset * k + 0.5) + dy)
-    end
-    local function mulDim(u, k)
+hàm S.FitEmbedded(entry)
+    máy chủ cục bộ, gui = entry.host, entry.gui
+    nếu không phải máy chủ hoặc không phải máy chủ cha thì trả về kết thúc
+    hàm cục bộ mulUDim(u, k)
+        return UDim2.new(uXScale, math.floor(uXOffset * k + 0.5),
+                         uYScale, math.floor(uYOffset * k + 0.5))
+    kết thúc
+    hàm cục bộ mulUDimShift(u, k, dx, dy)
+        return UDim2.new(uXScale, math.floor(uXOffset * k + 0.5) + dx,
+                         uYScale, math.floor(uYOffset * k + 0.5) + dy)
+    kết thúc
+    hàm cục bộ mulDim(u, k)
         return UDim.new(u.Scale, math.floor(u.Offset * k + 0.5))
-    end
+    kết thúc
 
-    local area = host.Parent                      -- embedHost trong tab
+    vùng cục bộ = máy chủ.Cha -- embedHost trong tab
     local aw = area.AbsoluteSize.X - 6
     local ah = area.AbsoluteSize.Y - 6
-    if aw < 40 or ah < 40 then return end
+    nếu aw < 40 hoặc ah < 40 thì trả về end
 
     pcall(function()
         host.Size = UDim2.new(1, 0, 1, 0)
         host.Position = UDim2.new(0, 0, 0, 0)
         host.BackgroundTransparency = 1
-        host.ClipsDescendants = true              -- phần dư (nếu có) vừa vô hình vừa không nhận click
-    end)
+        Host.ClipsDescendants = true -- phần dư (nếu có) vừa vô hình không nhận click
+    kết thúc)
 
-    if not entry.snap then
+    nếu không phải entry.snap thì
         entry.snap = {}
         S.SnapSubtree(entry.snap, host, true)
         if #entry.snap == 0 then return end
-    end
+    kết thúc
     for _, rec in ipairs(entry.snap) do
         rec.dx, rec.dy = 0, 0
-    end
+    kết thúc
 
     S.RestoreSnap(entry)
-    local base = S.MeasureHost(host)
-    if not base then return end
+    cơ sở cục bộ = S.MeasureHost(host)
+    nếu không phải là cơ sở thì trả về kết thúc
 
     local s = math.clamp(math.min(aw / base.w, ah / base.h), 0.35, 3.0)
 
-    local function apply(k)
+    hàm cục bộ áp dụng(k)
         for _, rec in ipairs(entry.snap) do
-            local o = rec.obj
-            if o and o.Parent then
+            cục bộ o = rec.obj
+            nếu o và o.Parent thì
                 pcall(function()
                     if rec.Size then o.Size = mulUDim(rec.Size, k) end
-                    if rec.Position then
-                        if rec.top then
+                    nếu rec.Position thì
+                        nếu rec.top thì
                             o.Position = mulUDimShift(rec.Position, k, rec.dx or 0, rec.dy or 0)
-                        else
+                        khác
                             o.Position = mulUDim(rec.Position, k)
-                        end
-                    end
+                        kết thúc
+                    kết thúc
                     if rec.TextSize then o.TextSize = math.max(8, math.floor(rec.TextSize * k + 0.5)) end
-                    if rec.CornerRadius then
+                    nếu rec.CornerRadius thì
                         o.CornerRadius = UDim.new(rec.CornerRadius.Scale,
                             math.floor(rec.CornerRadius.Offset * k + 0.5))
-                    end
-                    if rec.PadT then
-                        o.PaddingTop    = mulDim(rec.PadT, k)
+                    kết thúc
+                    nếu rec.PadT thì
+                        o.PaddingTop = mulDim(rec.PadT, k)
                         o.PaddingBottom = mulDim(rec.PadB, k)
-                        o.PaddingLeft   = mulDim(rec.PadL, k)
-                        o.PaddingRight  = mulDim(rec.PadR, k)
-                    end
+                        o.PaddingLeft = mulDim(rec.PadL, k)
+                        o.PaddingRight = mulDim(rec.PadR, k)
+                    kết thúc
                     if rec.Thick then o.Thickness = math.max(1, rec.Thick * k) end
-                end)
-            end
-        end
-    end
+                kết thúc)
+            kết thúc
+        kết thúc
+    kết thúc
 
     local hw, hh = area.AbsoluteSize.X, area.AbsoluteSize.Y
-    local function align(k, tries)
-        apply(k)
+    hàm cục bộ align(k, tries)
+        áp dụng(k)
         local m = S.MeasureHost(host)
-        if not m then return k end
-        local dx = math.floor(-m.x + math.max(0, (aw - m.w) / 2) + 0.5)
-        local dy = math.floor(-m.y + math.max(0, (ah - m.h) / 2) + 0.5)
-        if math.abs(dx) > 0.5 or math.abs(dy) > 0.5 then
+        nếu không phải m thì trả về k kết thúc
+        local dx = math.floor(-mx + math.max(0, (aw - mw) / 2) + 0.5)
+        local dy = math.floor(-my + math.max(0, (ah - mh) / 2) + 0.5)
+        nếu math.abs(dx) > 0,5 hoặc math.abs(dy) > 0,5 thì
             for _, rec in ipairs(entry.snap) do
                 if rec.top then rec.dx, rec.dy = (rec.dx or 0) + dx, (rec.dy or 0) + dy end
-            end
-            apply(k)
-            m = S.MeasureHost(host) or m
-        end
-        if m and tries < 2 and (m.w > hw + 1 or m.h > hh + 1) then
-            local k2 = k * math.min(hw / m.w, hh / m.h)
-            if k2 < k * 0.98 then
+            kết thúc
+            áp dụng(k)
+            m = S.MeasureHost(host) hoặc m
+        kết thúc
+        nếu m và tries < 2 và (mw > hw + 1 hoặc mh > hh + 1) thì
+            local k2 = k * math.min(hw / mw, hh / mh)
+            nếu k2 < k * 0,98 thì
                 for _, rec in ipairs(entry.snap) do rec.dx, rec.dy = 0, 0 end
                 return align(math.max(k2, 0.15), tries + 1)
-            end
-        end
-        return k
-    end
+            kết thúc
+        kết thúc
+        trả về k
+    kết thúc
 
     s = align(s, 0)
     entry.fitScale = s
-    return s
-end
+    trả về s
+kết thúc
 
-function S.TabArea(nm)
-    local frame
-    if type(nm) == "string" and #nm > 0 then
+hàm S.TabArea(nm)
+    khung cục bộ
+    nếu type(nm) == "string" và #nm > 0 thì
         for _, ft in ipairs(featureTabs) do
             if ft.name == nm then frame = ft.frame break end
-        end
-    end
-    frame = frame or activeTab
-    if not frame then return nil end
-    local host = frame:FindFirstChild("ScriptHost")
-    local area = host or frame
+        kết thúc
+    kết thúc
+    khung = khung hoặc tab đang hoạt động
+    nếu không phải là khung thì trả về nil.
+    máy chủ cục bộ = frame:FindFirstChild("ScriptHost")
+    khu vực cục bộ = máy chủ hoặc khung
     local sz = area.AbsoluteSize
     return Vector2.new(math.max(0, sz.X - 6), math.max(0, sz.Y - 6))
-end
+kết thúc
 
 S.resizedCbs = {}
-function S.OnResized(fn)
+hàm S.OnResized(fn)
     if type(fn) ~= "function" then return nil end
     table.insert(S.resizedCbs, fn)
     return { Disconnect = function()
         for i, f in ipairs(S.resizedCbs) do
             if f == fn then table.remove(S.resizedCbs, i) break end
-        end
-    end }
-end
-function S.NotifyResize()
+        kết thúc
+    kết thúc }
+kết thúc
+hàm S.NotifyResize()
     local a = S.TabArea()
-    local cbs = {}
+    cục bộ cbs = {}
     for _, f in ipairs(S.resizedCbs) do cbs[#cbs+1] = f end
     for _, f in ipairs(cbs) do pcall(f, a) end
-end
+kết thúc
 
-function S.FeatureTabHost(nm)
-    if type(nm) == "string" and #nm > 0 then
+hàm S.FeatureTabHost(nm)
+    nếu type(nm) == "string" và #nm > 0 thì
         for _, ft in ipairs(featureTabs) do
-            if ft.name == nm then
+            nếu ft.name == nm thì
                 local h = ft.frame and ft.frame:FindFirstChild("ScriptHost")
-                if h then return h end
-            end
-        end
-    end
-    return activeTab and activeTab:FindFirstChild("ScriptHost")
-end
+                nếu h thì trả về h kết thúc
+            kết thúc
+        kết thúc
+    kết thúc
+    trả về activeTab và activeTab:FindFirstChild("ScriptHost")
+kết thúc
 
-function S.FitToTab(obj, nm)
-    if not obj then return nil end
-    local host = S.FeatureTabHost(nm)
-    if host and obj.Parent ~= host then
+hàm S.FitToTab(obj, nm)
+    nếu không phải là obj thì trả về nil.
+    máy chủ cục bộ = S.FeatureTabHost(nm)
+    nếu host và obj.Parent ~= host thì
         pcall(function() obj.Parent = host end)
-    end
+    kết thúc
     pcall(function()
         obj.Size = UDim2.new(1, 0, 1, 0)
         obj.Position = UDim2.new(0, 0, 0, 0)
-    end)
-    return obj
-end
+    kết thúc)
+    trả về obj
+kết thúc
 
 _G.BananaCatHubAPI = {
-    Version = "5.0",
+    Phiên bản = "5.0",
     LegacyVersion = "4.61", -- giữ thông tin tương thích cho script cũ
-    HubGui = gui,     -- v4.4e: sửa lỗi cũ — biến tên là `gui`, không phải `hubGui` (trước đây là nil)
-    Main = main,
+    HubGui = gui, -- v4.4e: sửa lỗi cũ — biến tên là `gui`, không phải `hubGui` (trước đây là nil)
+    Chính = chính,
     TabArea = function(self, nm) return S.TabArea(nm) end,
-    OnResize = function(self, fn) return S.OnResized(fn) end,      -- API:OnResize(f) -> {Disconnect=}
+    OnResize = function(self, fn) return S.OnResized(fn) end, -- API:OnResize(f) -> {Disconnect=}
     FeatureTabHost = function(self, nm) return S.FeatureTabHost(nm) end,
     FitToTab = function(self, obj, nm) return S.FitToTab(obj, nm) end,
-    EmbedGui = function(self, guiOrFrame, nm)                        -- xin hub mượn GUI vào tab
+    EmbedGui = function(self, guiOrFrame, nm) -- xin hub mượn GUI vào tab
         local scr = guiOrFrame
         if scr and not scr:IsA("ScreenGui") then scr = scr:FindFirstAncestorOfClass("ScreenGui") end
-        local host = S.FeatureTabHost(nm)
-        if not scr or not host then return nil end
-        return S.EmbedGui(scr, host)
-    end,
+        máy chủ cục bộ = S.FeatureTabHost(nm)
+        nếu không phải scr hoặc không phải máy chủ thì trả về nil.
+        trả về S.EmbedGui(scr, host)
+    kết thúc,
     MakeTemplate = function(self, nm, icon) return S.FeatureTemplate(nm, icon) end,
     ReleaseFocus = function(self) pcall(ReleaseHubFocus) end,
     ExternalGui = function(self, props)
-        props = props or {}
+        props = props hoặc {}
         local g = Instance.new("ScreenGui")
         g.Name = props.Name or ("BC_External_" .. tostring(math.random(10000, 99999)))
         g.IgnoreGuiInset = props.IgnoreGuiInset ~= false
         g.ResetOnSpawn = false
         g.ZIndexBehavior = Enum.ZIndexBehavior.Global
         g.DisplayOrder = tonumber(props.DisplayOrder) or 9000
-        g:SetAttribute("BCHub_External", true) -- báo cho hub biết đừng nhúng GUI này
+        g:SetAttribution("BCHub_External", true) -- báo cho hub biết đừng nhúng GUI này
         g.Parent = targetGui or (player and player:WaitForChild("PlayerGui"))
-        return g
-    end,
-    Crosshair = function(self, on)
+        trả lại g
+    kết thúc,
+    Tâm ngắm = hàm(self, on)
         if on == nil then return S.ToggleCrosshair() end
-        S.SetCrosshair(on and true or false)
-        return S.crosshairOn
-    end,
+        S.SetCrosshair(on và true hoặc false)
+        trả về S.crosshairOn
+    kết thúc,
 }
 
-function S.FeatureTemplate(nm, icon, stamp)
-    if type(nm) ~= "string" or #nm == 0 then nm = "Tính Năng Mới" end
+hàm S.FeatureTemplate(nm, icon, stamp)
+    nếu type(nm) ~= "string" hoặc #nm == 0 thì nm = " Tính Năng Mới" end
     if type(icon) ~= "string" or #icon == 0 then icon = "⚙️" end
     if type(stamp) ~= "string" then stamp = "" end
-    local head = [==[
+    đầu cục bộ = [==[
 -- ---------------------------------------------------------------------------
 
-local BC = { Name = "__BC_NAME__", Icon = "__BC_ICON__", DesignW = 620, DesignH = 384 }
+BC cục bộ = { Tên = "__BC_NAME__", Biểu tượng = "__BC_ICON__", Thiết kế chiều rộng = 620, Thiết kế chiều cao = 384 }
 
 local Players = game:GetService("Players")
-local player = Players.LocalPlayer
+người chơi cục bộ = Players.LocalPlayer
 local pg = player and player:WaitForChild("PlayerGui")
-if not pg then return end
+nếu không phải pg thì trả về end
 
 local gui = Instance.new("ScreenGui")
 gui.Name = BC.Name
@@ -3749,84 +4118,84 @@ gui.ResetOnSpawn = false
 gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 gui.Parent = pg
 
-local root = Instance.new("Frame")
+gốc cục bộ = Instance.new("Frame")
 root.Name = "Root"
 root.Size = UDim2.new(0, BC.DesignW, 0, BC.DesignH)
 root.Position = UDim2.new(0.5, -BC.DesignW / 2, 0.5, -BC.DesignH / 2)
 root.BackgroundColor3 = Color3.fromRGB(24, 26, 38)
 root.BorderSizePixel = 0
 root.Parent = gui
-local function bcCorner(o, r)
+hàm cục bộ bcCorner(o, r)
     local c = Instance.new("UICorner")
     c.CornerRadius = UDim.new(0, r)
-    c.Parent = o
-    return c
-end
+    c.Cha mẹ = o
+    trả về c
+kết thúc
 bcCorner(root, 8)
 
-local API = _G.BananaCatHubAPI
-local bcConn = nil        -- connection của API:OnResize, bcClose sẽ ngắt để không leak
-local function bcHubMain()
-    local ok, m = pcall(function() return API and API.Main end)
-    if ok and m and m.AbsoluteSize then return m end
-    local hub = pg:FindFirstChild("ExMenu") or pg:FindFirstChild("BananaCatHub")
-    if hub then
+API cục bộ = _G.BananaCatHubAPI
+local bcConn = nil -- kết nối của API:OnResize, bcClose sẽ ngắt để không bị rò rỉ
+hàm cục bộ bcHubMain()
+    cục bộ ok, m = pcall(function() trả về API và API.Main kết thúc)
+    nếu ok và m và m.AbsoluteSize thì trả về m.
+    trung tâm cục bộ = pg:FindFirstChild("ExMenu") hoặc pg:FindFirstChild("BananaCatHub")
+    nếu là trung tâm thì
         local f = hub:FindFirstChildWhichIsA("Frame")
-        if f and f.AbsoluteSize.X > 300 then return f end
-    end
-end
-local function bcArea()
+        nếu f và f.AbsoluteSize.X > 300 thì trả về f.
+    kết thúc
+kết thúc
+hàm cục bộ bcArea()
     local ok, v = pcall(function() return API and API.TabArea and API:TabArea(BC.Name) end)
-    if ok and v and v.X and v.X > 60 then return v end
-    local m = bcHubMain()
-    if m and m.AbsoluteSize.X > 300 then
+    Nếu ổn và v và vX và vX > 60 thì trả về v kết thúc
+    cục bộ m = bcHubMain()
+    nếu m và m.AbsoluteSize.X > 300 thì
         return Vector2.new(m.AbsoluteSize.X - 30, m.AbsoluteSize.Y - 72)
-    end
+    kết thúc
     local vp = Vector2.new(1280, 720)
     pcall(function() vp = workspace.CurrentCamera.ViewportSize end)
     local w = math.max(320, math.min(vp.X * 0.55, vp.X - 60))
     return Vector2.new(w, w * BC.DesignH / BC.DesignW)
-end
-local function bcFit()
+kết thúc
+hàm cục bộ bcFit()
     pcall(function()
-        local par = root.Parent
-        if par and not par:IsA("ScreenGui") then
+        cục bộ par = root.Parent
+        nếu par và không phải là par:IsA("ScreenGui") thì
             root.Size = UDim2.new(1, 0, 1, 0)
             root.Position = UDim2.new(0, 0, 0, 0)
-            return
-        end
+            trở lại
+        kết thúc
         local a = bcArea()
-        root.Size = UDim2.new(0, math.floor(a.X), 0, math.floor(a.Y))
-        root.Position = UDim2.new(0.5, -math.floor(a.X / 2), 0.5, -math.floor(a.Y / 2))
-    end)
-end
+        root.Size = UDim2.new(0, math.floor(aX), 0, math.floor(aY))
+        root.Position = UDim2.new(0.5, -math.floor(aX / 2), 0.5, -math.floor(aY / 2))
+    kết thúc)
+kết thúc
 bcConn = nil
 bcFit()
 pcall(function()
     if API and API.OnResize then bcConn = API:OnResize(bcFit) end
-end)
+kết thúc)
 local bcHubFrame = bcHubMain()
-if bcHubFrame then
+nếu bcHubFrame thì
     pcall(function()
         bcHubFrame:GetPropertyChangedSignal("AbsoluteSize"):Connect(bcFit)
-    end)
-end
+    kết thúc)
+kết thúc
 task.delay(0.25, bcFit)
 task.delay(1.2, bcFit)
 
 ]==]
-    local body = [==[
+    cơ thể cục bộ = [==[
 -- ---------- giao diện mẫu (thêm/bớt thoải mái, miễn là CON của panel/root) ----
 local title = Instance.new("TextLabel")
 title.Size = UDim2.new(1, -56, 0, 32)
 title.Position = UDim2.new(0, 10, 0, 0)
 title.BackgroundTransparency = 1
-title.Text = BC.Icon .. "  " .. BC.Name
+title.Text = BC.Icon .. " " .. BC.Name
 title.Font = Enum.Font.GothamBold
 title.TextSize = 15
 title.TextXAlignment = Enum.TextXAlignment.Left
 title.TextColor3 = Color3.fromRGB(255, 255, 255)
-title.Parent = root
+tiêu đề.Cha = gốc
 
 local closeBtn = Instance.new("TextButton")
 closeBtn.Name = "CloseBtn"
@@ -3841,20 +4210,20 @@ closeBtn.AutoButtonColor = true
 closeBtn.Parent = root
 bcCorner(closeBtn, 6)
 
-local panel = Instance.new("ScrollingFrame")
+bảng cục bộ = Instance.new("ScrollingFrame")
 panel.Name = "Panel"
 panel.Size = UDim2.new(1, -20, 1, -74)
 panel.Position = UDim2.new(0, 10, 0, 38)
 panel.BackgroundTransparency = 1
 panel.BorderSizePixel = 0
-panel.ScrollBarThickness = 4   -- v4.9: đồng bộ
+panel.ScrollBarThickness = 4 -- v4.9: đồng bộ
 panel.AutomaticCanvasSize = Enum.AutomaticSize.Y
 panel.CanvasSize = UDim2.new(0, 0, 0, 0)
 panel.Parent = root
 local list = Instance.new("UIListLayout")
 list.Padding = UDim.new(0, 6)
 list.SortOrder = Enum.SortOrder.LayoutOrder
-list.Parent = panel
+danh sách.Cha = bảng
 local pad = Instance.new("UIPadding")
 pad.PaddingRight = UDim.new(0, 8)
 pad.Parent = panel
@@ -3864,38 +4233,38 @@ bcStatus.Name = "Status"
 bcStatus.Size = UDim2.new(1, -20, 0, 22)
 bcStatus.Position = UDim2.new(0, 10, 1, -30)
 bcStatus.BackgroundTransparency = 1
-bcStatus.Text = "Tắt"
+bcStatus.Text = "Tót"
 bcStatus.TextColor3 = Color3.fromRGB(255, 214, 90)
 bcStatus.Font = Enum.Font.Gotham
 bcStatus.TextSize = 12
 bcStatus.TextXAlignment = Enum.TextXAlignment.Left
 bcStatus.Parent = root
 
-local function bcButton(txt, color)
+hàm cục bộ bcButton(txt, color)
     local b = Instance.new("TextButton")
     b.Size = UDim2.new(1, 0, 0, 30)
-    b.BackgroundColor3 = color or Color3.fromRGB(60, 120, 220)
+    b.BackgroundColor3 = color hoặc Color3.fromRGB(60, 120, 220)
     b.Text = txt
     b.Font = Enum.Font.GothamMedium
     b.TextSize = 13
     b.TextColor3 = Color3.fromRGB(255, 255, 255)
     b.AutoButtonColor = true
-    b.Parent = panel
+    b.Cha = bảng
     bcCorner(b, 6)
-    return b
-end
+    trả lại b
+kết thúc
 
-bcToggle = bcButton(BC.Icon .. "  Bật " .. BC.Name)
+bcToggle = bcButton(BC.Icon .. " Kích hoạt " .. BC.Name)
 
--- ---------- EXTERNAL OVERLAY (vòng tròn niêm tâm / ESP / HUD ngoài màn hình) ------
-local function bcMakeExternalGui(name, order)
-    local ext
-    local ok, API = pcall(function() return _G.BananaCatHubAPI end)
-    if ok and API and API.ExternalGui then
+--------- LỚP PHỦ BÊN NGOÀI (vòng tròn niêm tâm / ESP / HUD ngoài màn hình) ------
+hàm cục bộ bcMakeExternalGui(name, order)
+    số máy lẻ
+    cục bộ ok, API = pcall(function() return _G.BananaCatHubAPI end)
+    nếu ổn và API và API.ExternalGui thì
         ext = API:ExternalGui({Name = name, DisplayOrder = order})
-    else
+    khác
         ext = Instance.new("ScreenGui")
-        ext.Name = name
+        ext.Name = tên
         ext.IgnoreGuiInset = true
         ext.ResetOnSpawn = false
         ext.ZIndexBehavior = Enum.ZIndexBehavior.Global
@@ -3903,74 +4272,74 @@ local function bcMakeExternalGui(name, order)
         ext:SetAttribute("BCHub_External", true)
         local pg2 = game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui")
         local hui = pg2
-        if type(gethui) == "function" then
+        nếu kiểu dữ liệu (gethui) == "function" thì
             local okH, gotH = pcall(gethui)
-            if okH and gotH then hui = gotH end
-        end
+            nếu okH và gotH thì hui = gotH kết thúc
+        kết thúc
         ext.Parent = hui
-    end
-    return ext
-end
+    kết thúc
+    trả về phần mở rộng
+kết thúc
 
-local extGui = nil            -- ScreenGui overlay ngoài màn hình (được tạo khi bật tính năng)
+local extGui = nil -- Lớp phủ ScreenGui ngoài màn hình (có thể tạo khi bật tính năng)
 local extCrossOn = false
-local function bcToggleCross()
-    if not extGui then return end
-    extCrossOn = not extCrossOn
+hàm cục bộ bcToggleCross()
+    nếu không phải extGui thì trả về end
+    extCrossOn = không phải extCrossOn
     local ring = extGui:FindFirstChild("BC_Ring")
-    local dot  = extGui:FindFirstChild("BC_Dot")
+    local dot = extGui:FindFirstChild("BC_Dot")
     if ring then ring.Visible = extCrossOn end
-    if dot  then dot.Visible  = extCrossOn end
+    if dot then dot.Visible = extCrossOn end
     pcall(function()
-        if _G.BananaCatHubAPI and _G.BananaCatHubAPI.Crosshair then
-        end
-    end)
-end
+        nếu _G.BananaCatHubAPI và _G.BananaCatHubAPI.Crosshair thì
+        kết thúc
+    kết thúc)
+kết thúc
 
-local bcCrossBtn = bcButton("🎯  Niêm tâm: TẮT", Color3.fromRGB(160, 60, 255))
+local bcCrossBtn = bcButton("🎯 Niêm tâm: TẮT", Color3.fromRGB(160, 60, 255))
 
 pcall(function()
-    if _G.BananaCatHubAPI and _G.BananaCatHubAPI.OnResize then
-    end
-end)
+    nếu _G.BananaCatHubAPI và _G.BananaCatHubAPI.OnResize thì
+    kết thúc
+kết thúc)
 
 ]==]
-    local foot = [==[
+    chân cục bộ = [==[
 -- ---------- đóng / trả GUI (KHÔNG xóa khối này) ----------------------------
 local bcEnabled = false
 local bcConns = {}
-local function bcOn(inst, sig, fn)
+hàm cục bộ bcOn(inst, sig, fn)
     table.insert(bcConns, inst[sig]:Connect(fn))
-end
+kết thúc
 
-local function bcClose()
+hàm cục bộ bcClose()
     if bcConn then pcall(function() bcConn:Disconnect() end) bcConn = nil end
     for _, c in ipairs(bcConns) do pcall(function() c:Disconnect() end) end
     for i = #bcConns, 1, -1 do bcConns[i] = nil end
     bcEnabled = false
     pcall(function() gui.Enabled = false end)
     task.delay(0.06, function() pcall(function() gui:Destroy() end) end)
-end
+kết thúc
 bcOn(closeBtn, "MouseButton1Click", bcClose)
 
-_G.BC_FEATURES = _G.BC_FEATURES or {}
+_G.BC_FEATURES = _G.BC_FEATURES hoặc {}
 _G.BC_FEATURES[BC.Name] = { name = BC.Name, Close = bcClose, Gui = gui, Root = root }
 
 bcOn(bcCrossBtn, "MouseButton1Click", function()
-    if not bcEnabled then
+    nếu không được bật thì
         bcToggle:Activate()
         task.wait(0.1)
-    end
+    kết thúc
     bcToggleCross()
-    bcCrossBtn.Text = extCrossOn and "🎯  Niêm tâm: BẬT" or "🎯  Niêm tâm: TẮT"
-end)
+    bcCrossBtn.Text = extCrossOn và "🎯 Niêm tâm: BẬT" hoặc "🎯 Niêm tâm: TẮT"
+kết thúc)
 
 bcOn(bcToggle, "MouseButton1Click", function()
-    bcEnabled = not bcEnabled
-    bcToggle.Text = (bcEnabled and "⏹  Tắt " or BC.Icon .. "  Bật ") .. BC.Name
-    bcStatus.Text = bcEnabled and "Đang chạy…" or "Tắt"
-    if bcEnabled then
-        if not extGui or not extGui.Parent then
+    bcEnabled = không bcEnabled
+    bcToggle.Text = (bcEnabled and "⏹ " or BC.Icon .. " ") .. BC.Name
+    bcStatus.Text = bcEnabled và "Đang chạy..." hoặc "Tắt"
+    nếu bcEnabled thì
+        nếu không phải extGui hoặc không phải extGui.Parent thì
             extGui = bcMakeExternalGui(BC.Name .. "_Ext", 9500)
 
             local ring = Instance.new("Frame")
@@ -3992,148 +4361,148 @@ bcOn(bcToggle, "MouseButton1Click", function()
             dot.BackgroundColor3 = Color3.fromRGB(255,255,255)
             dot.BorderSizePixel = 0
             dot.AnchorPoint = Vector2.new(0.5, 0.5)
-            dot.Visible = false
+            chấm.Visible = false
             dot.Parent = extGui
             local dc = Instance.new("UICorner"); dc.CornerRadius = UDim.new(1, 0); dc.Parent = dot
 
-            local gap, ll = 22, 10
-            local function ln(w, h, x, y)
+            khoảng cách cục bộ, ll = 22, 10
+            hàm cục bộ ln(w, h, x, y)
                 local f = Instance.new("Frame")
                 f.Size = UDim2.new(0,w,0,h); f.Position = UDim2.new(0.5,x,0.5,y)
                 f.BackgroundColor3 = Color3.fromRGB(255,255,255); f.BorderSizePixel = 0
                 f.AnchorPoint = Vector2.new(0.5,0.5); f.BackgroundTransparency = 0.2
                 f.Name = "BC_Line"; f.Parent = extGui
-            end
+            kết thúc
             ln(2, ll, -1, -gap - ll/2)
-            ln(2, ll, -1,  gap + ll/2)
+            ln(2, ll, -1, gap + ll/2)
             ln(ll, 2, -gap - ll/2, -1)
-            ln(ll, 2,  gap + ll/2, -1)
-        end
+            ln(ll, 2, gap + ll/2, -1)
+        kết thúc
 
         table.insert(bcConns, task.spawn(function()
-            while bcEnabled do
+            trong khi bcEnabled thực hiện
                 task.wait(0.2)
                 pcall(function()
-                end)
-            end
-        end))
-    else
+                kết thúc)
+            kết thúc
+        kết thúc))
+    khác
         extCrossOn = false
         pcall(function() if extGui then extGui:Destroy() end end)
         extGui = nil
-        bcCrossBtn.Text = "🎯  Niêm tâm: TẮT"
-    end
-end)
+        bcCrossBtn.Text = "🎯 Niêm tâm: BẮT ĐẦU"
+    kết thúc
+kết thúc)
 
-print("✅ [" .. BC.Name .. "] đã nạp — dán vào tab \"Tạo Tính Năng\" của taodepzai v5.0 NOIR rồi bấm ▶ Chạy Script")
-return BC.Name
+print(" ✅ [" .. BC.Name .. "] đã tải — dán vào tab \"Tạo Tính Năng\" của taodepzai v5.0 NOIR rồi nhấn vào ► Chạy Script")
+Trả về BC.Name
 ]==]
-    local out = head .. body .. foot
+    đầu ra cục bộ = đầu .. thân .. chân
     out = (out:gsub("__BC_NAME__", function() return nm end))
     out = (out:gsub("__BC_ICON__", function() return icon end))
     out = (out:gsub("__BC_STAMP__", function() return (#stamp > 0) and stamp or "sinh bởi hub" end))
-    return out
-end
+    trở lại
+kết thúc
 
 _G.BananaCatHub_SyncEmbeds = function()
     pcall(S.SyncAllEmbeds)
-end
+kết thúc
 pcall(function()
     trackConn(main:GetPropertyChangedSignal("Size"):Connect(function()
-        BcFit()                 -- GUI đang nhúng trong tab -> đo & scale lại
-        pcall(S.NotifyResize)   -- script đứng ngoài (tự xin size) -> chạy lại bcFit của nó
-    end))
-end)
+        BcFit() -- GUI đang được nhúng trong tab -> đo & thu nhỏ lại
+        pcall(S.NotifyResize) -- script ngoài (tự xin size) -> chạy lại bcFit của nó
+    kết thúc))
+kết thúc)
 
-function S.SyncAllEmbeds()
+hàm S.SyncAllEmbeds()
     for _, e in ipairs(S.embeds) do
-        if e.host and e.host.Parent then
+        nếu e.host và e.host.Parent thì
             pcall(function() S.FitEmbedded(e) end)
-        end
-    end
-end
+        kết thúc
+    kết thúc
+kết thúc
 
-function S.ClearEmbedsUnder(containerFrame)
-    if not containerFrame then return 0 end
-    local n = 0
+hàm S.ClearEmbedsUnder(containerFrame)
+    nếu không phải containerFrame thì trả về 0.
+    cục bộ n = 0
     for i = #S.embeds, 1, -1 do
-        local e = S.embeds[i]
-        if e.host and e.host.Parent == containerFrame then
+        cục bộ e = S.embeds[i]
+        nếu e.host và e.host.Parent == containerFrame thì
             S.RestoreEmbed(e)
-            n += 1
-        end
-    end
+            n ± 1
+        kết thúc
+    kết thúc
     for _, child in ipairs(containerFrame:GetChildren()) do
-        if child.Name:sub(1, 9) == "Embedded_" then
+        nếu child.Name:sub(1, 9) == "Embedded_" thì
             pcall(function() child:Destroy() end)
-        end
-    end
-    return n
-end
+        kết thúc
+    kết thúc
+    trả về n
+kết thúc
 
-function S.EmbedGui(scr, containerFrame)
+hàm S.EmbedGui(scr, containerFrame)
     if not S.embedEnabled then return nil end
     if not scr or not scr.Parent then return nil end
     if not containerFrame or not containerFrame.Parent then return nil end
     if scr == gui or scr:IsDescendantOf(gui) then return nil end
     local isExt = false
     pcall(function() isExt = (scr:GetAttribute("BCHub_External") == true) end)
-    if isExt then return nil end
+    nếu isExt thì trả về nil
 
-    local hostName = "Embedded_"..scr.Name
+    Tên máy chủ cục bộ = "Embedded_"..scr.Name
     for _, ex in ipairs(containerFrame:GetChildren()) do
-        if ex.Name == hostName then
+        nếu ex.Name == hostName thì
             local e = S.FindEmbedByHost(ex)
-            if e then
+            nếu e thì
                 S.RestoreEmbed(e)
-            else
+            khác
                 pcall(function() ex:Destroy() end)
-            end
-        end
-    end
+            kết thúc
+        kết thúc
+    kết thúc
 
-    local host = New("Frame", {
-        Size = UDim2.new(1,0,1,0),
-        Position = UDim2.new(0,0,0,0),
-        BackgroundTransparency = 1,
+    máy chủ cục bộ = New("Frame", {
+        Kích thước = UDim2.new(1,0,1,0),
+        Vị trí = UDim2.new(0,0,0,0),
+        Độ trong suốt của nền = 1,
         BorderSizePixel = 0,
-        ZIndex = 5,
-        Name = hostName,
+        Chỉ số Z = 5,
+        Tên = hostName,
         ClipsDescendants = true,
     }, containerFrame)
 
-    local recs = {}
+    bản ghi cục bộ = {}
     for _, ch in ipairs(scr:GetChildren()) do
-        if ch:IsA("GuiObject") then
-            recs[#recs+1] = {obj = ch, origParent = scr, origPos = ch.Position, origSize = ch.Size}
-        end
-    end
-    if #recs == 0 then
+        nếu ch:IsA("GuiObject") thì
+            recs[#recs+1] = {obj = ch, origParent = scr, origPosition = ch.Position, origSize = ch.Size}
+        kết thúc
+    kết thúc
+    nếu #recs == 0 thì
         pcall(function() host:Destroy() end)
-        return nil
-    end
+        trả về nil
+    kết thúc
     for _, rec in ipairs(recs) do
         pcall(function() rec.obj.Parent = host end)
-    end
+    kết thúc
 
-    ForceStretchToParent(host)          -- root only (an toàn cho mấy frame con)
-    local entry = S.RegisterEmbed(host, scr, recs)
+    ForceStretchToParent(host) -- chỉ root (an toàn cho vài frame con)
+    mục nhập cục bộ = S.RegisterEmbed(host, scr, recs)
     pcall(function() S.FitEmbedded(entry) end)
     task.delay(0.08, function() pcall(function() S.FitEmbedded(entry) end) end)
-    task.delay(0.4,  function() pcall(function() S.FitEmbedded(entry) end) end)
-    return host
-end
+    task.delay(0.4, function() pcall(function() S.FitEmbedded(entry) end) end)
+    máy chủ trả về
+kết thúc
 
-S.crosshairGui   = nil
-S.crosshairBtns  = {}    -- danh sách nút 🎯 trên các tab để cập nhật text đồng loạt
-S.crosshairOn    = false
+S.crosshairGui = nil
+S.crosshairBtns = {} -- danh sách nút 🎯 trên các tab để cập nhật văn bản đồng loạt
+S.crosshairOn = false
 S.crosshairColor = Color3.fromRGB(255, 255, 255)
-S.crosshairSize  = 32
+S.crosshairSize = 32
 
-function S._buildCrosshair()
+hàm S._buildCrosshair()
     if S.crosshairGui and S.crosshairGui.Parent then return S.crosshairGui end
-    local g = New("ScreenGui", {
-        Name = "BananaCatHub_Crosshair",
+    cục bộ g = New("ScreenGui", {
+        Tên = "BananaCatHub_Crosshair",
         IgnoreGuiInset = true,
         ResetOnSpawn = false,
         ZIndexBehavior = Enum.ZIndexBehavior.Global,
@@ -4141,11 +4510,11 @@ function S._buildCrosshair()
     }, targetGui)
     g:SetAttribute("BCHub_External", true)
 
-    local ring = New("Frame", {
-        Name = "Ring",
-        Size = UDim2.new(0, S.crosshairSize, 0, S.crosshairSize),
-        Position = UDim2.new(0.5, -S.crosshairSize/2, 0.5, -S.crosshairSize/2),
-        BackgroundTransparency = 1,
+    vòng cục bộ = New("Khung", {
+        Tên = "Nhẫn",
+        Kích thước = UDim2.new(0, S.crosshairSize, 0, S.crosshairSize),
+        Vị trí = UDim2.new(0.5, -S.crosshairSize/2, 0.5, -S.crosshairSize/2),
+        Độ trong suốt của nền = 1,
         BorderSizePixel = 0,
         AnchorPoint = Vector2.new(0.5, 0.5),
     }, g)
@@ -4153,778 +4522,778 @@ function S._buildCrosshair()
     New("UIStroke", {Thickness = 1.5, Color = S.crosshairColor, Transparency = 0.1}, ring)
 
     local dot = New("Frame", {
-        Name = "Dot",
-        Size = UDim2.new(0, 3, 0, 3),
-        Position = UDim2.new(0.5, -2, 0.5, -2),
+        Tên = "Dot",
+        Kích thước = UDim2.new(0, 3, 0, 3),
+        Vị trí = UDim2.new(0.5, -2, 0.5, -2),
         BackgroundColor3 = S.crosshairColor,
         BorderSizePixel = 0,
         AnchorPoint = Vector2.new(0.5, 0.5),
     }, g)
     New("UICorner", {CornerRadius = UDim.new(1, 0)}, dot)
 
-    local gap = S.crosshairSize/2 + 6
+    khoảng cách cục bộ = S.crosshairSize/2 + 6
     local lineLen = 10
-    local function line(name, w, h, x, y)
+    hàm cục bộ line(name, w, h, x, y)
         local ln = New("Frame", {
-            Name = name, Size = UDim2.new(0, w, 0, h),
-            Position = UDim2.new(0.5, x, 0.5, y),
+            Tên = tên, Kích thước = UDim2.new(0, w, 0, h),
+            Vị trí = UDim2.new(0.5, x, 0.5, y),
             BackgroundColor3 = S.crosshairColor, BorderSizePixel = 0,
             AnchorPoint = Vector2.new(0.5, 0.5), BackgroundTransparency = 0.15,
         }, g)
-        return ln
-    end
-    line("Top",    2, lineLen, -1, -gap - lineLen/2)
-    line("Bottom", 2, lineLen, -1,  gap + lineLen/2)
-    line("Left",   lineLen, 2, -gap - lineLen/2, -1)
-    line("Right",  lineLen, 2,  gap + lineLen/2, -1)
+        trả về ln
+    kết thúc
+    line("Top", 2, lineLen, -1, -gap - lineLen/2)
+    line("Bottom", 2, lineLen, -1, gap + lineLen/2)
+    line("Left", lineLen, 2, -gap - lineLen/2, -1)
+    line("Phải", lineLen, 2, gap + lineLen/2, -1)
 
     S.crosshairGui = g
-    return g
-end
+    trả lại g
+kết thúc
 
-function S.SetCrosshair(on)
+hàm S.SetCrosshair(on)
     S.crosshairOn = (on == true)
-    if S.crosshairOn then
+    nếu S.crosshairOn thì
         S._buildCrosshair()
         if S.crosshairGui then S.crosshairGui.Enabled = true end
-    else
+    khác
         if S.crosshairGui then S.crosshairGui.Enabled = false end
-    end
+    kết thúc
     for _, b in ipairs(S.crosshairBtns) do
         pcall(function()
-            if b and b.Parent then
-                b.Text = S.crosshairOn and "🎯 Tâm: BẬT" or "🎯 Tâm"
-                b.BackgroundColor3 = S.crosshairOn and Color3.fromRGB(180, 80, 220) or C.PURPLE
-            end
-        end)
-    end
-end
+            nếu b và b.Cha thì
+                b.Text = S.crosshairOn và "🎯 Tâm: BẬT" hoặc "🎯 Tâm"
+                b.BackgroundColor3 = S.crosshairOn và Color3.fromRGB(180, 80, 220) hoặc C.PURPLE
+            kết thúc
+        kết thúc)
+    kết thúc
+kết thúc
 
-function S.ToggleCrosshair()
+hàm S.ToggleCrosshair()
     S.SetCrosshair(not S.crosshairOn)
-    return S.crosshairOn
-end
+    trả về S.crosshairOn
+kết thúc
 
-function S.RegisterCrosshairBtn(btn)
-    if not btn then return end
+hàm S.RegisterCrosshairBtn(btn)
+    nếu không phải btn thì trả về end
     table.insert(S.crosshairBtns, btn)
     pcall(function()
-        btn.Text = S.crosshairOn and "🎯 Tâm: BẬT" or "🎯 Tâm"
+        btn.Text = S.crosshairOn và "🎯 Tâm: BẬT" hoặc "🎯 Tâm"
         btn.BackgroundColor3 = S.crosshairOn and Color3.fromRGB(180, 80, 220) or C.PURPLE
-    end)
+    kết thúc)
     btn.Activated:Connect(function()
         S.ToggleCrosshair()
-    end)
-end
+    kết thúc)
+kết thúc
 
-S.EMBED_TRY_DELAYS   = {0.6, 1.8, 4, 7, 10}  -- các mốc thử nhúng lại sau khi bấm ▶
-S.EMBED_HOOK_GRACE   = 11                    -- giữ hook + watcher bấy nhiêu giây (bắt GUI sinh trễ)
-S.EMBED_PROBABLE_AGE = 5                     -- GUI "không chắc chắn" chỉ tự nhận nếu sinh trong 5s đầu
-S.EMBED_CHILD_WAIT   = 15                    -- số lần chờ GUI "chín" (0.2s/lần = tối đa 3s)
-S.activeHook = nil                           -- chỉ 1 hook sống tại 1 thời điểm (tránh đè hook script khác)
+S.EMBED_TRY_DELAYS = {0.6, 1.8, 4, 7, 10} -- các cột thử lại sau khi nhấn ▶
+S.EMBED_HOOK_GRACE = 11 -- giữ hook + watcher đà bao nhiêu giây (bắt GUI sinh đẩu)
+S.EMBED_PROBABLE_AGE = 5 -- GUI "không chắc chắn" tự động nhận chỉ nếu sinh trong 5 giây đầu
+S.EMBED_CHILD_WAIT = 15 -- GUI chờ "chín" số lần (0,2s/lần = tối đa 3s)
+S.activeHook = nil -- chỉ 1 hook sống tại 1 thời điểm (khác hook script đè)
 
 S.SYSTEM_GUI_NAMES = {
-    Topbar = true, TopbarContainer = true, PlayerList = true, Chat = true, Backpack = true,
+    Thanh trên cùng = true, Khung chứa thanh trên cùng = true, Danh sách người chơi = true, Trò chuyện = true, Ba lô = true,
     DevConsoleUI = true, ScriptInvitationUI = true, FollowPromptUI = true,
     TouchControlsFrame = true, PauseMenu = true, CoreGui = true, ExMenu = true,
 }
 S.GENERIC_GUI_NAMES = { Main = true, InGame = true, Notifications = true }
 
-function S.IsEmbeddable(g, containerFrame, trust)
-    if not g then return false, "không có GUI" end
-    if not g.Parent then return false, "GUI chưa có Parent (script chưa gắn lên màn hình)" end
+hàm S.IsEmbeddable(g, containerFrame, trust)
+    nếu không phải g thì trả về false, kết thúc "không có GUI"
+    nếu không phải g.Parent thì trả về false, "GUI chưa có Parent (script chưa được gắn lên màn hình)" end
     if not (g:IsA("ScreenGui") or g:IsA("Folder")) then return false, "không phải ScreenGui/Folder" end
-    if g == gui or g:IsDescendantOf(gui) then return false, "là GUI của chính hub" end
-    if g.Name == "ExMenu" then return false, "trùng tên GUI của hub (ExMenu)" end
-    if S.SYSTEM_GUI_NAMES[g.Name] then
+    if g == gui hoặc g:IsDescendantOf(gui) thì trả về false, "là GUI của hub chính" end
+    if g.Name == "ExMenu" thì trả về false, "sử dụng tên GUI của hub (ExMenu)" end
+    nếu S.SYSTEM_GUI_NAMES[g.Name] thì
         return false, "là GUI của game/hệ thống (" .. tostring(g.Name) .. ")"
-    end
-    if trust ~= "certain" and trust ~= "manual" and S.GENERIC_GUI_NAMES[g.Name] then
-        return false, "tên '" .. tostring(g.Name) .. "' hay là UI của game — bật 🕵 hoặc bấm 🔁 để ép nhúng"
-    end
+    kết thúc
+    nếu độ tin cậy ~= "certain" và độ tin cậy ~= "manual" và S.GENERIC_GUI_NAMES[g.Name] thì
+        return false, "tên '" .. tostring(g.Name) .. "' hay là UI của game — bật 🕵 hoặc nhấn 🔁 để ép nhúng"
+    kết thúc
     local isExt = false
     pcall(function() isExt = (g:GetAttribute("BCHub_External") == true) end)
-    if isExt then return false, "là overlay ngoài màn hình (BCHub_External)" end
-    if containerFrame and g:IsDescendantOf(containerFrame) then return false, "đã nằm trong tab rồi" end
+    nếu isExt thì trả về false, "là lớp phủ ngoài màn hình (BCHub_External)" end
+    if containerFrame and g:IsDescendantOf(containerFrame) then return false, " đã nằm trong tab rồi" end
     for _, e in ipairs(S.embeds) do
-        if e.gui == g then return false, "đã được nhúng ở tab khác" end
-    end
+        if e.gui == g thì trả về false, "đã được nhúng ở tab khác" end
+    kết thúc
     local hasChild = false
     for _, c in ipairs(g:GetChildren()) do
         if c:IsA("GuiObject") then hasChild = true break end
-    end
-    if not hasChild then return false, "chưa có frame con (script còn đang dựng GUI)" end
-    return true
-end
+    kết thúc
+    nếu không có hasChild thì trả về false, "chưa có frame con (script còn dựng GUI)" end
+    trả về giá trị đúng
+kết thúc
 
-function S.HookInstanceNew()
-    if S.activeHook then pcall(S.activeHook) end   -- gỡ hook lần chạy trước, tránh chồng chain
+hàm S.HookInstanceNew()
+    if S.activeHook thì pcall(S.activeHook) end -- gỡ hook lần chạy trước, tránh chồng chuỗi
     S.activeHook = nil
 
-    local records = {}
-    local st = {
+    bản ghi cục bộ = {}
+    cục bộ st = {
         hooked = false, available = false, viaHookfunction = false,
         realNew = nil, ours = nil, origFromHook = nil,
-        probing = false, probeSeen = false,
-        inRun = true, graceUntil = nil, t0 = os.clock(),
+        thăm dò = false, thăm dò đã thấy = false,
+        inRun = true, GraceUntil = nil, t0 = os.clock(),
     }
     local myCo = coroutine.running()
 
-    local function unhook()
-        if not st.hooked then return end
+    hàm cục bộ unhook()
+        nếu không được móc nối thì trả về end
         st.hooked = false
-        if st.viaHookfunction then
+        nếu st.viaHookfunction thì
             pcall(function()
-                if type(hookfunction) == "function" and st.origFromHook then
+                nếu kiểu của hookfunction là "function" và st.origFromHook thì
                     hookfunction(Instance.new, st.origFromHook)
-                end
-            end)
-        else
+                kết thúc
+            kết thúc)
+        khác
             pcall(function()
                 if Instance.new == st.ours then Instance.new = st.realNew end
-            end)
-        end
+            kết thúc)
+        kết thúc
         if S.activeHook == unhook then S.activeHook = nil end
-    end
+    kết thúc
 
-    local function recorder(cls, ...)
+    hàm cục bộ recorder(cls, ...)
         local inst = st.realNew(cls, ...)
-        if st.probing then
+        nếu st.probing thì
             if cls == "ScreenGui" then st.probeSeen = true end
-            return inst
-        end
-        if st.hooked and cls == "ScreenGui" then
+            trả lại inst
+        kết thúc
+        nếu st.hooked và cls == "ScreenGui" thì
             local now = os.clock()
-            records[#records + 1] = {
-                inst      = inst,
-                certain   = (coroutine.running() == myCo),
-                duringRun = (st.inRun == true) or (st.graceUntil ~= nil and now < st.graceUntil),
-                age       = now - st.t0,
-                embedded  = false,
-                via       = "hook",
+            bản ghi[#bản ghi + 1] = {
+                inst = inst,
+                certain = (coroutine.running() == myCo),
+                whileRun = (st.inRun == true) hoặc (st.graceUntil ~= nil và bây giờ là < st.graceUntil),
+                tuổi = hiện tại - st.t0,
+                nhúng = sai,
+                qua = "móc",
             }
-        end
-        return inst
-    end
+        kết thúc
+        trả lại inst
+    kết thúc
 
     pcall(function()
         st.realNew = Instance.new
-        st.ours = recorder
+        st.ours = máy ghi âm
         Instance.new = st.ours
         st.hooked = (Instance.new == st.ours)
-    end)
+    kết thúc)
 
-    if not st.hooked and type(hookfunction) == "function" then
+    nếu st.hooked không phải là và kiểu của hookfunction là "function" thì
         pcall(function()
-            st.ours = recorder
+            st.ours = máy ghi âm
             st.origFromHook = hookfunction(Instance.new, st.ours)
             if st.origFromHook then st.realNew = st.origFromHook end
             st.hooked = true
             st.viaHookfunction = true
-        end)
-    end
+        kết thúc)
+    kết thúc
 
-    if st.hooked then
+    nếu st.hooked thì
         pcall(function()
             st.probing, st.probeSeen = true, false
-            local probe = Instance.new("ScreenGui")   -- không gắn Parent, hủy ngay
+            local thăm dò = Instance.new("ScreenGui") -- không gắn kết Parent, hủy bỏ ngay
             st.probing = false
             st.available = (st.probeSeen == true)
             if probe and probe.Destroy then pcall(function() probe:Destroy() end) end
-        end)
-        if not st.available then
+        kết thúc)
+        nếu không có sẵn thì
             pcall(unhook)
-        end
-    end
+        kết thúc
+    kết thúc
 
     S.activeHook = unhook
-    return unhook, records, st
-end
+    trả lại móc, ghi âm, st
+kết thúc
 
-function S.WatchNewGuis(records, st)
-    local conns = {}
-    local function already(g)
+hàm S.WatchNewGuis(records, st)
+    kết nối cục bộ = {}
+    hàm cục bộ đã có(g)
         for _, r in ipairs(records) do if r.inst == g then return true end end
-        return false
-    end
-    local function makeHandler()
-        return function(child)
+        trả về false
+    kết thúc
+    hàm cục bộ makeHandler()
+        trả về hàm (con)
             if st.watchOn == false then return end
-            if not child then return end
+            nếu không phải là con thì trả về end
             local okType, isGui = pcall(function()
-                return child:IsA("ScreenGui") or child:IsA("Folder")
-            end)
-            if not (okType and isGui) then return end
+                trả về child:IsA("ScreenGui") hoặc child:IsA("Folder")
+            kết thúc)
+            nếu không (okType và isGui) thì trả về end
             if child == gui or already(child) then return end
             local now = os.clock()
-            records[#records + 1] = {
-                inst      = child,
-                certain   = false,
-                duringRun = (st.inRun == true) or (st.graceUntil ~= nil and now < st.graceUntil),
-                age       = now - st.t0,
-                embedded  = false,
-                via       = "watch",
+            bản ghi[#bản ghi + 1] = {
+                inst = con,
+                chắc chắn = sai,
+                whileRun = (st.inRun == true) hoặc (st.graceUntil ~= nil và bây giờ là < st.graceUntil),
+                tuổi = hiện tại - st.t0,
+                nhúng = sai,
+                qua = "xem",
             }
-        end
-    end
+        kết thúc
+    kết thúc
     local seenCtn, containers = {}, {playerGui, targetGui}
     pcall(function()
         local cg = game:GetService("CoreGui")
-        if cg then containers[#containers + 1] = cg end
-    end)
+        nếu cg thì containers[#containers + 1] = cg end
+    kết thúc)
     for _, ctn in ipairs(containers) do
-        if ctn and not seenCtn[ctn] then
+        nếu ctn và không thấyCtn[ctn] thì
             seenCtn[ctn] = true
             pcall(function()
                 conns[#conns + 1] = ctn.ChildAdded:Connect(makeHandler())
-            end)
-        end
-    end
+            kết thúc)
+        kết thúc
+    kết thúc
     st.watchOn = true
-    local function stopWatch()
+    hàm cục bộ stopWatch()
         st.watchOn = false
         for _, c in ipairs(conns) do pcall(function() c:Disconnect() end) end
-    end
-    return stopWatch, conns
-end
+    kết thúc
+    trả về đồng hồ bấm giờ, conns
+kết thúc
 
-function S.EmbedRecorded(records, containerFrame, mode, verbose)
+hàm S.EmbedRecorded(records, containerFrame, mode, verbose)
     if type(records) ~= "table" or #records == 0 then return 0, nil end
     if not containerFrame or not containerFrame.Parent then return 0, "tab đã bị đóng" end
     if not S.embedEnabled then return 0, "🧩 nhúng đang TẮT" end
-    mode = mode or "run"
+    chế độ = chế độ hoặc "chạy"
 
-    local order = {}
+    thứ tự cục bộ = {}
     for _, r in ipairs(records) do
-        if r and r.inst and not r.embedded then order[#order + 1] = r end
-    end
-    local function score(r)
-        if r.certain then return 3 end
+        nếu r và r.inst và không r.embedded thì order[#order + 1] = r end
+    kết thúc
+    điểm chức năng cục bộ (r)
+        nếu r.certain thì trả về 3 end
         if r.duringRun then return 2 end
-        return 1
-    end
+        trả về 1
+    kết thúc
     table.sort(order, function(a, b) return score(a) > score(b) end)
 
-    local done, whyTop = 0, nil
+    cục bộ đã xong, whyTop = 0, nil
     for _, r in ipairs(order) do
-        local accept = false
-        if mode == "all" then
-            accept = true
-        elseif r.certain then
-            accept = true
+        chấp nhận cục bộ = false
+        nếu mode == "all" thì
+            chấp nhận = đúng
+        nếu r.certain thì
+            chấp nhận = đúng
         elseif r.duringRun and mode ~= "strict" then
-            accept = true
+            chấp nhận = đúng
         elseif mode == "any" and (r.age or 0) <= S.EMBED_PROBABLE_AGE then
-            accept = true
-        end
-        if accept then
-            local trust
-            if r.certain then trust = "certain"
+            chấp nhận = đúng
+        kết thúc
+        nếu chấp nhận thì
+            quỹ tín thác địa phương
+            Nếu r.certain thì trust = "certain"
             elseif r.duringRun or mode == "all" then trust = "manual"
-            else trust = "guess" end
+            Ngược lại, tin tưởng = "đoán" kết thúc
             local okE, why = S.IsEmbeddable(r.inst, containerFrame, trust)
-            if okE then
-                if S.EmbedGui(r.inst, containerFrame) then
+            nếu okE thì
+                nếu S.EmbedGui(r.inst, containerFrame) thì
                     r.embedded = true
                     r.why = nil
-                    done += 1
-                else
+                    đã hoàn thành += 1
+                khác
                     r.why = "S.EmbedGui từ chối"
                     whyTop = r.why
-                end
-            else
+                kết thúc
+            khác
                 r.why = why
-                if why then whyTop = why end
-                if verbose and not r.reported then
+                nếu tại sao thì whyTop = why end
+                nếu chi tiết và không được báo cáo thì
                     r.reported = true
                     pcall(function()
                         print(string.format("[taodepzai v5.0 NOIR] 🔍 bỏ qua GUI '%s' (%s, %s): %s",
                             tostring(r.inst and r.inst.Name), tostring(r.via), trust, tostring(why)))
-                    end)
-                end
-            end
-        end
-    end
-    return done, whyTop
-end
+                    kết thúc)
+                kết thúc
+            kết thúc
+        kết thúc
+    kết thúc
+    Trả về đã xong, tại sao?
+kết thúc
 
-function S.FindFeatureByHost(host)
-    if not host then return nil end
+hàm S.FindFeatureByHost(host)
+    nếu không phải là máy chủ thì trả về nil.
     for _, ft in ipairs(featureTabs) do
         if ft.frame and ft.frame.Parent and ft.frame:FindFirstChild("ScriptHost") == host then return ft end
-    end
-    return nil
-end
+    kết thúc
+    trả về nil
+kết thúc
 
-function S.FindActiveFeature()
+hàm S.FindActiveFeature()
     for _, ft in ipairs(featureTabs) do
         if ft.frame == activeTab then return ft end
-    end
-    return nil
-end
+    kết thúc
+    trả về nil
+kết thúc
 
-function S.DiagText(st, records)
-    local hookTxt = "không rõ"
-    if st then
-        if st.available then
-            hookTxt = st.viaHookfunction and "OK (qua hookfunction)" or "OK (ghi đè Instance.new)"
-        elseif st.hooked then
-            hookTxt = "cài được nhưng KHÔNG ăn (executor bỏ qua hook)"
-        else
-            hookTxt = "BỊ CHẶN (executor không cho sửa Instance.new)"
-        end
-    end
-    local n, certain, watch, scan = 0, 0, 0, 0
+hàm S.DiagText(st, records)
+    local hookTxt = "Không rõ"
+    nếu st thì
+        nếu st.available thì
+            hookTxt = st.viaHookfunction and "OK (qua hookfunction)" or "OK ​​(ghi ngo Instance.new)"
+        nếu st.hooked thì
+            hookTxt = "cài được nhưng KHÔNG ăn (người thực hiện bỏ qua hook)"
+        khác
+            hookTxt = "BỊ CHẶN (người thực thi không cho sửa Instance.new)"
+        kết thúc
+    kết thúc
+    cục bộ n, chắc chắn, theo dõi, quét = 0, 0, 0, 0
     for _, r in ipairs(records or {}) do
-        n += 1
-        if r.certain then certain += 1 end
+        n ± 1
+        nếu r.certain thì certain += 1 end
         if r.via == "watch" then watch += 1 end
         if r.via == "scan" then scan += 1 end
-    end
+    kết thúc
     local lastWhy = nil
     for _, r in ipairs(records or {}) do if r.why then lastWhy = r.why end end
-    return string.format("hook=%s · ghi nhận %d GUI (chắc chắn %d, watcher %d, quét %d) · nhúng=%s · lý do cuối: %s",
+    return string.format("hook=%s · ghi nhận %d GUI (chắc chắn %d, watcher %d, quét %d) · nhúng=%s · lý do cuối cùng: %s",
         hookTxt, n, certain, watch, scan, tostring(S.embedEnabled and "BẬT" or "TẮT"), tostring(lastWhy or "—"))
-end
+kết thúc
 
-function S.RescueScan(ft, host)
+hàm S.RescueScan(ft, host)
     host = host or (ft and ft.frame and ft.frame:FindFirstChild("ScriptHost"))
-    if not host or not host.Parent then return 0 end
+    nếu không phải là máy chủ hoặc không phải là máy chủ cha thì trả về 0.
     if not S.embedEnabled then return 0 end
-    local containers = {playerGui}
+    các container cục bộ = {playerGui}
     if targetGui ~= playerGui then containers[#containers + 1] = targetGui end
     pcall(function()
         local cg = game:GetService("CoreGui")
-        if cg then containers[#containers + 1] = cg end
-    end)
-    local seen, n = {}, 0
+        nếu cg thì containers[#containers + 1] = cg end
+    kết thúc)
+    cục bộ được nhìn thấy, n = {}, 0
     for _, ctn in ipairs(containers) do
         pcall(function()
             for _, g in ipairs(ctn:GetChildren()) do
-                if n < 3 and not seen[g] then
-                    seen[g] = true
+                nếu n < 3 và không được nhìn thấy[g] thì
+                    đã thấy[g] = đúng
                     local okE = S.IsEmbeddable(g, host, "manual")
-                    if okE and S.EmbedGui(g, host) then
-                        n += 1
-                        if ft then
-                            ft.records = ft.records or {}
+                    nếu okE và S.EmbedGui(g, host) thì
+                        n ± 1
+                        nếu ft thì
+                            ft.records = ft.records hoặc {}
                             ft.records[#ft.records + 1] =
                                 {inst = g, certain = false, duringRun = true, age = 0, embedded = true, via = "rescue"}
-                        end
-                    end
-                end
-            end
-        end)
-        if n >= 3 then break end
-    end
-    return n
-end
+                        kết thúc
+                    kết thúc
+                kết thúc
+            kết thúc
+        kết thúc)
+        nếu n >= 3 thì thoát
+    kết thúc
+    trả về n
+kết thúc
 
-function S.ReembedFeature(ft, allowScan)
+hàm S.ReembedFeature(ft, allowScan)
     if not ft or not ft.frame or not ft.frame.Parent then return 0, "tab không còn tồn tại" end
     if not S.embedEnabled then return 0, "🧩 nhúng đang TẮT" end
-    local host = ft.frame:FindFirstChild("ScriptHost")
-    if not host then return 0, "tab thiếu ScriptHost" end
+    máy chủ cục bộ = ft.frame:FindFirstChild("ScriptHost")
+    if not host then return 0, "tab lack ScriptHost" end
     for _, e in ipairs(S.embeds) do
-        if e.host and e.host.Parent == host then return 0, "tab đã có GUI nhúng sẵn" end
-    end
+        nếu e.host và e.host.Parent == hosting thì trả về 0, "tab đã có sẵn GUI nhúng" end
+    kết thúc
     local n, why = S.EmbedRecorded(ft.records, host, "all", true)
-    if n > 0 then return n end
-    if allowScan == true then
-        local m = S.RescueScan(ft, host)
-        if m > 0 then return m end
-        why = "không tìm thấy GUI nào nằm ngoài menu để nhúng"
-    end
-    if not why then
-        why = (ft.records and #ft.records > 0)
-            and (ft.lastWhy or "GUI chưa sẵn sàng để nhúng")
-            or  "chưa ghi nhận được GUI nào (script có tạo ScreenGui không?)"
-    end
-    return 0, why
-end
+    nếu n > 0 thì trả về n
+    nếu allowScan == true thì
+        cục bộ m = S.RescueScan(ft, host)
+        nếu m > 0 thì trả về m
+        tại sao = "không tìm thấy GUI nào ngoài menu để nhúng"
+    kết thúc
+    Nếu không thì tại sao?
+        tại sao = (số bản ghi ft và số bản ghi ft > 0)
+            và (ft.last Why hoặc "GUI chưa sẵn sàng để nhúng")
+            hoặc "không ghi được GUI nào (tập lệnh có tạo ScreenGui không?)"
+    kết thúc
+    trả về 0, tại sao?
+kết thúc
 
-function S.OnFeatureTabOpened(ft)
+hàm S.OnFeatureTabOpened(ft)
     if not ft or not ft.frame or not ft.frame.Parent then return end
     local n = S.ReembedFeature(ft, false)
-    if n > 0 then
+    nếu n > 0 thì
         pcall(function()
-            if ft.status and ft.status.Parent then
+            nếu ft.status và ft.status.Parent thì
                 ft.status.Text = string.format(
-                    "✅ vừa nhúng lại %d GUI vào tab (lần trước bị rớt ngoài menu) — bấm ✕ để trả về game", n)
-            end
+                    "# vừa tải lại %d GUI vào tab (một lần trước đó bị rớt ngoài menu) — nhấn ✕ để trả về trò chơi", n)
+            kết thúc
             if ft.indicator and ft.indicator.Parent then ft.indicator.BackgroundColor3 = C.GREEN end
-        end)
-    end
-end
+        kết thúc)
+    kết thúc
+kết thúc
 
-S.parkTab   = nil
-S.parkBtn   = nil
-S.parkList  = nil
+S.parkTab = nil
+S.parkBtn = nil
+S.parkList = nil
 S.parkCount = 0
-S.PARK_MAX  = 2      -- mỗi lần chạy chỉ đưa tối đa 2 GUI vào menu (tránh nuốt cả UI của game)
+S.PARK_MAX = 2 -- mỗi lần chạy chỉ đưa ra tối đa 2 GUI vào menu (tránh cả giao diện người dùng của trò chơi)
 
-function S.ParkHost(label)
-    if not (S.parkList and S.parkList.Parent) then
-        local sf, btn = AddTab("GUI Ngoài", "🧩", 99)
+hàm S.ParkHost(nhãn)
+    nếu không (S.parkList và S.parkList.Parent) thì
+        sf cục bộ, btn = AddTab("GUI Ngoài", "🧩", 99)
         S.parkTab, S.parkBtn = sf, btn
-        New("TextLabel", {
-            Size = UDim2.new(1, -140, 0, 30), Position = UDim2.new(0, 8, 0, 4),
-            Text = "🧩 GUI do script chạy ở tab 💻 Code tạo ra — hub đưa vào đây. Bấm ↩ để trả về màn hình game. (Dex/IY/SimpleSpy KHÔNG bao giờ vào đây.)",
+        Mới("TextLabel", {
+            Kích thước = UDim2.new(1, -140, 0, 30), Vị trí = UDim2.new(0, 8, 0, 4),
+            Text = "🧩 GUI chạy tập lệnh ở tab 💻 Tạo mã ra — trung tâm đưa vào đây. Bấm ↩ để trả về màn hình trò chơi. (Dex/IY/SimpleSpy KHÔNG bao giờ vào đây.)",
             BackgroundTransparency = 1, TextColor3 = C.DARK, Font = Enum.Font.GothamMedium,
-            TextSize = 10, TextWrapped = true, ZIndex = 6,
+            Kích thước văn bản = 10, Ngắt dòng văn bản = true, Chỉ số Z = 6,
             TextXAlignment = Enum.TextXAlignment.Left,
         }, S.parkTab)
         local backAll = New("TextButton", {
-            Size = UDim2.new(0, 124, 0, 24), Position = UDim2.new(1, -128, 0, 6),
+            Kích thước = UDim2.new(0, 124, 0, 24), Vị trí = UDim2.new(1, -128, 0, 6),
             Text = "↩ Trả tất cả về game", BackgroundColor3 = C.RED, BackgroundTransparency = 0.15,
             TextColor3 = C.WHITE, Font = Enum.Font.GothamBold, TextSize = 9, BorderSizePixel = 0, ZIndex = 7,
         }, S.parkTab)
-        Corner(backAll, UDim.new(0, 5))
+        Góc(backAll, UDim.new(0, 5))
         backAll.Activated:Connect(function()
             local n = S.RemoveAllParked()
             pcall(function()
                 print("[taodepzai v5.0 NOIR] ↩ đã trả " .. n .. " GUI về màn hình game")
-            end)
-        end)
+            kết thúc)
+        kết thúc)
         S.parkList = New("Frame", {
-            Name = "ParkList", Size = UDim2.new(1, -16, 1, -42), Position = UDim2.new(0, 8, 0, 38),
+            Tên = "ParkList", Kích thước = UDim2.new(1, -16, 1, -42), Vị trí = UDim2.new(0, 8, 0, 38),
             BackgroundTransparency = 1, BorderSizePixel = 0, ZIndex = 5,
         }, S.parkTab)
         New("UIListLayout", {Padding = UDim.new(0, 6), SortOrder = Enum.SortOrder.LayoutOrder}, S.parkList)
-    end
+    kết thúc
 
     S.parkCount += 1
-    local box = New("Frame", {
-        Name = "ParkBox_" .. tostring(label or "GUI"),
-        Size = UDim2.new(1, 0, 0, 240), LayoutOrder = S.parkCount,
+    hộp cục bộ = New("Khung", {
+        Tên = "ParkBox_" .. tostring(label hoặc "GUI"),
+        Kích thước = UDim2.new(1, 0, 0, 240), Thứ tự bố trí = S.parkCount,
         BackgroundColor3 = C.BG, BackgroundTransparency = 0.35, BorderSizePixel = 0, ZIndex = 5,
     }, S.parkList)
-    Corner(box, UDim.new(0, 8))
+    Góc(hộp, UDim.new(0, 8))
     Stroke(box, nil, 1)
 
-    local back = New("TextButton", {
-        Size = UDim2.new(0, 110, 0, 20), Position = UDim2.new(1, -114, 0, 2),
+    cục bộ back = New("TextButton", {
+        Kích thước = UDim2.new(0, 110, 0, 20), Vị trí = UDim2.new(1, -114, 0, 2),
         Text = "↩ Trả về game", BackgroundColor3 = C.GRAY, BackgroundTransparency = 0.2,
         TextColor3 = C.WHITE, Font = Enum.Font.GothamBold, TextSize = 9, BorderSizePixel = 0, ZIndex = 7,
-    }, box)
-    Corner(back, UDim.new(0, 5))
-    back.Activated:Connect(function()
-        S.ClearEmbedsUnder(box)                    -- trả frame con về ScreenGui gốc + hủy host
+    }, hộp)
+    Góc(phía sau, UDim.new(0, 5))
+    trở lại.Đã kích hoạt:Kết nối(function()
+        S.ClearEmbedsUnder(box) -- return frame con về ScreenGui gốc + abort hosting
         pcall(function() box:Destroy() end)
         S.parkCount = math.max(0, S.parkCount - 1)
         pcall(function() S.parkTab.CanvasSize = UDim2.new(0, 0, 0, S.parkCount * 246 + 10) end)
         pcall(function()
-            if S.parkBtn then S.parkBtn.Text = S.parkCount > 0
-                and ("🧩 GUI Ngoài (" .. S.parkCount .. ")") or "🧩 GUI Ngoài" end
-        end)
-    end)
+            Nếu S.parkBtn thì S.parkBtn.Text = S.parkCount > 0
+                và ("🧩 GUI Ngoài (" .. S.parkCount .. ")") hoặc "🧩 GUI Ngoài" cuối
+        kết thúc)
+    kết thúc)
 
-    local area = New("Frame", {
-        Name = "ParkArea", Size = UDim2.new(1, -8, 1, -30), Position = UDim2.new(0, 4, 0, 26),
+    khu vực cục bộ = Mới("Khung", {
+        Tên = "ParkArea", Kích thước = UDim2.new(1, -8, 1, -30), Vị trí = UDim2.new(0, 4, 0, 26),
         BackgroundTransparency = 1, BorderSizePixel = 0, ClipsDescendants = true, ZIndex = 5,
-    }, box)
+    }, hộp)
     pcall(function() S.parkTab.CanvasSize = UDim2.new(0, 0, 0, S.parkCount * 246 + 10) end)
     pcall(function()
         if S.parkBtn then S.parkBtn.Text = "🧩 GUI Ngoài (" .. S.parkCount .. ")" end
-    end)
-    return area, box
-end
+    kết thúc)
+    khu vực trả hàng, hộp
+kết thúc
 
 S.NO_PARK_MARKERS = {
     "dex.lua", "dex explorer", "dexexplorer", "infiniteyield", "infinite yield",
-    "simplespy", "simple spy",
+    "Điệp viên đơn giản", "gián điệp đơn giản",
 }
-function S.ShouldSkipPark(code, name)
+hàm S.ShouldSkipPark(code, name)
     local hay = (tostring(code or "") .. "\n" .. tostring(name or "")):lower()
     for _, m in ipairs(S.NO_PARK_MARKERS) do
         if hay:find(m, 1, true) then return true, m end
-    end
+    kết thúc
     local code_l = tostring(code or ""):lower()
     local hasFetch = code_l:find("httpget", 1, true) or code_l:find("http_request", 1, true)
-        or code_l:find("request(", 1, true) or code_l:find("https://", 1, true)
-        or code_l:find("http://", 1, true)
-    if hasFetch and (code_l:find("loadstring", 1, true) or code_l:find("load(", 1, true)) then
-        return true, "script tải từ mạng (để GUI ngoài màn hình như tác giả thiết kế)"
-    end
-    return false, nil
-end
+        hoặc code_l:find("request(", 1, true) hoặc code_l:find("https://", 1, true)
+        hoặc code_l:find("http://", 1, true)
+    nếu hasFetch và (code_l:find("loadstring", 1, true) hoặc code_l:find("load(", 1, true)) thì
+        return true, "tải tập lệnh từ mạng (sang GUI ngoài màn hình như thiết kế tác giả)"
+    kết thúc
+    trả về false, nil
+kết thúc
 
-function S.RemoveAllParked()
+hàm S.RemoveAllParked()
     if not (S.parkList and S.parkList.Parent) then return 0 end
-    local n = 0
-    local kids = S.parkList:GetChildren()
+    cục bộ n = 0
+    trẻ em địa phương = S.parkList:GetChildren()
     for i = #kids, 1, -1 do
-        local box = kids[i]
-        if box.Name:sub(1, 8) == "ParkBox_" then
+        hộp cục bộ = trẻ em[i]
+        nếu box.Name:sub(1, 8) == "ParkBox_" thì
             S.ClearEmbedsUnder(box)
             pcall(function() box:Destroy() end)
-            n += 1
-        end
-    end
+            n ± 1
+        kết thúc
+    kết thúc
     S.parkCount = 0
     pcall(function() S.parkTab.CanvasSize = UDim2.new(0, 0, 0, 10) end)
-    pcall(function() if S.parkBtn then S.parkBtn.Text = "🧩 GUI Ngoài" end end)
-    return n
-end
+    pcall(function() if S.parkBtn then S.parkBtn.Text = "🧩 GUI Bên" end end)
+    trả về n
+kết thúc
 
-function S.BeginRunCapture()
+hàm S.BeginRunCapture()
     if not S.embedEnabled then return nil end
     if S.parkCodeGuis == false then return nil end
-    local ok, cap = pcall(function()
+    cục bộ ok, cap = pcall(function()
         local unhook, recs, st = S.HookInstanceNew()
         local stopWatch = S.WatchNewGuis(recs, st)
-        st.stopWatch = stopWatch
+        st.stopWatch = đồng hồ bấm giờ
         return {unhook = unhook, recs = recs, st = st, stopWatch = stopWatch,
-            parked = 0, names = {}, cancelled = false}
-    end)
-    if not ok then return nil end
-    S.activeCap = cap     -- để Cancel() gỡ được hook+watcher nếu người dùng bấm ⏹ Dừng giữa chừng
-    return cap
-end
+            đã đỗ xe = 0, tên = {}, đã hủy = false}
+    kết thúc)
+    Nếu không ổn thì trả về nil.
+    S.activeCap = cap -- để Cancel() được gỡ bỏ hook+watcher nếu người dùng nhấn ⏹ Dừng giữa chừng
+    nắp trả lại
+kết thúc
 
-function S.AbortRunCapture()
-    local cap = S.activeCap
-    if not cap then return false end
+hàm S.AbortRunCapture()
+    giới hạn cục bộ = S.activeCap
+    nếu không phải là cap thì trả về false end
     S.activeCap = nil
     cap.cancelled = true
     pcall(function() if cap.st then cap.st.watchOn = false cap.st.inRun = false end end)
     pcall(cap.stopWatch)
     pcall(cap.unhook)
-    return true
-end
+    trả về giá trị đúng
+kết thúc
 
-function S.EndRunCapture(cap, label)
+hàm S.EndRunCapture(cap, label)
     if not cap or cap.cancelled then return 0 end
     local st, recs = cap.st, cap.recs
     pcall(function()
         st.inRun = false
         st.graceUntil = os.clock() + 1.0
-    end)
+    kết thúc)
 
-    local function try()
+    hàm cục bộ try()
         if cap.cancelled or cap.parked >= S.PARK_MAX or not S.embedEnabled then return 0 end
-        local added = 0
+        cục bộ được thêm vào = 0
         for _, r in ipairs(recs) do
-            if cap.parked >= S.PARK_MAX then break end
-            if r and r.inst and not r.embedded then
-                local trust
-                if r.certain then trust = "certain"
+            nếu cap.parked >= S.PARK_MAX thì dừng lại.
+            nếu r và r.inst và không phải r.embedded thì
+                quỹ tín thác địa phương
+                Nếu r.certain thì trust = "certain"
                 elseif r.duringRun then trust = "manual"
-                else trust = "guess" end
-                if S.IsEmbeddable(r.inst, nil, trust) then
-                    local area, box = S.ParkHost(label)
-                    if area and S.EmbedGui(r.inst, area) then
+                Ngược lại, tin tưởng = "đoán" kết thúc
+                nếu S.IsEmbeddable(r.inst, nil, trust) thì
+                    khu vực địa phương, hộp = S.ParkHost(nhãn)
+                    nếu area và S.EmbedGui(r.inst, area) thì
                         r.embedded = true
                         cap.parked += 1
                         cap.names[#cap.names + 1] = tostring(r.inst.Name)
-                        added += 1
+                        đã thêm ± 1
                         pcall(function()
-                            print(string.format("[taodepzai v5.0 NOIR] 🧩 đã đưa GUI '%s' vào tab 'GUI Ngoài' (script chạy ở tab Code)",
+                            print(string.format("[taodepzai v5.0 NOIR] 🧩 đã đưa GUI '%s' vào tab 'GUI Ngoài' (tập lệnh chạy ở tab Code)",
                                 tostring(r.inst.Name)))
-                        end)
-                    elseif box then
-                        pcall(function() box:Destroy() end)   -- không nhúng được -> đừng để ô rỗng
+                        kết thúc)
+                    nếu hộp thì
+                        pcall(function() box:Destroy() end) -- không được nhúng -> do để ô trống
                         S.parkCount = math.max(0, S.parkCount - 1)
-                    end
-                end
-            end
-        end
-        return added
-    end
+                    kết thúc
+                kết thúc
+            kết thúc
+        kết thúc
+        trả lại đã thêm
+    kết thúc
 
-    local total = try()
+    tổng cục bộ = thử()
     for _, d in ipairs(S.EMBED_TRY_DELAYS) do
         task.delay(d, function()
-            if cap.cancelled or cap.parked >= S.PARK_MAX then return end
-            if not S.embedEnabled then return end
-            try()
-        end)
-    end
+            nếu cap.cancelled hoặc cap.parked >= S.PARK_MAX thì trả về end
+            nếu không phải S.embedEnabled thì trả về end
+            thử()
+        kết thúc)
+    kết thúc
     task.delay(S.EMBED_HOOK_GRACE, function()
         pcall(cap.unhook)
         pcall(cap.stopWatch)
         if S.activeCap == cap then S.activeCap = nil end
-    end)
+    kết thúc)
     pcall(function()
-        print("[taodepzai v5.0 NOIR] ▶ tab Code · " .. S.DiagText(st, recs) .. " · đã đưa vào menu: " .. cap.parked)
-    end)
-    return total
-end
+        print("[taodepzai v5.0 NOIR] ► tab Code · " .. S.DiagText(st, recs) .. " · đã đưa vào menu: " .. cap.parked)
+    kết thúc)
+    tổng số tiền hoàn trả
+kết thúc
 
-local function RunFeatureScript(code, name, containerFrame, indicator, statusLabel)
-    if #code == 0 then
-        if statusLabel then statusLabel.Text = "⚠️ Vui lòng nhập code!" end
-        return false, "empty"
-    end
+hàm cục bộ RunFeatureScript(code, name, containerFrame, indicator, statusLabel)
+    nếu #code == 0 thì
+        nếu statusLabel thì statusLabel.Text = "⚠️ Vui lòng nhập mã!" kết thúc
+        trả về false, "rỗng"
+    kết thúc
 
-    code = NormalizeCode(code)
-    S.EnsureCompat()   -- v4.7: tab ➕ Tính Năng cũng được bù hàm executor còn thiếu
+    mã = Chuẩn hóa mã(mã)
+    S.EnsureCompat() -- v4.7: tab ➕ Tính Năng cũng được bù đắp thiếu chức năng thi hành
 
-    if indicator then indicator.BackgroundColor3 = C.RED end
+    nếu chỉ báo thì indicator.BackgroundColor3 = C.RED
     if statusLabel then statusLabel.Text = "⏳ Đang thực thi..." end
-    ReleaseHubFocus()   -- v4.4b: đang dán code trong TextBox mà chạy luôn thì game vẫn "khóa" input
+    ReleaseHubFocus() -- v4.4b: đang dán code trong TextBox mà chạy luôn thì game vẫn "khóa" input
 
     local ft = S.FindFeatureByHost(containerFrame)
     local runToken = nil
-    if ft then
+    nếu ft thì
         ft._runToken = (tonumber(ft._runToken) or 0) + 1
         runToken = ft._runToken
-        ft.records = nil              -- lần chạy mới -> bỏ danh sách GUI của lần chạy cũ
-    end
+        ft.records = nil -- lần chạy mới -> bỏ danh sách GUI của lần chạy cũ
+    kết thúc
 
     local embedCount, lateCandidate = 0, 0
     local featureUnhook, records, lastWhy, hookState = nil, nil, nil, nil
-    local ok, err = pcall(function()
+    cục bộ ok, err = pcall(function()
         local fn, lerr = loadstring(code)
         if not fn then error("loadstring thất bại: "..tostring(lerr)) end
 
-        local beforeGuis = {}
+        cục bộ beforeGuis = {}
         for _, g in ipairs(playerGui:GetChildren()) do beforeGuis[g] = true end
         for _, g in ipairs(targetGui:GetChildren()) do beforeGuis[g] = true end
         pcall(function()
             for _, g in ipairs(game:GetService("CoreGui"):GetChildren()) do beforeGuis[g] = true end
-        end)
+        kết thúc)
 
         local unhook, recs, st = S.HookInstanceNew()
         local stopWatch = S.WatchNewGuis(recs, st)
-        st.stopWatch = stopWatch
-        featureUnhook, records, hookState = unhook, recs, st
+        st.stopWatch = đồng hồ bấm giờ
+        featureUnhook, record, hookState = unhook, recs, st
         if ft then ft.records = recs ft.hookState = st end
 
-        local fnOk, fnErr = pcall(fn)
+        cục bộ fnOk, fnErr = pcall(fn)
 
         st.inRun = false
         st.graceUntil = os.clock() + 1.0
 
         local hookWorks = (st.available == true)
         local useScan = (not hookWorks) or (S.embedGuessNew == true)
-        local mode = (S.embedGuessNew == true) and "any" or "run"
+        chế độ cục bộ = (S.embedGuessNew == true) và "bất kỳ" hoặc "chạy"
 
         for i = 1, S.EMBED_CHILD_WAIT do
-            if useScan then
+            nếu sử dụng quét thì
                 local found = ScanNewGuis(beforeGuis, nil, true)
                 for _, g in ipairs(found) do
                     local now = os.clock()
                     recs[#recs + 1] = {
                         inst = g, certain = false,
                         duringRun = (st.inRun == true) or (now < (st.graceUntil or 0)),
-                        age = now - st.t0, embedded = false, via = "scan",
+                        tuổi = hiện tại - st.t0, nhúng = false, thông qua = "quét",
                     }
-                end
-            end
+                kết thúc
+            kết thúc
             local d, why = S.EmbedRecorded(recs, containerFrame, useScan and "any" or mode, true)
             embedCount += d
-            if why then lastWhy = why end
-            if embedCount > 0 then break end
+            nếu tại sao thì lastWhy = tại sao kết thúc
+            nếu embedCount > 0 thì thoát
             task.wait(0.2)
-        end
+        kết thúc
 
-        if embedCount > 0 then
+        nếu embedCount > 0 thì
             unhook()
             pcall(stopWatch)
-        else
+        khác
             task.delay(S.EMBED_HOOK_GRACE, function() pcall(unhook) pcall(stopWatch) end)
-        end
+        kết thúc
 
-        if not fnOk then error(fnErr) end
+        nếu không phải fnOk thì báo lỗi (fnErr) kết thúc
 
         for _, dly in ipairs(S.EMBED_TRY_DELAYS) do
             task.delay(dly, function()
                 if ft and ft._runToken ~= runToken then return end
-                if embedCount > 0 then return end
+                nếu embedCount > 0 thì trả về end
                 if not (containerFrame and containerFrame.Parent) then return end
-                if not S.embedEnabled then return end
-                if useScan then
+                nếu không phải S.embedEnabled thì trả về end
+                nếu sử dụng quét thì
                     local found = ScanNewGuis(beforeGuis, nil, true)
                     for _, g in ipairs(found) do
                         local now = os.clock()
                         recs[#recs + 1] = {
                             inst = g, certain = false, duringRun = false,
-                            age = now - st.t0, embedded = false, via = "scan",
+                            tuổi = hiện tại - st.t0, nhúng = false, thông qua = "quét",
                         }
-                    end
-                end
+                    kết thúc
+                kết thúc
                 local more = S.EmbedRecorded(recs, containerFrame, "any", true)
-                if more > 0 then
+                nếu lớn hơn 0 thì
                     embedCount += more
                     pcall(function()
                         if indicator and indicator.Parent then indicator.BackgroundColor3 = C.GREEN end
-                        if statusLabel and statusLabel.Parent then
+                        nếu statusLabel và statusLabel.Parent thì
                             statusLabel.Text = string.format(
-                                "✅ xong · GUI sinh trễ đã được nhúng vào tab (%d) — bấm ✕ để trả về màn hình game",
+                                " ✅ xong · GUI sinh học đã được nhúng vào tab (%d) — nhấn ✕ để trả về màn hình trò chơi",
                                 embedCount)
-                        end
-                    end)
-                end
-            end)
-        end
+                        kết thúc
+                    kết thúc)
+                kết thúc
+            kết thúc)
+        kết thúc
 
-        if embedCount == 0 then
+        nếu embedCount == 0 thì
             local late = ScanNewGuis(beforeGuis, nil, true)
-            local real = 0
+            thực cục bộ = 0
             for _, g in ipairs(late) do
                 if g.Parent and not g:IsDescendantOf(containerFrame) then real += 1 end
-            end
-            if real > 0 then lateCandidate = real end
-        end
-    end)
+            kết thúc
+            nếu real > 0 thì lateCandidate = real end
+        kết thúc
+    kết thúc)
 
-    if embedCount > 0 then
+    nếu embedCount > 0 thì
         if featureUnhook then pcall(featureUnhook) end
-        pcall(function() if hookState and hookState.stopWatch then hookState.stopWatch() end end)
-    end
-    if ft then
-        ft.records   = records    -- giữ lại để MỞ tab / bấm 🔁 là nhúng tiếp được
-        ft.lastWhy   = lastWhy
-        ft.indicator = indicator
+        pcall(function() nếu hookState và hookState.stopWatch thì kết thúc hookState.stopWatch())
+    kết thúc
+    nếu ft thì
+        ft.records = record -- giữ lại để MỞ tab / press 🔁 được nhúng tiếp theo
+        ft.lastWhy = lastWhy
+        ft.indicator = chỉ báo
         ft.hookState = hookState
-    end
+    kết thúc
     pcall(function()
         print("[taodepzai v5.0 NOIR] ▶ '" .. tostring(name) .. "' · " .. S.DiagText(hookState, records)
             .. " · đã nhúng: " .. embedCount)
-    end)
+    kết thúc)
 
-    if ok then
-        if indicator then indicator.BackgroundColor3 = C.GREEN end
-        if statusLabel then
-            if embedCount > 0 then
+    nếu được thì
+        nếu chỉ báo thì indicator.BackgroundColor3 = C.GREEN
+        nếu statusLabel thì
+            nếu embedCount > 0 thì
                 statusLabel.Text = string.format(
-                    "✅ xong · %d GUI đã nhúng vào tab (bấm ✕ để trả về màn hình game)", embedCount)
-            elseif not S.embedEnabled then
-                statusLabel.Text = "✅ xong · 🧩 nhúng đang TẮT nên GUI nằm ngoài màn hình — BẬT lại rồi bấm ▶"
-            elseif hookState and hookState.available ~= true then
-                statusLabel.Text = "⚠️ Executor CHẶN hook Instance.new — hub đã dùng chế độ quét dự phòng"
-                    .. (lateCandidate > 0 and (" (thấy " .. lateCandidate .. " GUI mới)") or " (không thấy GUI mới nào)")
-                    .. " · bấm 🔁 'Cứu GUI' ở tab Tạo Tính Năng để ép nhúng · chi tiết ở console (F9)"
-            elseif lateCandidate > 0 then
+                    " ✅ xong · %d GUI đã được nhúng vào tab (bấm ✕ để trả về màn hình trò chơi)", embedCount)
+            nếu không phải S.embedEnabled thì
+                statusLabel.Text = " ✅ xong · 🧩 nhúng đang TẮT, GUI nằm ngoài màn hình — BẬT lại rồi nhấn ►"
+            nếu hookState và hookState.available ~= true thì
+                statusLabel.Text = "⚠️ Executor CHẶN hook Instance.new — hub đã sử dụng chế độ quét dự phòng"
+                    .. (lateCandidate > 0 and (" (thấy " .. LateCandidate .. " GUI mới)") hoặc " (không tìm thấy GUI mới nào)")
+                    .. " · nhấn 🔁 'Cứu GUI' ở tab Tạo Tính Năng để ép nhúng · chi tiết ở console (F9)"
+            nếu lateCandidate > 0 thì
                 statusLabel.Text = string.format(
-                    "✅ xong · thấy %d GUI mới nhưng chưa nhúng được — MỞ lại tab này hoặc bấm 🔁 'Cứu GUI'%s",
-                    lateCandidate, (S.embedGuessNew == true) and "" or " · hoặc bật 🕵 'Đoán GUI trễ'")
-            else
-                statusLabel.Text = "✅ xong · không thấy script tạo GUI nào (script có tạo ScreenGui không?)"
-                    .. (lastWhy and (" · lý do: " .. tostring(lastWhy)) or "")
-            end
-        end
-        return true, nil, records
-    else
-        if indicator then indicator.BackgroundColor3 = C.RED end
+                    " ✅ xong · đã tìm thấy %d mới GUI nhưng chưa được nhúng — MỞ lại tab này hoặc nhấn 🔁 'Cứu GUI'%s",
+                    LateCandidate, (S.embedGuessNew == true) và "" hoặc " · hoặc bật 🕵 'Đoán GUI đ'")
+            khác
+                statusLabel.Text = " ✅ xong · không tìm thấy tập lệnh tạo GUI nào (tập lệnh có tạo ScreenGui không?)"
+                    .. (lastWhy và (" · lý do: " .. tostring(lastWhy)) hoặc "")
+            kết thúc
+        kết thúc
+        trả về true, nil, records
+    khác
+        nếu chỉ báo thì indicator.BackgroundColor3 = C.RED
         if statusLabel then statusLabel.Text = "❌ Lỗi: "..tostring(err) end
-        warn("[taodepzai v5.0 NOIR] Feature script error:", err)
-        return false, err, records
-    end
-end
-local function CreateFeatureTab(name, icon, codeContent)
+        cảnh báo("[taodepzai v5.0 NOIR] Lỗi kịch bản tính năng:", err)
+        trả về false, lỗi, bản ghi
+    kết thúc
+kết thúc
+hàm cục bộ CreateFeatureTab(name, icon, codeContent)
     if not name or #name == 0 then name = "Tính Năng " .. (#featureTabs + 1) end
     if not icon or #icon == 0 then icon = "⚙️" end
 
     codeContent = NormalizeCode(codeContent)
 
-    local featureData
+    dữ liệu tính năng cục bộ
 
-    local sf  = MakeTabFrame()
+    local sf = MakeTabFrame()
     local btn = MakeTabButton(name, icon, featureTabIndex + #featureTabs, function()
         task.defer(function() S.OnFeatureTabOpened(featureData) end)
-    end)
+    kết thúc)
 
     table.insert(tabs, btn)
     table.insert(tabContent, sf)
@@ -4933,95 +5302,95 @@ local function CreateFeatureTab(name, icon, codeContent)
     local tabIdx = #tabs
 
     featureData = {
-        name = name,
-        icon = icon,
-        code = codeContent,
-        btn = btn,
-        frame = sf,
+        tên = tên,
+        biểu tượng = biểu tượng,
+        mã = nội dung mã,
+        nút = nút,
+        khung = sf,
         tabIdx = tabIdx,
     }
     table.insert(featureTabs, featureData)
 
     local embedHost = New("Frame", {
-        Size = UDim2.new(1,0,1,-36),
-        Position = UDim2.new(0,0,0,0),
-        BackgroundTransparency = 1,
+        Kích thước = UDim2.new(1,0,1,-36),
+        Vị trí = UDim2.new(0,0,0,0),
+        Độ trong suốt của nền = 1,
         BorderSizePixel = 0,
-        ZIndex = 5,
-        Name = "ScriptHost",
-        Visible = true,
+        Chỉ số Z = 5,
+        Tên = "ScriptHost",
+        Hiển thị = đúng,
     }, sf)
-    featureData.hostFrame = embedHost   -- v4.4g
+    featureData.hostFrame = embedhost -- v4.4g
 
-    local toolbar = New("Frame", {
-        Size = UDim2.new(1,0,0,36),
-        Position = UDim2.new(0,0,1,-36),
+    thanh công cụ cục bộ = Mới("Khung", {
+        Kích thước = UDim2.new(1,0,0,36),
+        Vị trí = UDim2.new(0,0,1,-36),
         BackgroundColor3 = Color3.fromRGB(230,233,242),
-        BackgroundTransparency = 0.1,
+        Độ trong suốt của nền = 0.1,
         BorderSizePixel = 0,
-        ZIndex = 20,
+        Chỉ số Z = 20,
     }, sf)
-    Corner(toolbar, UDim.new(0,6))
+    Góc(thanh công cụ, UDim.new(0,6))
     Stroke(toolbar, Color3.fromRGB(180,185,200), 1)
 
     local runFeatureBtn = New("TextButton", {
-        Size=UDim2.new(0,90,0,26), Position=UDim2.new(0,6,0,5),
-        Text="▶ Chạy Script", BackgroundColor3=C.GREEN, BackgroundTransparency=0.1,
+        Kích thước=UDim2.new(0,90,0,26), Vị trí=UDim2.new(0,6,0,5),
+        Văn bản="▶ Chạy Script", Màu nền 3=XANH LÁ CÂY, Độ trong suốt nền=0.1,
         TextColor3=C.WHITE, Font=Enum.Font.GothamBold, TextSize=9, BorderSizePixel=0, ZIndex=21,
-    }, toolbar)
-    Corner(runFeatureBtn, UDim.new(0,5))
+    }, thanh công cụ)
+    Góc(runFeatureBtn, UDim.new(0,5))
 
     local saveFeatureBtn = New("TextButton", {
-        Size=UDim2.new(0,84,0,26), Position=UDim2.new(0,100,0,5),
-        Text="📤 Chép Code", BackgroundColor3=C.BLUE, BackgroundTransparency=0.1,
+        Kích thước=UDim2.new(0,84,0,26), Vị trí=UDim2.new(0,100,0,5),
+        Văn bản="📤 Mã giảm giá", Màu nền 3 = Xanh lam, Độ trong suốt nền = 0.1,
         TextColor3=C.WHITE, Font=Enum.Font.GothamBold, TextSize=9, BorderSizePixel=0, ZIndex=21,
-    }, toolbar)
-    Corner(saveFeatureBtn, UDim.new(0,5))
+    }, thanh công cụ)
+    Góc(saveFeatureBtn, UDim.new(0,5))
 
     local editFeatureBtn = New("TextButton", {
-        Size=UDim2.new(0,52,0,26), Position=UDim2.new(0,188,0,5),
-        Text="✏️ Sửa", BackgroundColor3=C.ORANGE, BackgroundTransparency=0.1,
+        Kích thước=UDim2.new(0,52,0,26), Vị trí=UDim2.new(0,188,0,5),
+        Văn bản="✏️ Sửa", Màu nền 3 = Cam, Độ trong suốt nền = 0.1,
         TextColor3=C.WHITE, Font=Enum.Font.GothamBold, TextSize=10, BorderSizePixel=0, ZIndex=21,
-    }, toolbar)
-    Corner(editFeatureBtn, UDim.new(0,5))
+    }, thanh công cụ)
+    Góc(editFeatureBtn, UDim.new(0,5))
 
     local crosshairBtn = New("TextButton", {
-        Size=UDim2.new(0,68,0,26), Position=UDim2.new(0,244,0,5),
-        Text="🎯 Tâm", BackgroundColor3=C.PURPLE, BackgroundTransparency=0.1,
+        Kích thước=UDim2.new(0,68,0,26), Vị trí=UDim2.new(0,244,0,5),
+        Văn bản="🎯 Tâm", Màu nền 3=Tím nhạt, Độ trong suốt nền=0.1,
         TextColor3=C.WHITE, Font=Enum.Font.GothamBold, TextSize=9, BorderSizePixel=0, ZIndex=21,
-    }, toolbar)
-    Corner(crosshairBtn, UDim.new(0,5))
+    }, thanh công cụ)
+    Góc(crosshairBtn, UDim.new(0,5))
     S.RegisterCrosshairBtn(crosshairBtn)
 
-    local closeFeatureBtn = New("TextButton", {
-        Size=UDim2.new(0,40,0,26), Position=UDim2.new(1,-46,0,5),
-        Text="✕", BackgroundColor3=C.RED, BackgroundTransparency=0.1,
+    local closeFeatureBtn = Mới("TextButton", {
+        Kích thước=UDim2.new(0,40,0,26), Vị trí=UDim2.new(1,-46,0,5),
+        Văn bản="✕", Màu nền 3=Đỏ, Độ trong suốt nền=0.1,
         TextColor3=C.WHITE, Font=Enum.Font.GothamBold, TextSize=12, BorderSizePixel=0, ZIndex=21,
-    }, toolbar)
-    Corner(closeFeatureBtn, UDim.new(0,5))
+    }, thanh công cụ)
+    Góc(closeFeatureBtn, UDim.new(0,5))
 
     local fStatus = New("TextLabel", {
-        Size=UDim2.new(1,-52-316,0,26), Position=UDim2.new(0,316,0,5),
-        Text="", BackgroundTransparency=1, TextColor3=Color3.fromRGB(255, 205, 64),
+        Kích thước=UDim2.new(1,-52-316,0,26), Vị trí=UDim2.new(0,316,0,5),
+        Văn bản="", Độ trong suốt nền=1, Màu văn bản3=Màu3.fromRGB(255, 205, 64),
         Font=Enum.Font.GothamMedium, TextSize=8, TextXAlignment=Enum.TextXAlignment.Left,
         TextTruncate=Enum.TextTruncate.AtEnd, ZIndex=21,
-    }, toolbar)
-    featureData.status = fStatus   -- v4.4g: hub tự sửa nhãn khi nhúng trễ thành công
+    }, thanh công cụ)
+    featureData.status = fStatus -- v4.4g: hub tự sửa nhãn khi nhúng địu thành công
 
     local editorFrame = New("Frame", {
-        Size=UDim2.new(1,0,1,-36),
-        Position=UDim2.new(0,0,0,0),
+        Kích thước = UDim2.new(1, 0, 1, -36),
+        Vị trí = UDim2.new(0,0,0,0),
         BackgroundColor3=Color3.fromRGB(245,247,252),
-        BackgroundTransparency=0,
+        Độ trong suốt nền = 0,
         BorderSizePixel=0,
-        ZIndex=30,
-        Visible=false,
+        Chỉ số Z = 30,
+        Hiển thị = false,
     }, sf)
 
     local editorBox = New("TextBox", {
-        Size=UDim2.new(1,-16,1,-70), Position=UDim2.new(0,8,0,8),
-        Text=codeContent,
-        PlaceholderText="Dán script hoàn chỉnh HOẶC link raw vào đây...\nScript có thể tạo GUI riêng, GUI đó sẽ được nhúng vào tab này.",
+        Kích thước=UDim2.new(1,-16,1,-70), Vị trí=UDim2.new(0,8,0,8),
+        Văn bản=codeContent,
+        PlaceholderText="Dán script hoàn chỉnh HOẶC link raw vào đây...\nScript có thể tạo GUI riêng, GUI sẽ được nhúng vào tab này.",
         PlaceholderColor3=Color3.fromRGB(122, 130, 148),
         BackgroundColor3=Color3.fromRGB(26, 29, 38), BackgroundTransparency=0,
         TextColor3=Color3.fromRGB(233, 237, 245),
@@ -5029,135 +5398,135 @@ local function CreateFeatureTab(name, icon, codeContent)
         MultiLine=true, TextWrapped=true, TextXAlignment=Enum.TextXAlignment.Left, TextYAlignment=Enum.TextYAlignment.Top,
         Active=true, Selectable=true, ZIndex=31,
     }, editorFrame)
-    Corner(editorBox, UDim.new(0,5))
+    Góc(editorBox, UDim.new(0,5))
     Stroke(editorBox, Color3.fromRGB(100,120,200), 1.5)
     New("UIPadding", {PaddingLeft=UDim.new(0,6), PaddingTop=UDim.new(0,4)}, editorBox)
 
     local applyEditBtn = New("TextButton", {
-        Size=UDim2.new(0,120,0,26), Position=UDim2.new(0,8,1,-34),
-        Text="✅ Áp Dụng", BackgroundColor3=C.GREEN, BackgroundTransparency=0.1,
+        Kích thước=UDim2.new(0,120,0,26), Vị trí=UDim2.new(0,8,1,-34),
+        Text=" ✅ Áp Dụng", BackgroundColor3=C.GREEN, BackgroundTransparency=0.1,
         TextColor3=C.WHITE, Font=Enum.Font.GothamBold, TextSize=10, BorderSizePixel=0, ZIndex=31,
     }, editorFrame)
-    Corner(applyEditBtn, UDim.new(0,5))
+    Góc(applyEditBtn, UDim.new(0,5))
 
     local cancelEditBtn = New("TextButton", {
-        Size=UDim2.new(0,120,0,26), Position=UDim2.new(0,134,1,-34),
-        Text="❌ Hủy", BackgroundColor3=C.RED, BackgroundTransparency=0.1,
+        Kích thước=UDim2.new(0,120,0,26), Vị trí=UDim2.new(0,134,1,-34),
+        Văn bản="❌", Màu nền 3=Đỏ, Độ trong suốt nền=0.1,
         TextColor3=C.WHITE, Font=Enum.Font.GothamBold, TextSize=10, BorderSizePixel=0, ZIndex=31,
     }, editorFrame)
-    Corner(cancelEditBtn, UDim.new(0,5))
+    Góc(cancelEditBtn, UDim.new(0,5))
 
-    local function ClearHost()
+    hàm cục bộ ClearHost()
         S.ClearEmbedsUnder(embedHost)
-    end
+    kết thúc
 
     runFeatureBtn.Activated:Connect(function()
         ClearHost()
         fStatus.Text = "⏳ Đang chạy..."
         RunFeatureScript(codeContent, name, embedHost, runFeatureBtn, fStatus)
-    end)
+    kết thúc)
 
     saveFeatureBtn.Activated:Connect(function()
-        local c = codeContent
-        if #c == 0 then
-            fStatus.Text = "⚠️ Không có code!"
-            return
-        end
-        local n = name
-        local bn = n
-        local cnt = 1
-        while true do
-            local ex = false
+        cục bộ c = codeContent
+        nếu #c == 0 thì
+            fStatus.Text = "⚠️ Không có mã!"
+            trở lại
+        kết thúc
+        cục bộ n = tên
+        cục bộ bn = n
+        số lượng cục bộ = 1
+        trong khi đúng vậy
+            cục bộ ex = false
             for _, s in ipairs(scripts) do
                 if s.name == n then ex = true; break end
-            end
-            if not ex then break end
-            cnt += 1
+            kết thúc
+            nếu không phải ex thì dừng lại
+            cnt ± 1
             n = bn.." ("..cnt..")"
-        end
+        kết thúc
         table.insert(scripts, {name = n, code = c, expanded = false})
-        if RebuildScripts then RebuildScripts() end
+        nếu RebuildScripts thì RebuildScripts() kết thúc
         Store.saveSoon()
-        fStatus.Text = "✅ Đã chép sang tab Code!"
-    end)
+        fStatus.Text = " ✅ Đã sao chép sang tab Code!"
+    kết thúc)
 
     editFeatureBtn.Activated:Connect(function()
         editorBox.Text = codeContent
         editorFrame.Visible = true
-    end)
+    kết thúc)
 
     applyEditBtn.Activated:Connect(function()
         codeContent = NormalizeCode(editorBox.Text)
         featureData.code = codeContent
         editorFrame.Visible = false
         ClearHost()
-        Store.saveSoon()   -- code đã đổi thì bản lưu trên đĩa cũng phải đổi theo
-        fStatus.Text = "✏️ Đã cập nhật code"
-    end)
+        Store.saveSoon() -- code đã thay đổi thì bản lưu trên đĩa cũng phải thay đổi theo
+        fStatus.Text = "✏️ Đã cập nhật mã"
+    kết thúc)
 
     cancelEditBtn.Activated:Connect(function()
         editorFrame.Visible = false
-    end)
+    kết thúc)
 
     closeFeatureBtn.Activated:Connect(function()
         ClearHost()
-        OpenFirstPage()   -- v4.6.2: đóng tab tính năng thì về trang đầu (💾 Code Đã Lưu)
-    end)
+        OpenFirstPage() -- v4.6.2: đóng tab tính năng thì về trang đầu (💾 Code Đã Lưu)
+    kết thúc)
 
-    return featureData
-end
+    trả về dữ liệu tính năng
+kết thúc
 
 task.spawn(function()
     task.wait(1)
     local lastSize = main.AbsoluteSize
-    while main and main.Parent do
+    trong khi main và main.Parent thực hiện
         task.wait(0.15)
-        if main.AbsoluteSize ~= lastSize then
+        nếu main.AbsoluteSize ~= lastSize thì
             lastSize = main.AbsoluteSize
-            if #S.embeds > 0 then
+            nếu #S.embeds > 0 thì
                 S.SyncAllEmbeds()
-            end
+            kết thúc
             S.PruneEmbeds()
-            if _G.BananaCatHub_EmbedHosts then
+            nếu _G.BananaCatHub_EmbedHosts thì
                 for i = #_G.BananaCatHub_EmbedHosts, 1, -1 do
-                    local host = _G.BananaCatHub_EmbedHosts[i]
-                    if not host or not host.Parent then
+                    máy chủ cục bộ = _G.BananaCatHub_EmbedHosts[i]
+                    nếu không phải máy chủ hoặc không phải máy chủ.Cha thì
                         table.remove(_G.BananaCatHub_EmbedHosts, i)
-                    end
-                end
-            end
-        end
-    end
-end)
+                    kết thúc
+                kết thúc
+            kết thúc
+        kết thúc
+    kết thúc
+kết thúc)
 
-local createFeatureTab = AddTab("Tạo Tính Năng", "➕", 7)   -- v4.15: 6 -> 7 (👥 chen vào ô 4)
+local createFeatureTab = AddTab("Tạo Năng", "➕", 7) -- v4.15: 6 -> 7 (👥 chen vào ô 4)
 
-local cy = 8
-Label(createFeatureTab, "➕ Tạo Tab Tính Năng Tích Hợp", cy)
+cy cục bộ = 8
+Label(createFeatureTab, "➕ Tạo Tab Năng Tính Tích Hợp", cy)
 cy = cy + 16
-Label(createFeatureTab, "Dán NGUYÊN một script hoàn chỉnh HOẶC link raw.", cy)
+Label(createFeatureTab, "Dán NGUYÊN an script HOẶC link raw.", cy)
 cy = cy + 14
-Label(createFeatureTab, "Script chạy trong tab; GUI của NÓ được nhúng vào menu (không đụng GUI game).", cy)
+Label(createFeatureTab, "Chạy tập lệnh trong tab; GUI của NÓ được nhúng vào menu (không đụng đến trò chơi GUI).", cy)
 cy = cy + 14
-Label(createFeatureTab, "💾 Tab tạo ra TỰ ĐỘNG được lưu — thoát game vào lại vẫn còn, khỏi cần bấm gì thêm.", cy)
+Label(createFeatureTab, "💾 Tab tạo ra TỰ ĐỘNG được lưu — vẫn thoát game vào lại, thoát khỏi cần nhấn thêm gì.", cy)
 cy = cy + 14
-Label(createFeatureTab, "🧩 Bấm 🎯 Chạy Script xong nhớ bấm ✕ hoặc kéo menu to ra — hub tự nhả focus", cy)
+Label(createFeatureTab, "🧩 Nhấn 🎯 Chạy tập lệnh xong nhớ nhấn ✕ hoặc kéo menu ra — hub auto-free focus", cy)
 cy = cy + 14
-Label(createFeatureTab, "    để bạn quay chuột/bắn lại bình thường. Nếu script vẫn chiếm chuột: 🧩 TẮT nhúng.", cy)
+Label(createFeatureTab, " để bạn quay chuột/bắn lại bình thường. Nếu script vẫn sử dụng chuột: 🧩 TẮT nhúng.", cy)
 cy = cy + 18
 
-Label(createFeatureTab, "🏷️ Tên Tính Năng:", cy)
+Label(createFeatureTab, "🏷️ Tên Tính:", cy)
 cy = cy + 14
 
 local featureNameIn = New("TextBox", {
-    Size=UDim2.new(1,-16,0,26), Position=UDim2.new(0,8,0,cy), Text="",
-    PlaceholderText="VD: Auto Farm, Fly, Speed...",
+    Kích thước=UDim2.new(1,-16,0,26), Vị trí=UDim2.new(0,8,0,cy), Văn bản="",
+    PlaceholderText="VD: Tự động canh tác, Bay, Tốc độ...",
     PlaceholderColor3=Color3.fromRGB(122, 130, 148),
     BackgroundColor3=Color3.fromRGB(26, 29, 38), BackgroundTransparency=0, TextColor3=Color3.fromRGB(233, 237, 245),
     Font=Enum.Font.GothamMedium, TextSize=12, BorderSizePixel=0, ClearTextOnFocus=false,
     Active=true, Selectable=true, ZIndex=10, TextXAlignment=Enum.TextXAlignment.Left,
 }, createFeatureTab)
-Corner(featureNameIn, UDim.new(0,5))
+Góc(featureNameIn, UDim.new(0,5))
 Stroke(featureNameIn, Color3.fromRGB(100,120,200), 1.5)
 New("UIPadding", {PaddingLeft=UDim.new(0,6)}, featureNameIn)
 
@@ -5166,13 +5535,13 @@ Label(createFeatureTab, "🎨 Icon (1 ký tự, tùy chọn):", cy)
 cy = cy + 14
 
 local featureIconIn = New("TextBox", {
-    Size=UDim2.new(0,60,0,26), Position=UDim2.new(0,8,0,cy), Text="⚙️",
+    Kích thước=UDim2.new(0,60,0,26), Vị trí=UDim2.new(0,8,0,cy), Văn bản="⚙️",
     PlaceholderColor3=Color3.fromRGB(122, 130, 148),
     BackgroundColor3=Color3.fromRGB(26, 29, 38), BackgroundTransparency=0, TextColor3=Color3.fromRGB(233, 237, 245),
     Font=Enum.Font.GothamBold, TextSize=14, BorderSizePixel=0, ClearTextOnFocus=false,
     Active=true, Selectable=true, ZIndex=10,
 }, createFeatureTab)
-Corner(featureIconIn, UDim.new(0,5))
+Góc(featureIconIn, UDim.new(0,5))
 Stroke(featureIconIn, Color3.fromRGB(180,180,200), 1.2)
 
 cy = cy + 32
@@ -5180,31 +5549,31 @@ Label(createFeatureTab, "📜 Dán Script Hoàn Chỉnh HOẶC link raw:", cy)
 cy = cy + 14
 
 local featureCodeIn = New("TextBox", {
-    Size=UDim2.new(1,-16,0,140), Position=UDim2.new(0,8,0,cy), Text="",
-    PlaceholderText="Dán script hoặc link raw (https://...) vào đây...\nScript có thể tạo ScreenGui riêng, GUI đó sẽ được nhúng vào tab.",
+    Kích thước=UDim2.new(1,-16,0,140), Vị trí=UDim2.new(0,8,0,cy), Văn bản="",
+    PlaceholderText="Dán script hoặc link raw (https://...) vào đây...\nScript có thể tạo riêng ScreenGui, GUI sẽ được nhúng vào tab.",
     PlaceholderColor3=Color3.fromRGB(122, 130, 148),
     BackgroundColor3=Color3.fromRGB(28, 31, 41), BackgroundTransparency=0, TextColor3=Color3.fromRGB(233, 237, 245),
     Font=Enum.Font.Code, TextSize=11, BorderSizePixel=0, ClearTextOnFocus=false,
     MultiLine=true, TextWrapped=true, TextXAlignment=Enum.TextXAlignment.Left, TextYAlignment=Enum.TextYAlignment.Top,
     Active=true, Selectable=true, ZIndex=10,
 }, createFeatureTab)
-Corner(featureCodeIn, UDim.new(0,5))
+Góc(featureCodeIn, UDim.new(0,5))
 Stroke(featureCodeIn, Color3.fromRGB(100,120,200), 1.5)
 New("UIPadding", {PaddingLeft=UDim.new(0,6), PaddingTop=UDim.new(0,4)}, featureCodeIn)
 
 cy = cy + 146
 
 local createTabBtn = Button(createFeatureTab, "➕ Tạo Tab Tính Năng", 8, cy, 210, 28, Color3.fromRGB(0,150,200))
-local clearFormBtn = Button(createFeatureTab, "🧹 Xóa Form", 224, cy, 116, 28, C.ORANGE)
+local clearFormBtn = Button(createFeatureTab, "🧹 Form", 224, cy, 116, 28, C.ORANGE)
 cy = cy + 34
 
 local embedToggleBtn = Button(createFeatureTab, "🧩 Nhúng vào Tab: BẬT", 346, cy - 34, 130, 28, C.GREEN)
-local guessToggleBtn = Button(createFeatureTab, "🕵 Đoán GUI trễ: TẮT", 8, cy, 176, 26, C.GRAY)
-local grabSizeCodeBtn = Button(createFeatureTab, "📏 Code Tự Co Giãn (an toàn, Auto-Lưu)", 190, cy, 286, 26, C.PURPLE)
+local GuessToggleBtn = Button(createFeatureTab, "🕵 Đoán GUI: TẮT", 8, cy, 176, 26, C.GRAY)
+local GrabSizeCodeBtn = Button(createFeatureTab, "📏 Code Tự Co Giãn (an toàn, Auto-Lưu)", 190, cy, 286, 26, C.PURPLE)
 cy = cy + 34
-local fixMouseBtn = Button(createFeatureTab, "🖱 Kẹt chuột / không bấm được? Bấm đây", 8, cy, 468, 24, C.RED)
+local fixMouseBtn = Button(createFeatureTab, "🖱 Kẹt chuột / không được ấn? Bấm vào đây", 8, cy, 468, 24, C.RED)
 cy = cy + 30
-local copyTemplateBtn = Button(createFeatureTab, "📋 Copy Code Mẫu Cho AI (menu + niêm tâm)", 8, cy, 468, 26, C.BLUE)
+local copyTemplateBtn = Button(createFeatureTab, "📋 Copy Code Mẫu Cho AI (menu + Kiểm tâm)", 8, cy, 468, 26, C.BLUE)
 cy = cy + 32
 
 S.reembedBtn = Button(createFeatureTab,
@@ -5216,20 +5585,20 @@ S.parkToggleBtn = Button(createFeatureTab,
 cy = cy + 32
 
 S.SyncEmbedToggles = function()
-    pcall(function() if D.SyncPageChips then D.SyncPageChips() end end)   -- v4.5: chip trên header trang
+    pcall(function() if D.SyncPageChips then D.SyncPageChips() end end) -- v4.5: chip trên trang tiêu đề
     pcall(function()
-        embedToggleBtn.Text = S.embedEnabled and "🧩 Nhúng vào Tab: BẬT" or "🧩 Nhúng vào Tab: TẮT"
-        D.SetBg(embedToggleBtn, S.embedEnabled and C.GREEN or C.GRAY)   -- v4.5
-        guessToggleBtn.Text = (S.embedGuessNew == true) and "🕵 Đoán GUI trễ: BẬT" or "🕵 Đoán GUI trễ: TẮT"
-        D.SetBg(guessToggleBtn, (S.embedGuessNew == true) and C.ORANGE or C.GRAY)   -- v4.5
-        if S.parkToggleBtn then
-            local on = (S.parkCodeGuis ~= false)
-            S.parkToggleBtn.Text = on and "🪟 GUI chạy ở tab 💻 Code → đưa vào menu: BẬT"
-                                     or "🪟 GUI chạy ở tab 💻 Code → để ngoài màn hình: TẮT"
+        embedToggleBtn.Text = S.embedEnabled và "🧩 Nhúng vào Tab: BẬT" hoặc "🧩 Nhúng vào Tab: TẮT"
+        D.SetBg(embedToggleBtn, S.embedEnabled and C.GREEN or C.GRAY) -- v4.5
+        đoánToggleBtn.Text = (S.embedGuessNew == true) và "🕵Đoán GUI: BẬT" hoặc "🕵Đoán GUI: TẮT"
+        D.SetBg(guessToggleBtn, (S.embedGuessNew == true) and C.ORANGE or C.GRAY) -- v4.5
+        nếu S.parkToggleBtn thì
+            cục bộ bật = (S.parkCodeGuis ~= false)
+            S.parkToggleBtn.Text = bật và "🪟 GUI chạy ở tab 💻 Mã → menu đưa vào: BẬT"
+                                     hoặc "🪟 GUI chạy ở tab 💻 Code → để ngoài màn hình: BẮT ĐẦU"
             D.SetBg(S.parkToggleBtn, on and C.GREEN or C.GRAY)
-        end
-    end)
-end
+        kết thúc
+    kết thúc)
+kết thúc
 S.SyncEmbedToggles()
 
 local createStatus = Label(createFeatureTab, "", cy)
@@ -5237,79 +5606,79 @@ createStatus.TextColor3=C.YELLOW; createStatus.TextSize=9; createStatus.ZIndex=6
 cy = cy + 14
 
 S.DoToggleEmbed = function()
-    S.embedEnabled = not S.embedEnabled
-    if S.embedEnabled then
+    S.embedEnabled = không phải S.embedEnabled
+    nếu S.embedEnabled thì
         embedToggleBtn.Text = "🧩 Nhúng vào Tab: BẬT"
         D.SetBg(embedToggleBtn, C.GREEN)
-        createStatus.Text = "🧩 BẬT: GUI của script được mượn vào tab. Bấm ✕ trên tab để trả về như cũ."
-    else
-        embedToggleBtn.Text = "🧩 Nhúng vào Tab: TẮT"
+        createStatus.Text = "🧩 BẬT: GUI của tập lệnh được mượn vào tab. Nhấn ✕ trên tab để trả về như cũ."
+    khác
+        embedToggleBtn.Text = "🧩 Nhúng vào Tab: BẮT ĐẦU"
         D.SetBg(embedToggleBtn, C.GRAY)
         for _, ft in ipairs(featureTabs) do
             local hostFrame = ft.frame and ft.frame:FindFirstChild("ScriptHost")
             if hostFrame then S.ClearEmbedsUnder(hostFrame) end
-        end
+        kết thúc
         pcall(S.RemoveAllParked)
         S.PruneEmbeds()
-        createStatus.Text = "🛡 Chế độ an toàn: hub không sửa GUI nào nữa. Muốn nhúng lại thì bấm BẬT."
-    end
-    Store.saveSoon()   -- v4.4g: lưu trạng thái 🧩 xuống đĩa -> thoát game vào lại vẫn giữ
+        createStatus.Text = "🛡 Chế độ an toàn: hub không sửa GUI nữa. Muốn nhúng lại thì nhấn BẬT."
+    kết thúc
+    Store.saveSoon() -- v4.4g: lưu trạng thái 🧩 xuống đĩa -> thoát game vào lại vẫn được giữ
     pcall(function() if Store.refreshStatus then Store.refreshStatus() end end)
-end
+kết thúc
 embedToggleBtn.Activated:Connect(S.DoToggleEmbed)
 
 S.DoToggleGuess = function()
     S.embedGuessNew = not (S.embedGuessNew == true)
-    if S.embedGuessNew then
-        guessToggleBtn.Text = "🕵 Đoán GUI trễ: BẬT"
+    nếu S.embedGuessNew thì
+        đoánToggleBtn.Text = "🕵Đoán GUI: BẬT"
         D.SetBg(guessToggleBtn, C.ORANGE)
-        createStatus.Text = "🕵 BẬT: script tạo GUI trễ (sau HttpGet/task.wait) sẽ được nhúng — tiện hơn"
-            .. " nhưng nếu game cũng vừa mở UI đúng lúc thì UI đó có thể bị mượn vào tab (bấm ✕ để trả)."
-    else
-        guessToggleBtn.Text = "🕵 Đoán GUI trễ: TẮT"
+        createStatus.Text = "🕵 BẬT: script tạo GUI mút (sau HttpGet/task.wait) sẽ được nhúng — tiện hơn"
+            .. " Nhưng nếu game cũng vừa mở UI đúng lúc thì UI đó có thể được mượn vào tab (bấm ✕ để trả)."
+    khác
+        đoánToggleBtn.Text = "🕵Đo GUI đị: BẮT ĐẦU"
         D.SetBg(guessToggleBtn, C.GRAY)
-        createStatus.Text = "🛡 An toàn nhất: chỉ nhúng GUI mà hub chắc chắn là của script."
-            .. " Script tạo GUI trễ sẽ chạy bình thường ngoài màn hình, không bị nhúng."
-    end
-    Store.saveSoon()   -- v4.4g: lưu trạng thái 🕵 xuống đĩa
-end
+        createStatus.Text = "🛡 An toàn nhất: chỉ nhúng GUI mà hub chắc chắn là tập lệnh."
+            .. " Script tạo GUI sẽ chạy bình thường bên ngoài màn hình, không được nhúng."
+    kết thúc
+    Store.saveSoon() -- v4.4g: lưu trạng thái 🕵 xuống đĩa
+kết thúc
 guessToggleBtn.Activated:Connect(S.DoToggleGuess)
 
 S.DoTogglePark = function()
-    S.parkCodeGuis = (S.parkCodeGuis == false)   -- đảo trạng thái
+    S.parkCodeGuis = (S.parkCodeGuis == false) -- đảo trạng thái
     S.SyncEmbedToggles()
-    if S.parkCodeGuis == false then
-        local n = S.RemoveAllParked()   -- hoàn tác ngay: trả GUI về màn hình game
-        createStatus.Text = "🪟 TẮT: script chạy ở tab 💻 Code / 💾 Code Đã Lưu sẽ để GUI NGOÀI màn hình game"
-            .. (n > 0 and (" · đã trả " .. n .. " GUI về màn hình") or "")
+    nếu S.parkCodeGuis == false thì
+        local n = S.RemoveAllParked() -- hoàn tác ngay: trả GUI về màn hình trò chơi
+        createStatus.Text = "🪟 BẮT ĐẦU: script chạy ở tab 💻 Code / 💾 Code Đã lưu sẽ để GUI NGOÀI màn hình trò chơi"
+            .. (n > 0 and (" · đã trả " .. n .. " GUI về màn hình") hoặc "")
             .. " · tab ➕ Tính Năng vẫn nhúng GUI vào tab như bình thường."
-    else
-        createStatus.Text = "🪟 BẬT: GUI của script chạy ở tab 💻 Code sẽ được đưa vào tab '🧩 GUI Ngoài'"
-            .. " (mỗi GUI có nút ↩ trả về màn hình). Dex/IY/SimpleSpy vẫn LUÔN ở ngoài màn hình game."
-    end
-    Store.saveSoon()   -- lưu xuống đĩa: thoát game vào lại vẫn giữ lựa chọn này
-end
+    khác
+        createStatus.Text = "🪟 BẬT: GUI của tập lệnh chạy ở tab 💻 Mã sẽ được đưa vào tab '🧩 GUI Ngoài'"
+            .. " (mỗi GUI có nút ↩ trả về màn hình). Dex/IY/SimpleSpy vẫn LUÔN ở ngoài màn hình trò chơi."
+    kết thúc
+    Store.saveSoon() -- lưu xuống đĩa: thoát trò chơi vào lại vẫn giữ lựa chọn này
+kết thúc
 S.parkToggleBtn.Activated:Connect(S.DoTogglePark)
 
 grabSizeCodeBtn.Activated:Connect(function()
     local currentCode = featureCodeIn.Text
-    if #currentCode == 0 then
+    nếu #currentCode == 0 thì
         createStatus.Text = "⚠️ Ô code đang trống, không có gì để lấy!"
-        return
-    end
+        trở lại
+    kết thúc
 
     local wrappedCode = [[
 local _FIT_WRAPPER = true
 local _bcRealNew = Instance.new
-local _bcMine = {}
+cục bộ _bcMine = {}
 local _bcHookOn = true
 pcall(function()
     Instance.new = function(cls, ...)
         local inst = _bcRealNew(cls, ...)
         if _bcHookOn and cls == "ScreenGui" then _bcMine[#_bcMine + 1] = inst end
-        return inst
-    end
-end)
+        trả lại inst
+    kết thúc
+kết thúc)
 
 ]] .. currentCode .. [[
 
@@ -5317,234 +5686,234 @@ pcall(function() _bcHookOn = false; Instance.new = _bcRealNew end)
 
 task.delay(4, function()
     pcall(function() _bcHookOn = false; Instance.new = _bcRealNew end)
-end)
+kết thúc)
 
 task.defer(function()
     task.wait(0.4)
-    local hub = nil
+    trung tâm cục bộ = nil
     pcall(function()
         local hubGui = (gethui and gethui()) or game:GetService("Players").LocalPlayer:FindFirstChildOfClass("PlayerGui")
-        hub = hubGui and hubGui:FindFirstChild("ExMenu") and hubGui.ExMenu:FindFirstChildWhichIsA("Frame")
-        if not hub then
+        hub = hubGui và hubGui:FindFirstChild("ExMenu") và hubGui.ExMenu:FindFirstChildWhichIsA("Frame")
+        nếu không phải là trung tâm
             local pg = game:GetService("Players").LocalPlayer:FindFirstChildOfClass("PlayerGui")
-            hub = pg and pg:FindFirstChild("ExMenu") and pg.ExMenu:FindFirstChildWhichIsA("Frame")
-        end
-    end)
+            hub = pg và pg:FindFirstChild("ExMenu") và pg.ExMenu:FindFirstChildWhichIsA("Frame")
+        kết thúc
+    kết thúc)
     for _, g in ipairs(_bcMine) do
         pcall(function()
-            if not g or not g.Parent then return end
-            local root = g:FindFirstChildWhichIsA("Frame")
-                or g:FindFirstChildWhichIsA("ScrollingFrame")
-                or g:FindFirstChildWhichIsA("GuiObject")
-            if not root then return end
+            nếu không phải g hoặc không phải g.Parent thì trả về end
+            gốc cục bộ = g:TìmConĐầuTiênLàMột("Khung")
+                hoặc g:FindFirstChildWhichIsA("ScrollingFrame")
+                hoặc g:FindFirstChildWhichIsA("GuiObject")
+            nếu không phải là root thì trả về end
             if root.Size and (root.Size.X.Scale ~= 0 or root.Size.Y.Scale ~= 0) then return end
             local us = root:FindFirstChild("BananaCatFitScale")
-            if not us then
+            nếu không phải chúng ta thì
                 us = _bcRealNew("UIScale")
                 us.Name = "BananaCatFitScale"
-                us.Parent = root
-            end
-            if hub then
-                local function _bcSync()
+                chúng ta.Cha mẹ = gốc
+            kết thúc
+            nếu là trung tâm thì
+                hàm cục bộ _bcSync()
                     us.Scale = math.clamp(hub.AbsoluteSize.X / 540, 0.8, 1.6)
-                end
+                kết thúc
                 _bcSync()
                 hub:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()
                     pcall(_bcSync)
-                end)
-            end
-        end)
-    end
-end)
+                kết thúc)
+            kết thúc
+        kết thúc)
+    kết thúc
+kết thúc)
 ]]
 
     local saveName = "AutoSize_"..os.date("%H%M%S")
     local bn = saveName
-    local cnt = 1
-    while true do
-        local ex = false
+    số lượng cục bộ = 1
+    trong khi đúng vậy
+        cục bộ ex = false
         for _, s in ipairs(scripts) do
             if s.name == saveName then ex = true; break end
-        end
-        if not ex then break end
-        cnt += 1
+        kết thúc
+        nếu không phải ex thì dừng lại
+        cnt ± 1
         saveName = bn.." ("..cnt..")"
-    end
+    kết thúc
 
     table.insert(scripts, {name = saveName, code = wrappedCode, expanded = false})
-    if RebuildScripts then RebuildScripts() end
+    nếu RebuildScripts thì RebuildScripts() kết thúc
     Store.saveSoon()
 
-    createStatus.Text = "✅ Đã lưu bản tự co giãn vào tab 'Code Đã Lưu': "..saveName..
-        " · để tab tính năng co giãn theo menu thì KHÔNG cần bản này, hub tự làm khi bấm ▶ Chạy Script."
-end)
+    createStatus.Text = " ✅Đã lưu bản tự động co giãn vào tab 'Code Đã Lưu': "..saveName..
+        " · Để tab tính năng co giãn theo menu thì KHÔNG cần bản này, hub sẽ tự động làm khi ấn vào ► Chạy Script."
+kết thúc)
 
 S.DoFixMouse = function()
-    local done = {}
+    cục bộ đã hoàn thành = {}
     ReleaseHubFocus()
-    done[#done+1] = "nhả focus"
-    local restored = 0
+    đã xong[#done+1] = "nhả tập trung"
+    cục bộ được khôi phục = 0
     for _, ft in ipairs(featureTabs) do
         local hostFrame = ft.frame and ft.frame:FindFirstChild("ScriptHost")
         if hostFrame then restored = restored + S.ClearEmbedsUnder(hostFrame) end
-    end
-    if restored > 0 then done[#done+1] = "đã trả " .. restored .. " GUI về game" end
+    kết thúc
+    nếu được khôi phục > 0 thì done[#done+1] = "đã trả " .. được khôi phục .. " GUI về game" end
     for _, e in ipairs(S.embeds) do
         pcall(function() e.host.Visible = e.gui.Enabled end)
-    end
+    kết thúc
     pcall(function() UserInputService.MouseBehavior = Enum.MouseBehavior.Default end)
     done[#done+1] = "chuột về mặc định"
     createStatus.Text = "🖱 " .. table.concat(done, " · ")
-        .. " — vẫn không được? 🧩 TẮT nhúng rồi bấm ▶ lại (lúc đó hub không đụng GUI nào)"
+        .. " — vẫn không được? 🧩 KHẮC nhúng rồi nhấn vào ► lại (lúc đó hub không xâm phạm GUI nào)"
     return table.concat(done, " · ")
-end
+kết thúc
 fixMouseBtn.Activated:Connect(S.DoFixMouse)
 
 S.reembedBtn.Activated:Connect(function()
     ReleaseHubFocus()
     local ft = S.FindActiveFeature()
-    if not ft then
-        createStatus.Text = "⚠️ Hãy MỞ tab tính năng cần cứu trước (bấm vào tab đó cho nó hiện ra) rồi hãy bấm 🔁."
-        return
-    end
-    if not S.embedEnabled then
-        createStatus.Text = "⚠️ 🧩 'Nhúng vào Tab' đang TẮT — BẬT lại rồi mới cứu GUI được."
-        return
-    end
+    nếu không phải ft thì
+        createStatus.Text = "⚠️ Hãy MỞ tab tính năng cần nghiên trước (bấm vào tab đó cho nó hiện ra) rồi nhấn 🔁."
+        trở lại
+    kết thúc
+    nếu không phải S.embedEnabled thì
+        createStatus.Text = "⚠️ 🧩 'Nhúng vào Tab' đang TẮT — BẬT lại rồi mới cứu GUI."
+        trở lại
+    kết thúc
     createStatus.Text = "⏳ Đang tìm GUI của '" .. ft.name .. "' để nhúng lại vào menu..."
     task.defer(function()
         local n, why = S.ReembedFeature(ft, true)
-        if n > 0 then
+        nếu n > 0 thì
             createStatus.Text = string.format(
-                "✅ Đã nhúng lại %d GUI vào tab '%s'. Nếu lỡ nhúng nhầm GUI khác, mở tab đó bấm ✕ để trả về.",
+                " ✅ Đã nhúng lại %d GUI vào tab '%s'. Nếu nhầm lẫn một GUI khác, hãy mở tab đó nhấn ✕ để trả về.",
                 n, ft.name)
             pcall(function()
-                if ft.status and ft.status.Parent then
-                    ft.status.Text = string.format("✅ đã nhúng lại %d GUI vào tab (nút 🔁 Cứu GUI)", n)
-                end
+                nếu ft.status và ft.status.Parent thì
+                    ft.status.Text = string.format("Đã nhúng lại %d GUI vào tab (nút 🔁 Cứu GUI)", n)
+                kết thúc
                 if ft.indicator and ft.indicator.Parent then ft.indicator.BackgroundColor3 = C.GREEN end
-            end)
-        else
-            createStatus.Text = "⚠️ Chưa nhúng được: " .. tostring(why or "không rõ lý do")
-                .. " · bấm ▶ Chạy Script lại rồi CHỜ 10 giây (hub tự thử lại 5 lần) · xem console (F9) để biết hook có bị executor chặn không."
-        end
-        print(string.format("[taodepzai v5.0 NOIR] 🔁 Cứu GUI tab '%s': %d GUI đã nhúng%s",
+            kết thúc)
+        khác
+            createStatus.Text = "⚠️ Chưa được nhúng: " .. tostring(why hoặc "không rõ lý do")
+                .. " · press ► Chạy lại Script rồi CHỜ 10 giây (hub tự động thử lại 5 lần) · xem bảng điều khiển (F9) để biết hook có bị chặn thực thi không."
+        kết thúc
+        print(string.format("[taodepzai v5.0 NOIR] 🔁 Cứu tab GUI '%s': %d GUI đã nhúng%s",
             tostring(ft.name), n, why and (" · lý do bỏ qua: " .. tostring(why)) or ""))
-    end)
-end)
+    kết thúc)
+kết thúc)
 
 copyTemplateBtn.Activated:Connect(function()
     ReleaseHubFocus()
-    local nm = (featureNameIn.Text or ""):gsub('[\r	"]', " "):gsub("^%s+", ""):gsub("%s+$", "")
-    if #nm == 0 then nm = "Tính Năng Mới" end
-    local ic = (featureIconIn.Text or ""):gsub('[\r	"]', " ")
+    local nm = (featureNameIn.Text or ""):gsub('[\r "]', " "):gsub("^%s+", ""):gsub("%s+$", "")
+    if #nm == 0 thì nm = "Tính Năng Mới" end
+    local ic = (featureIconIn.Text or ""):gsub('[\r "]', " ")
     if #ic == 0 then ic = "⚙️" end
-    local stamp
+    tem địa phương
     pcall(function() stamp = os.date("sinh %H:%M %d/%m/%Y") end)
-    local code = S.FeatureTemplate(nm, ic, stamp)
+    mã cục bộ = S.FeatureTemplate(nm, ic, stamp)
 
     local copied = S.CopyToClipboard(code)
     local inBox = false
-    if #featureCodeIn.Text == 0 then
-        featureCodeIn.Text = code
-        inBox = true
-    end
-    local saveName = "Mẫu " .. nm
+    nếu #featureCodeIn.Text == 0 thì
+        featureCodeIn.Text = mã
+        trong hộp thư đến = đúng
+    kết thúc
+    local saveName = "Mẫu" .. nm
     local baseName = saveName
-    local cnt = 1
-    while true do
-        local exists = false
+    số lượng cục bộ = 1
+    trong khi đúng vậy
+        cục bộ tồn tại = sai
         for _, sc in ipairs(scripts) do
             if sc.name == saveName then exists = true break end
-        end
-        if not exists then break end
+        kết thúc
+        nếu không tồn tại thì dừng lại
         cnt = cnt + 1
         saveName = baseName .. " (" .. cnt .. ")"
-    end
+    kết thúc
     table.insert(scripts, {name = saveName, code = code, expanded = false})
-    if RebuildScripts then RebuildScripts() end
+    nếu RebuildScripts thì RebuildScripts() kết thúc
     Store.saveSoon()
 
-    createStatus.Text = (copied and ("📋 ĐÃ COPY " .. #code .. " ký tự vào clipboard")
-        or ("⚠️ Executor không có setclipboard — lấy code ở tab 'Code Đã Lưu'"))
+    createStatus.Text = (đã sao chép và ("📋 ĐÃ COPY " .. #code .. " ký tự vào clipboard")
+        hoặc ("⚠️ Người thực thi không có setclipboard — lấy mã ở tab 'Mã đã lưu'"))
         .. " · đã lưu '" .. saveName .. "'"
-        .. (inBox and " · đã điền vào ô code" or " · ô code giữ nguyên code của bạn")
-        .. " · gửi NGUYÊN đoạn code đó cho AI/người viết script, dán lại rồi bấm ▶ Chạy Script."
+        .. (inBox and " · đã điền vào ô code" hoặc " · ô code giữ mã của bạn")
+        .. " · gửi mã đoạn NGUYÊN cho AI/người viết script, dán lại rồi nhấn ► Chạy Script."
     local oldLabel = copyTemplateBtn.Text
-    copyTemplateBtn.Text = "✅ Đã copy code mẫu cho: " .. nm
+    copyTemplateBtn.Text = " ✅ Đã sao chép mã mẫu cho: " .. nm
     task.delay(2.6, function()
         if copyTemplateBtn and copyTemplateBtn.Parent then copyTemplateBtn.Text = oldLabel end
-    end)
+    kết thúc)
     print("[taodepzai v5.0 NOIR] 📋 Code mẫu '" .. nm .. "' (" .. #code .. " ký tự) — clipboard: "
         .. tostring(copied))
-end)
+kết thúc)
 
-Label(createFeatureTab, "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━", cy)
+Label(createFeatureTab, "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━", cy)
 cy = cy + 16
-Label(createFeatureTab, "📋 Danh Sách Tab Tính Năng Đã Tạo:", cy)
+Label(createFeatureTab, "📋 Danh Sách Tab Tính Đã Tạo:", cy)
 cy = cy + 16
 
 local featureListFrame = New("Frame", {
-    Size=UDim2.new(1,-16,0,0), Position=UDim2.new(0,8,0,cy),
+    Kích thước=UDim2.new(1,-16,0,0), Vị trí=UDim2.new(0,8,0,cy),
     BackgroundTransparency=1, BorderSizePixel=0, ZIndex=6,
 }, createFeatureTab)
 New("UIListLayout", {SortOrder=Enum.SortOrder.LayoutOrder, Padding=UDim.new(0,4)}, featureListFrame)
 
-local function RebuildFeatureList()
+hàm cục bộ RebuildFeatureList()
     for _, c in ipairs(featureListFrame:GetChildren()) do
         if not c:IsA("UIListLayout") then c:Destroy() end
-    end
+    kết thúc
 
-    if #featureTabs == 0 then
-        New("TextLabel", {
-            Size=UDim2.new(1,0,0,30),
-            Text="📭 Chưa có tab tính năng nào.",
+    nếu #featureTabs == 0 thì
+        Mới("TextLabel", {
+            Kích thước = UDim2.new(1, 0, 0, 30),
+            Text="📭 Chưa có tính năng tab nào.",
             BackgroundTransparency=1, TextColor3=C.GRAY, Font=Enum.Font.GothamMedium, TextSize=10,
             TextXAlignment=Enum.TextXAlignment.Center, TextYAlignment=Enum.TextYAlignment.Center, ZIndex=7,
         }, featureListFrame)
         createFeatureTab.CanvasSize = UDim2.new(0, 0, 0, cy + 50)
-        return
-    end
+        trở lại
+    kết thúc
 
-    local totalH = 0
+    tổng cục bộ H = 0
     for i, ft in ipairs(featureTabs) do
-        local row = New("Frame", {
+        hàng cục bộ = New("Khung", {
             Size=UDim2.new(1,0,0,32), BackgroundColor3=Color3.fromRGB(26, 29, 38),
             BackgroundTransparency=0.1, BorderSizePixel=0, ZIndex=6,
         }, featureListFrame)
-        Corner(row, UDim.new(0,5)); Stroke(row)
+        Góc(hàng, UDim.new(0,5)); Nét(hàng)
 
-        New("TextLabel", {
-            Size=UDim2.new(1,-90,1,0), Position=UDim2.new(0,8,0,0),
-            Text=ft.icon.." "..ft.name, BackgroundTransparency=1, TextColor3=C.DARK,
+        Mới("TextLabel", {
+            Kích thước=UDim2.new(1,-90,1,0), Vị trí=UDim2.new(0,8,0,0),
+            Văn bản=ft.icon.." "..ft.name, Độ trong suốt nền=1, Màu chữ 3=C.DARK,
             Font=Enum.Font.GothamBold, TextSize=10, TextXAlignment=Enum.TextXAlignment.Left, ZIndex=7,
-        }, row)
+        }, hàng ngang)
 
         local goBtn = New("TextButton", {
-            Size=UDim2.new(0,50,0,22), Position=UDim2.new(1,-78,0,5),
-            Text="➡ Mở", BackgroundColor3=C.BLUE, BackgroundTransparency=0.1,
+            Kích thước=UDim2.new(0,50,0,22), Vị trí=UDim2.new(1,-78,0,5),
+            Văn bản="➡ Mở", Màu nền 3 = Xanh lam, Độ trong suốt nền = 0.1,
             TextColor3=C.WHITE, Font=Enum.Font.GothamBold, TextSize=9, BorderSizePixel=0, ZIndex=8,
-        }, row)
-        Corner(goBtn, UDim.new(0,4))
+        }, hàng ngang)
+        Góc(goBtn, UDim.new(0,4))
         goBtn.Activated:Connect(function()
             for i, b in ipairs(tabs) do
                 if b == ft.btn then SwitchTab(i); break end
-            end
-        end)
+            kết thúc
+        kết thúc)
 
         local delBtn = New("TextButton", {
-            Size=UDim2.new(0,24,0,22), Position=UDim2.new(1,-26,0,5),
-            Text="🗑", BackgroundColor3=C.RED, BackgroundTransparency=0.1,
+            Kích thước=UDim2.new(0,24,0,22), Vị trí=UDim2.new(1,-26,0,5),
+            Văn bản="🗑", Màu nền 3 = Đỏ đậm, Độ trong suốt nền = 0.1,
             TextColor3=C.WHITE, Font=Enum.Font.GothamBold, TextSize=10, BorderSizePixel=0, ZIndex=8,
-        }, row)
-        Corner(delBtn, UDim.new(0,4))
+        }, hàng ngang)
+        Góc(delBtn, UDim.new(0,4))
         delBtn.Activated:Connect(function()
-            local idx = nil
+            chỉ số cục bộ = nil
             for j, t in ipairs(tabs) do
                 if t == ft.btn then idx = j; break end
-            end
-            if idx then
-                if activeTab == ft.frame then OpenFirstPage() end   -- v4.6.2
+            kết thúc
+            nếu idx thì
+                if activeTab == ft.frame then OpenFirstPage() end -- v4.6.2
                 local hostFrame = ft.frame and ft.frame:FindFirstChild("ScriptHost")
                 if hostFrame then S.ClearEmbedsUnder(hostFrame) end
                 ft.btn:Destroy()
@@ -5554,1078 +5923,1078 @@ local function RebuildFeatureList()
                 table.remove(featureTabs, i)
                 for j, t in ipairs(tabs) do
                     t.LayoutOrder = j
-                end
+                kết thúc
                 for j, ft2 in ipairs(featureTabs) do
                     for k, t in ipairs(tabs) do
                         if t == ft2.btn then ft2.tabIdx = k; break end
-                    end
-                end
+                    kết thúc
+                kết thúc
                 RebuildFeatureList()
-                Store.saveSoon()   -- ⭐ xóa cũng phải ghi xuống đĩa, nếu không tab sẽ "sống lại" khi rejoin
-            end
-        end)
+                Store.saveSoon() -- ⭐ xóa cũng phải ghi xuống đĩa, nếu không tab sẽ "sống lại" khi tham gia lại
+            kết thúc
+        kết thúc)
 
-        totalH = totalH + 36
-    end
+        tổngH = tổngH + 36
+    kết thúc
 
     featureListFrame.Size = UDim2.new(1,-16,0,totalH)
-    createFeatureTab.CanvasSize = UDim2.new(0, 0, 0, cy + totalH + 30)
-end
+    createFeatureTab.CanvasSize = UDim2.new(0, 0, 0, cy + TotalH + 30)
+kết thúc
 
 createTabBtn.Activated:Connect(function()
     local n = featureNameIn.Text
     local ic = featureIconIn.Text
     local c = featureCodeIn.Text
 
-    if #n == 0 then
+    nếu #n == 0 thì
         createStatus.Text = "⚠️ Vui lòng nhập tên tính năng!"
-        return
-    end
-    if #c == 0 then
+        trở lại
+    kết thúc
+    nếu #c == 0 thì
         createStatus.Text = "⚠️ Vui lòng dán script!"
-        return
-    end
+        trở lại
+    kết thúc
 
     for _, ft in ipairs(featureTabs) do
-        if ft.name == n then
+        nếu ft.name == n thì
             createStatus.Text = "⚠️ Tên tính năng đã tồn tại!"
-            return
-        end
-    end
+            trở lại
+        kết thúc
+    kết thúc
 
     CreateFeatureTab(n, ic, c)
     RebuildFeatureList()
-    Store.saveSoon()   -- ⭐ lưu ngay vào file để thoát game vào lại vẫn còn tab này
+    Store.saveSoon() -- ⭐ lưu ngay vào file để thoát game vào lại vẫn còn tab này
 
-    createStatus.Text = "✅ Đã tạo tab: "..n.." (đã lưu)"
+    createStatus.Text = " ✅ Đã tạo tab: "..n.." (đã lưu)"
     featureNameIn.Text = ""
     featureIconIn.Text = "⚙️"
     featureCodeIn.Text = ""
 
     SwitchTab(#tabs)
-end)
+kết thúc)
 
 clearFormBtn.Activated:Connect(function()
     featureNameIn.Text = ""
     featureIconIn.Text = "⚙️"
     featureCodeIn.Text = ""
-    createStatus.Text = "🧹 Đã xóa form"
-end)
+    createStatus.Text = "🧹 Đã xóa biểu mẫu"
+kết thúc)
 
 RebuildFeatureList()
 pcall(function()
     createFeatureTab.CanvasSize = UDim2.new(0, 0, 0, cy + 40)
-end)
+kết thúc)
 
 Store.restoreFeatures = function()
     for i = #featureTabs, 1, -1 do
-        local ft = featureTabs[i]
+        cục bộ ft = featureTabs[i]
         for j, b in ipairs(tabs) do
-            if b == ft.btn then
+            nếu b == ft.btn thì
                 table.remove(tabs, j)
                 table.remove(tabContent, j)
-                break
-            end
-        end
-        if activeTab == ft.frame then OpenFirstPage() end   -- v4.6.2
+                phá vỡ
+            kết thúc
+        kết thúc
+        if activeTab == ft.frame then OpenFirstPage() end -- v4.6.2
         local hostFrame = ft.frame and ft.frame:FindFirstChild("ScriptHost")
         if hostFrame then S.ClearEmbedsUnder(hostFrame) end
         pcall(function() ft.btn:Destroy() end)
         pcall(function() ft.frame:Destroy() end)
         table.remove(featureTabs, i)
-    end
+    kết thúc
 
     for _, f in ipairs(Store.loadedFeatures) do
         CreateFeatureTab(f.name, f.icon, f.code)
-    end
+    kết thúc
 
     for j, t in ipairs(tabs) do t.LayoutOrder = j end
     tabBar.CanvasSize = UDim2.new(0, 0, 0, #tabs * 44 + 10)
     RebuildFeatureList()
     if Store.refreshStatus then Store.refreshStatus() end
-end
+kết thúc
 
-if #Store.loadedFeatures > 0 then
+nếu #Store.loadedFeatures > 0 thì
     Store.restoreFeatures()
-    createStatus.Text = string.format("💾 Đã khôi phục %d tab tính năng từ bộ nhớ", #Store.loadedFeatures)
-end
+    createStatus.Text = string.format("💾Đã khôi phục %d tính năng của tab từ bộ nhớ", #Store.loadedFeatures)
+kết thúc
 
 S.Move = {
     fly = false, noclip = false, infJump = false, speed = false, carpet = false,
-    runMode = false,                         -- 🏃 chế độ "chạy trên thảm" (gộp thảm + tốc độ + HUD)
-    sprint = false, sprintSpeed = 50,        -- v4.37: 💨 tốc độ theo camera (mặt đất, không xuyên tường)
-    highJump = false, highJumpSpeed = 80,    -- v4.38: 🦘 nhảy cao (công tắc độc lập, chỉnh tốc độ)
+    runMode = false, -- 🏃 mode "chạy trên thảm" (gộp thảm + tốc độ + HUD)
+    sprint = false, sprintSpeed ​​= 50, -- v4.37: 💨 tốc độ theo camera (mặt đất, không Thường xuyên Tường)
+    highJump = false, highJumpSpeed ​​= 80, -- v4.38: 🦘 nhảy cao (công tắc độc lập, chỉnh tốc độ)
     _hud = nil, _hudUp = nil, _hudDown = nil, _hudCarpet = nil, _hudClose = nil, _menuWasOpen = nil,
-    flySpeed = 50, walkSpeed = 16, jumpPower = 50,
+    Tốc độ bay = 50, tốc độ đi bộ = 16, sức mạnh nhảy = 50,
     speedMode = "x", speedMul = 3, appliedWS = nil,
-    carpetW = 6, carpetH = 0.5, carpetL = 6,     -- Rộng × Cao(dày) × Dài
-    carpetGap = 0.2,                             -- thảm cách bàn chân bao nhiêu stud (0 = áp sát)
+    thảmW = 6, thảmH = 0.5, thảmL = 6, -- Rộng × Cao(ngày) × Dài
+    CarpetGap = 0.2, -- thảm cách bàn chân bao nhiêu stud (0 = áp sát)
     carpetSlack = 0.5, carpetHold = true, carpetEdge = true,
     carpetY = nil,
     _carpet = nil, _bv = nil, _bg = nil, _floor = nil,
-    _ncConn = nil, _ncDesc = nil, _ncChar = nil, _ncLast = nil,
-    _ijConn = nil, _ijConn2 = nil, _speedThread = nil,
-    _origCC = {},                                 -- [part] = CanCollide gốc
-    _baseWS = 16, _baseJP = 50,                   -- tốc độ / lực nhảy GỐC CỦA GAME
+    _ncConn = không, _ncDesc = không, _ncChar = không, _ncLast = không,
+    _ijConn = không, _ijConn2 = không, _speedThread = không,
+    _origCC = {}, -- [part] = CanCollide gốc
+    _baseWS = 16, _baseJP = 50, -- tốc độ / lực nhảy GỐC CỦA GAME
     _wd = nil, _lastJump = nil, _ijBaseJP = nil, _ijBaseJH = nil,
-    _carpetRetries = 0,                           -- số lần thảm bị game xoá
+    _carpetRetries = 0, -- số lần thảm bị xóa
 }
-local MV = S.Move
-_G.BananaCatHub_MV = S.Move  -- v4.28: expose for legacy refs (HubLoc fly)
+MV cục bộ = S.Move
+_G.BananaCatHub_MV = S.Move -- v4.28: hiển thị cho các tham chiếu cũ (HubLoc fly)
 
-function MV.comp(v, k, dft)
+hàm MV.comp(v, k, dft)
     if v == nil then return dft end
-    local ok, val = pcall(function() return v[k] end)
-    if ok and type(val) == "number" then return val end
-    return dft
-end
-local function mvClamp(n, lo, hi, dft)
+    cục bộ ok, val = pcall(function() return v[k] end)
+    nếu ok và kiểu dữ liệu (val) == "number" thì trả về val end
+    trả về dft
+kết thúc
+hàm cục bộ mvClamp(n, lo, hi, dft)
     n = tonumber(n)
     if n == nil or n ~= n then return dft end
-    if n < lo then return lo end
-    if n > hi then return hi end
-    return n
-end
+    nếu n < lo thì trả về lo kết thúc
+    nếu n > hi thì trả về hi kết thúc
+    trả về n
+kết thúc
 
 function MV.Char() return player.Character end
-function MV.Hum()
+hàm MV.Hum()
     local c = player.Character
-    return c and c:FindFirstChildOfClass("Humanoid") or nil
-end
-function MV.Root()
+    trả về c và c:FindFirstChildOfClass("Humanoid") hoặc nil
+kết thúc
+hàm MV.Root()
     local c = player.Character
-    return c and c:FindFirstChild("HumanoidRootPart") or nil
-end
+    trả về c và c:FindFirstChild("HumanoidRootPart") hoặc nil
+kết thúc
 
--- ---------- 🧱 XUYÊN TƯỜNG (NoClip) ----------
-function MV._NcPart(p)
-    if not (p and p.IsA and p:IsA("BasePart")) then return end
-    MV._ncParts = MV._ncParts or {}
-    if MV._origCC[p] == nil then
-        MV._origCC[p] = MV._ncParts[p] and true or p.CanCollide
-    end
-    if p.CanCollide ~= false then pcall(function() p.CanCollide = false end) end
+--------- 🧱 XUYÊN TƯỜNG (NoClip) ----------
+hàm MV._NcPart(p)
+    nếu không (p và p.IsA và p:IsA("BasePart")) thì trả về end
+    MV._ncParts = MV._ncParts hoặc {}
+    nếu MV._origCC[p] == nil thì
+        MV._origCC[p] = MV._ncParts[p] và đúng hoặc p.CanCollide
+    kết thúc
+    nếu p.CanCollide ~= false thì pcall(function() p.CanCollide = false end) end
     MV._ncParts[p] = true
-end
-function MV._NcScan()
+kết thúc
+hàm MV._NcScan()
     local c = MV.Char()
-    if not c then return end
-    if MV._ncChar ~= c then                    -- đổi nhân vật (respawn) -> dọn kết nối cũ
+    nếu không phải c thì trả về end
+    if MV._ncChar ~= c then --đổi nhân vật (respawn) -> up connect old
         if MV._ncDesc then pcall(function() MV._ncDesc:Disconnect() end) end
         MV._ncChar = c
-        MV._ncParts = {}                       -- nhân vật mới -> danh sách part mới
+        MV._ncParts = {} -- nhân vật mới -> mới danh sách phần
         MV._ncDesc = trackConn(c.DescendantAdded:Connect(MV._NcPart))
-    end
+    kết thúc
     for _, p in ipairs(c:GetDescendants()) do MV._NcPart(p) end
-end
-function MV._NcEnforce()
+kết thúc
+hàm MV._NcEnforce()
     if not MV.noclip then return end
     local c = MV.Char()
-    local parts = MV._ncParts
-    if not c or not parts then return end
+    các bộ phận cục bộ = MV._ncParts
+    nếu không phải c hoặc không phải các bộ phận thì trả về đầu cuối
     for p in pairs(parts) do
-        local ok = pcall(function()
-            if p:IsDescendantOf(c) then
-                if p.CanCollide ~= false then p.CanCollide = false end
-            else
-                parts[p] = nil                 -- part đã rời khỏi người (game xoá) -> thôi theo dõi
-            end
-        end)
-        if not ok then parts[p] = nil end
-    end
-end
--- ---------- v4.22: 🧲 ĐẨY XUYÊN khi bị chặn CỨNG ----------
-function MV._NcAssist()
-    if MV.fly or not (MV.noclip and MV.ncPass ~= false) then
+        cục bộ ok = pcall(function()
+            nếu p:LàHậu duệ của (c) thì
+                nếu p.CanCollide ~= false thì p.CanCollide = kết thúc sai
+            khác
+                parts[p] = nil -- part đã rời khỏi người dùng (game delete) -> theo dõi theo dõi
+            kết thúc
+        kết thúc)
+        nếu không ổn thì parts[p] = nil end
+    kết thúc
+kết thúc
+--------- v4.22: 🧲 ĐẨY XUYÊN khi bị chặn CỨNG ----------
+hàm MV._NcAssist()
+    nếu MV.fly hoặc không (MV.noclip và MV.ncPass ~= false) thì
         MV._passBlocked, MV._passPX, MV._passPZ, MV._passAt = 0, nil, nil, nil
-        return
-    end
+        trở lại
+    kết thúc
     local onCarpet = (MV.carpet == true) or (MV.runMode == true)
-    local h, r = MV.Hum(), MV.Root()
-    if not h or not r then
+    cục bộ h, r = MV.Hum(), MV.Root()
+    nếu không phải h hoặc không phải r thì
         MV._passBlocked, MV._passPX, MV._passPZ, MV._passAt = 0, nil, nil, nil
-        return
-    end
+        trở lại
+    kết thúc
     local now = os.clock()
     local dt = now - (MV._passAt or now)
     MV._passAt = now
-    if dt <= 0 or dt > 0.5 then dt = 1 / 60 end          -- frame đầu / lag -> coi như 1 frame
+    if dt <= 0 hoặc dt > 0.5 thì dt = 1/60 end -- frame start/lag -> coi như 1 frame
     local okMD, md = pcall(function() return h.MoveDirection end)
     local mx = okMD and MV.comp(md, "X", 0) or 0
     local mz = okMD and MV.comp(md, "Z", 0) or 0
-    local want = math.sqrt(mx * mx + mz * mz)            -- 0..1: đang bấm hướng nào
+    local want = math.sqrt(mx * mx + mz * mz) -- 0..1: đang nhấn bất kỳ hướng dẫn nào
     local px, pz = MV.comp(r.Position, "X", nil), MV.comp(r.Position, "Z", nil)
-    if not (px and pz) then return end
-    local moved = 0
-    if MV._passPX then
+    nếu không phải (px và pz) thì trả về end
+    cục bộ đã di chuyển = 0
+    nếu MV._passPX thì
         local dx, dz = px - MV._passPX, pz - MV._passPZ
         moved = math.sqrt(dx * dx + dz * dz)
-    end
+    kết thúc
     MV._passPX, MV._passPZ = px, pz
     local spd = mvClamp(tonumber(MV.WantSpeed()) or 16, 6, 120)
     local ws = tonumber(MV.comp(h, "WalkSpeed", nil)) or spd
     local expect = math.min(spd, ws) * want * dt
-    if want <= 0.1 then
-        MV._passBlocked = 0                              -- không bấm gì -> không đẩy
+    nếu muốn <= 0.1 thì
+        MV._passBlocked = 0 -- không nhấn gì -> không đưa
     elseif moved < expect * (onCarpet and 0.12 or 0.35) then
-        MV._passBlocked = (MV._passBlocked or 0) + dt    -- bị chặn -> đếm thời gian kẹt
-    else
-        MV._passBlocked = (MV._passBlocked or 0) * 0.5   -- đi được -> quên dần
-    end
+        MV._passBlocked = (MV._passBlocked hoặc 0) + dt -- bị chặn -> đếm thời gian khóa
+    khác
+        MV._passBlocked = (MV._passBlocked hoặc 0) * 0.5 -- đi được -> quên tăng dần
+    kết thúc
     if (MV._passBlocked or 0) < (onCarpet and 0.35 or 0.2) or want <= 0.1 then return end
-    local ux, uz = mx / want, mz / want
-    local stepLen = onCarpet and math.min(spd * dt * 0.5, 0.4)   -- trên thảm: nhích RẤT nhẹ
-                    or math.min(spd * dt * 1.15, 3)              -- 1 frame không nhích quá 3 stud
+    ux cục bộ, uz = mx / muốn, mz / muốn
+    local stepLen = onCarpet và math.min(spd * dt * 0.5, 0.4) -- trên thảm: lang RẤT nhẹ nhàng
+                    hoặc math.min(spd * dt * 1.15, 3) -- 1 frame không say quá 3 stud
     local y = MV.comp(r.Position, "Y", nil)
-    if y == nil then return end
+    nếu y == nil thì trả về end
     pcall(function() r.CFrame = CFrame.new(px + ux * stepLen, y, pz + uz * stepLen) end)
-end
-function MV._NcStep()
+kết thúc
+hàm MV._NcStep()
     if not MV.noclip then return end
     local c = MV.Char()
-    if not c then return end
+    nếu không phải c thì trả về end
     local now = os.clock()
-    if MV._ncChar ~= c or not MV._ncLast or (now - MV._ncLast) > 0.5 then
-        MV._ncLast = now
-        MV._NcScan()                                  -- quét đầy đủ: bắt part mới / nhân vật mới
-    end
-    MV._NcEnforce()                                   -- MỖI FRAME: thắng game bật lại CanCollide
-    MV._NcAssist()                                    -- 🧲 bị chặn cứng -> tự đẩy xuyên
-end
-function MV._NcBind(on)
-    if on and not MV._ncBound then
+    nếu MV._ncChar ~= c hoặc không phải MV._ncLast hoặc (now - MV._ncLast) > 0.5 thì
+        MV._ncLast = bây giờ
+        MV._NcScan() -- quét đầy đủ: bắt phần mới / nhân vật mới
+    kết thúc
+    MV._NcEnforce() -- MỖI FRAME: thắng game bật lại CanCollide
+    MV._NcAssist() -- 🧲 bị chặn -> tự đưa xuyên
+kết thúc
+hàm MV._NcBind(on)
+    nếu bật và không phải MV._ncBound thì
         MV._ncBound = true
-        local ok = pcall(function()
+        cục bộ ok = pcall(function()
             RunService:BindToRenderStep("BC_NoClip", Enum.RenderPriority.Last.Value, function()
                 pcall(MV._NcStep)
-            end)
-        end)
-        if not ok then MV._ncBound = false end
-    elseif (not on) and MV._ncBound then
+            kết thúc)
+        kết thúc)
+        nếu không ổn thì MV._ncBound = false kết thúc
+    nếu không bật và MV._ncBound thì
         MV._ncBound = false
         pcall(function() RunService:UnbindFromRenderStep("BC_NoClip") end)
-    end
-    return MV._ncBound
-end
-function MV._NcForgetLost()
+    kết thúc
+    trả về MV._ncBound
+kết thúc
+hàm MV._NcForgetLost()
     for p in pairs(MV._origCC) do
-        if not (p and p.Parent) then MV._origCC[p] = nil end
-    end
-end
-function MV._NcRestore()
+        nếu không (p và p.Parent) thì MV._origCC[p] = nil end
+    kết thúc
+kết thúc
+hàm MV._NcRestore()
     for p, v in pairs(MV._origCC) do
-        if p and p.Parent then
+        nếu p và p.Parent thì
             pcall(function() p.CanCollide = v end)
-        end
+        kết thúc
         MV._origCC[p] = nil
-    end
+    kết thúc
     MV._origCC = {}
     MV._ncParts = {}
-end
-function MV.SetNoclip(on)
-    on = (on == true)
+kết thúc
+hàm MV.SetNoclip(on)
+    bật = (bật == đúng)
     if on == MV.noclip then return MV.noclip end
-    MV.noclip = on
-    if on then
+    MV.noclip = bật
+    nếu bật thì
         MV._ncLast = nil
         MV._ncParts = {}
         MV._passBlocked, MV._passPX, MV._passPZ, MV._passAt = 0, nil, nil, nil
-        if MV.ncPass == nil then MV.ncPass = true end   -- v4.22: 🧲 mặc định BẬT
-        MV._NcScan()                                   -- quét ngay lần đầu cho chắc
+        if MV.ncPass == nil thì MV.ncPass = true end -- v4.22: 🧲 mặc định BẬT
+        MV._NcScan() -- quét ngay lần đầu cho chắc
         MV._ncConn = trackConn(RunService.Stepped:Connect(MV._NcStep))
-        MV._NcBind(true)                               -- v4.22: thêm lớp ghi cuối frame
-    else
+        MV._NcBind(true) -- v4.22: thêm khung cuối cùng của lớp ghi
+    khác
         for _, c in ipairs({ MV._ncConn, MV._ncDesc }) do
-            if c then pcall(function() c:Disconnect() end) end
-        end
+            nếu c thì pcall(function() c:Disconnect() end) end
+        kết thúc
         MV._ncConn, MV._ncDesc, MV._ncChar, MV._ncLast = nil, nil, nil, nil
         MV._NcBind(false)
         MV._passBlocked, MV._passPX, MV._passPZ, MV._passAt = 0, nil, nil, nil
         MV._NcRestore()
-    end
+    kết thúc
     MV._Watchdog()
     if MV.SyncFlyHud then MV.SyncFlyHud() end
-    return MV.noclip
-end
+    trả về MV.noclip
+kết thúc
 
--- ---------- 🦘 NHẢY VÔ HẠN ----------
-function MV._JumpGuard()
+--------- 🦘 NHẢY VÔ HẠN ----------
+hàm MV._JumpGuard()
     local h = MV.Hum()
-    if not h then return end
+    nếu không phải h thì trả về end
     pcall(function()
         local jp = mvClamp(MV.jumpPower, 1, 500)
-        if h.UseJumpPower ~= false then
+        nếu h.UseJumpPower ~= false thì
             if (tonumber(h.JumpPower) or 0) < 1 then h.JumpPower = jp end
-        end
-        if (tonumber(h.JumpHeight) or 0) < 0.1 then
+        kết thúc
+        nếu (tonumber(h.JumpHeight) hoặc 0) < 0.1 thì
             local g = tonumber(workspace.Gravity) or 0
-            if g < 1 then g = 196.2 end
+            nếu g < 1 thì g = 196,2 kết thúc
             h.JumpHeight = mvClamp((jp * jp) / (2 * g), 1, 500)
-        end
-    end)
-end
-function MV._JumpConfirm(y0)
+        kết thúc
+    kết thúc)
+kết thúc
+hàm MV._JumpConfirm(y0)
     if not MV.infJump then return end
-    local r2 = MV.Root()
-    if not r2 then return end
-    local up = r2.Position.Y - y0
-    local v  = r2.AssemblyLinearVelocity
+    cục bộ r2 = MV.Root()
+    nếu không phải r2 thì trả về end
+    vị trí cục bộ = r2.Vị trí.Y - y0
+    local v = r2.AssemblyLinearVelocity
     local vy = MV.comp(v, "Y", 0)
-    if up < 0.4 and vy < 10 then        -- chưa nhúc nhích -> game đã bỏ qua lệnh nhảy
+    if up < 0.4 và vy < 10 then -- chưa nhúc nhích -> game đã bỏ qua lệnh nhảy
         pcall(function()
             r2.AssemblyLinearVelocity = Vector3.new(
                 MV.comp(v, "X", 0), MV.WantJumpSpeed(), MV.comp(v, "Z", 0))
-        end)
-    end
-end
-function MV._DoJump()
+        kết thúc)
+    kết thúc
+kết thúc
+hàm MV._DoJump()
     if not MV.infJump then return false end
-    local h, r = MV.Hum(), MV.Root()
-    if not h or not r then return false end
-    if h.Sit or h.PlatformStand then return false end      -- đang ngồi ghế/xe: không nhảy
+    cục bộ h, r = MV.Hum(), MV.Root()
+    nếu không phải h hoặc không phải r thì trả về false.
+    nếu h.Sit hoặc h.PlatformStand thì trả về false end -- ngồi ngồi/xe: không nhảy
     local now = os.clock()
-    if MV._lastJump and (now - MV._lastJump) < 0.12 then return false end   -- chống bốc đúp
-    MV._lastJump = now
+    nếu MV._lastJump và (now - MV._lastJump) < 0.12 thì trả về kết thúc sai -- Chống Bốc Tăng
+    MV._lastJump = bây giờ
     MV._JumpGuard()
     local y0 = r.Position.Y
     pcall(function() h:ChangeState(Enum.HumanoidStateType.Jumping) end)
     pcall(function() h.Jump = true end)
     task.delay(0.08, function() pcall(MV._JumpConfirm, y0) end)
-    return true
-end
-function MV.SetInfJump(on)
-    on = (on == true)
+    trả về giá trị đúng
+kết thúc
+hàm MV.SetInfJump(on)
+    bật = (bật == đúng)
     if on == MV.infJump then return MV.infJump end
-    MV.infJump = on
-    if on then
+    MV.infJump = bật
+    nếu bật thì
         local h = MV.Hum()
         if h then MV._ijBaseJP, MV._ijBaseJH = h.JumpPower, h.JumpHeight end
         MV._JumpGuard()
-        MV._ijConn  = trackConn(UserInputService.JumpRequest:Connect(function()
+        MV._ijConn = trackConn(UserInputService.JumpRequest:Connect(function()
             pcall(MV._DoJump)
-        end))
+        kết thúc))
         MV._ijConn2 = trackConn(UserInputService.InputBegan:Connect(function(i, gp)
             if not MV.infJump then return end
             pcall(function()
                 local tb = UserInputService:GetFocusedTextBox()
-                if tb and tb:IsDescendantOf(gui) then return end   -- đang gõ trong hub thì thôi
-                local k = i and i.KeyCode
+                if tb và tb:IsDescendantOf(gui) then return end -- đang nhập trong hub thì thôi
+                cục bộ k = i và i.KeyCode
                 if k == Enum.KeyCode.Space or k == Enum.KeyCode.ButtonA then MV._DoJump() end
-            end)
-        end))
-    else
+            kết thúc)
+        kết thúc))
+    khác
         for _, c in ipairs({ MV._ijConn, MV._ijConn2 }) do
-            if c then pcall(function() c:Disconnect() end) end
-        end
-        MV._ijConn, MV._ijConn2 = nil, nil
+            nếu c thì pcall(function() c:Disconnect() end) end
+        kết thúc
+        MV._ijConn, MV._ijConn2 = không, không
         local h = MV.Hum()
-        if h then
-            if MV._ijBaseJP ~= nil then pcall(function() h.JumpPower  = MV._ijBaseJP end) end
+        nếu h thì
+            if MV._ijBaseJP ~= nil then pcall(function() h.JumpPower = MV._ijBaseJP end) end
             if MV._ijBaseJH ~= nil then pcall(function() h.JumpHeight = MV._ijBaseJH end) end
-        end
-        MV._ijBaseJP, MV._ijBaseJH = nil, nil
-    end
+        kết thúc
+        MV._ijBaseJP, MV._ijBaseJH = không, không
+    kết thúc
     MV._Watchdog()
-    return MV.infJump
-end
+    trả về MV.infJump
+kết thúc
 
--- ---------- 👟 CHẠY ĐỘ (WalkSpeed / JumpPower) ----------
-function MV.WantSpeed()
-    if MV.speedMode == "x" then
-        local base = tonumber(MV._baseWS) or 16
+--------- 👟 CHẠY ĐỘ (WalkSpeed ​​/ JumpPower) ----------
+hàm MV.WantSpeed()
+    nếu MV.speedMode == "x" thì
+        cơ sở cục bộ = tonumber(MV._baseWS) hoặc 16
         return mvClamp(base * mvClamp(MV.speedMul, 1, 20), 0, 500)
-    end
+    kết thúc
     return mvClamp(MV.walkSpeed, 0, 500)
-end
-function MV.ApplyChar()
+kết thúc
+hàm MV.ApplyChar()
     local h = MV.Hum()
-    if not h then return end
-    if MV.speed then
+    nếu không phải h thì trả về end
+    nếu MV.speed thì
         local want = MV.WantSpeed()
-        h.WalkSpeed = want
-        MV.appliedWS = want
-        if not MV.highJump then
+        h.WalkSpeed ​​= muốn
+        MV.appliedWS = muốn
+        nếu không phải MV.highJump thì
             local jp = mvClamp(MV.jumpPower, 0, 500)
             if h.JumpPower ~= jp then h.JumpPower = jp end
-        end
-    else
-        h.WalkSpeed  = MV._baseWS or 16
-        if not MV.highJump then
-            h.JumpPower  = MV._baseJP or 50
-        end
+        kết thúc
+    khác
+        h.WalkSpeed ​​= MV._baseWS hoặc 16
+        nếu không phải MV.highJump thì
+            h.JumpPower = MV._baseJP hoặc 50
+        kết thúc
         MV.appliedWS = nil
-    end
-end
-function MV.SpeedStep()
+    kết thúc
+kết thúc
+hàm MV.SpeedStep()
     local h = MV.Hum()
-    if not h or not MV.speed then return end
-    if MV.appliedWS ~= nil and math.abs((tonumber(h.WalkSpeed) or 0) - MV.appliedWS) > 0.01 then
-        MV._baseWS = tonumber(h.WalkSpeed) or MV._baseWS
-    end
+    nếu không phải h hoặc không phải MV.speed thì trả về end
+    nếu MV.appliedWS ~= nil và math.abs((tonumber(h.WalkSpeed) hoặc 0) - MV.appliedWS) > 0.01 thì
+        MV._baseWS = tonumber(h.WalkSpeed) hoặc MV._baseWS
+    kết thúc
     MV.ApplyChar()
-end
-function MV.SetSpeed(on)
-    on = (on == true)
+kết thúc
+hàm MV.SetSpeed(on)
+    bật = (bật == đúng)
     if on == MV.speed then return MV.speed end
     local h = MV.Hum()
-    if on and not MV.speed and h then          -- chỉ nhớ mặc định ở lần BẬT đầu tiên
-        MV._baseWS = h.WalkSpeed  or 16
-        MV._baseJP = h.JumpPower  or 50
-    end
-    MV.speed = on
+    nếu bật chứ không phải MV.speed và h thì -- mặc định nhớ ở lần đầu tiên
+        MV._baseWS = h.WalkSpeed ​​hoặc 16
+        MV._baseJP = h.JumpPower hoặc 50
+    kết thúc
+    MV.speed = bật
     MV.ApplyChar()
     MV._Watchdog()
-    return MV.speed
-end
+    trả về MV.speed
+kết thúc
 
--- ---------- v4.12.2: VÒNG CANH GÁC (lý do nhiều game "không hoạt động") ----------
-function MV._NeedWatch()
-    return (MV.fly or MV.noclip or MV.infJump or MV.speed or MV.runMode
-            or MV.sprint or MV.highJump or (MV.Safe and MV.Safe.on)) == true
-end
-function MV._KeepAlive()
+--------- v4.12.2: VÒNG CANH GÁC (lý do nhiều game "không hoạt động") ----------
+hàm MV._NeedWatch()
+    trả về (MV.fly hoặc MV.noclip hoặc MV.infJump hoặc MV.speed hoặc MV.runMode
+            hoặc MV.sprint hoặc MV.highJump hoặc (MV.Safe và MV.Safe.on)) == true
+kết thúc
+hàm MV._KeepAlive()
     if MV.speed or MV.runMode then pcall(MV.SpeedStep) end
-    if MV.sprint then
+    nếu MV.sprint thì
         pcall(MV._EnsureSpeed)
-        if not MV._speedBound or (tick() - (MV._speedFrameAt or 0)) > 0.6 then
+        nếu MV._speedBound không phải là (tick() - (MV._speedFrameAt hoặc 0)) > 0.6 thì
             MV._speedBound = false
             pcall(MV._BindSpeed)
             pcall(MV._SpeedFrame)
-        end
-    end
+        kết thúc
+    kết thúc
     if MV.infJump or MV.runMode then pcall(MV._JumpGuard) end
     if MV.highJump then pcall(MV._HighJumpApplyPower) end
-    -- [REMOVED] carpet keepalive
-    if MV.fly then
+    -- [ĐÃ XÓA] thảm giữ ấm
+    nếu MV.fly thì
         pcall(MV._EnsureFly)
-        if not MV._flyBound or (tick() - (MV._flyFrameAt or 0)) > 0.6 then
+        nếu MV._flyBound không phải là (tick() - (MV._flyFrameAt hoặc 0)) > 0.6 thì
             MV._flyBound = false
             pcall(MV._BindFly)
             pcall(MV._FlyFrame)
-        end
-    end
-    if MV.Safe and MV.Safe.on and (tick() - (MV.Safe._lastFrameAt or 0)) > 0.6 then
+        kết thúc
+    kết thúc
+    nếu MV.Safe và MV.Safe.on và (tick() - (MV.Safe._lastFrameAt hoặc 0)) > 0.6 thì
         MV.Safe._bound = false
         pcall(MV.Safe.Bind)
         pcall(MV.Safe.Step, 0.1)
-    end
-end
-function MV._Watchdog()
-    if not MV._NeedWatch() then
+    kết thúc
+kết thúc
+hàm MV._Watchdog()
+    nếu không phải MV._NeedWatch() thì
         MV._wdToken = nil
-        local thread = MV._wd
+        luồng cục bộ = MV._wd
         MV._wd = nil
         if type(thread) == "thread" and thread ~= coroutine.running() then pcall(task.cancel, thread) end
-        return
-    end
-    if MV._wdToken then return end
-    local token = {}
+        trở lại
+    kết thúc
+    nếu MV._wdToken thì trả về end
+    mã thông báo cục bộ = {}
     MV._wdToken = token
-    local thread = task.spawn(function()
-        while MV._wdToken == token and MV._NeedWatch() do
+    luồng cục bộ = tác vụ.tạo(hàm()
+        trong khi MV._wdToken == token và MV._NeedWatch() thực hiện
             pcall(MV._KeepAlive)
             task.wait(0.3)
-        end
+        kết thúc
         if MV._wdToken == token then MV._wdToken, MV._wd = nil, nil end
-    end)
+    kết thúc)
     if MV._wdToken == token then MV._wd = thread end
-end
+kết thúc
 
--- ---------- 🚀 BAY THEO CAMERA (v4.36) ----------
-do
+---------- 🚀 BAY THEO CAMERA (v4.36) ----------
+LÀM
 local FL = { x = 0, z = 0, y = 0, holds = {}, showHud = true, focused = true, conns = {} }
 MV.Flight = FL
 
-function MV.ClearFlyInput()
+hàm MV.ClearFlyInput()
     FL.x, FL.z, FL.y = 0, 0, 0
     FL.holds, FL.joyInput, FL.dragInput = {}, nil, nil
     if FL.knob and FL.knob.Parent then FL.knob.Position = UDim2.new(0.5, -14, 0.5, -14) end
-end
-function MV.SetFlyVirtual(x, z, y)
+kết thúc
+hàm MV.SetFlyVirtual(x, z, y)
     FL.x, FL.z, FL.y = mvClamp(x, -1, 1, 0), mvClamp(z, -1, 1, 0), mvClamp(y, -1, 1, 0)
-end
-function MV._RestoreFlyHum()
-    local h = FL.hum
-    if h and h.Parent then
+kết thúc
+hàm MV._RestoreFlyHum()
+    cục bộ h = FL.hum
+    nếu h và h.Parent thì
         h.PlatformStand = FL.platformStand
         h.AutoRotate = FL.autoRotate
-    end
+    kết thúc
     FL.hum = nil
-end
-function MV._DestroyFlyParts()
+kết thúc
+hàm MV._DestroyFlyParts()
     for _, key in ipairs({"_bv", "_bg", "_floor"}) do
         if MV[key] then MV[key]:Destroy(); MV[key] = nil end
-    end
-end
-function MV._EnsureFly()
-    local r, h = MV.Root(), MV.Hum()
+    kết thúc
+kết thúc
+hàm MV._EnsureFly()
+    cục bộ r, h = MV.Root(), MV.Hum()
     if not MV.fly then return nil end
-    if not r or not h or h.Health <= 0 then
+    nếu không phải r hoặc không phải h hoặc h.Health <= 0 thì
         MV._DestroyFlyParts()
         MV._RestoreFlyHum()
         MV.ClearFlyInput()
         FL.root = nil
-        return nil
-    end
-    if FL.root ~= r then
+        trả về nil
+    kết thúc
+    nếu FL.root ~= r thì
         MV._DestroyFlyParts()
         MV._RestoreFlyHum()
         MV.ClearFlyInput()
         FL.root = r
-    end
-    if FL.hum ~= h then
+    kết thúc
+    nếu FL.hum ~= h thì
         MV._RestoreFlyHum()
         FL.hum, FL.platformStand, FL.autoRotate = h, h.PlatformStand, h.AutoRotate
-    end
-    if not MV._bv or MV._bv.Parent ~= r then
+    kết thúc
+    nếu MV._bv hoặc MV._bv.Parent không bằng r thì
         if MV._bv then MV._bv:Destroy() end
         MV._bv = New("BodyVelocity", {
-            Name = "BC_FlyVel", MaxForce = Vector3.new(1e9, 1e9, 1e9), Velocity = Vector3.zero,
+            Tên = "BC_FlyVel", Lực tối đa = Vector3.new(1e9, 1e9, 1e9), Vận tốc = Vector3.zero,
         }, r)
-    end
-    if not MV._bg or MV._bg.Parent ~= r then
+    kết thúc
+    nếu MV._bg hoặc MV._bg.Parent không bằng r thì
         if MV._bg then MV._bg:Destroy() end
         MV._bg = New("BodyGyro", {
-            Name = "BC_FlyGyro", MaxTorque = Vector3.new(1e9, 1e9, 1e9), P = 1e4, D = 50,
+            Tên = "BC_FlyGyro", Mô-men xoắn cực đại = Vector3.new(1e9, 1e9, 1e9), P = 1e4, D = 50,
         }, r)
-    end
+    kết thúc
     if h.PlatformStand ~= true then h.PlatformStand = true end
     if h.AutoRotate ~= false then h.AutoRotate = false end
-    if not MV._floor or not MV._floor.Parent then
+    nếu không phải MV._floor hoặc không phải MV._floor.Parent thì
         MV._floor = New("Part", {
-            Name = "BC_FlyFloor", Size = Vector3.new(6, 0.2, 6), Transparency = 0.7,
-            Color = Color3.fromRGB(200, 230, 255), Material = Enum.Material.Glass,
-            Anchored = true, CanCollide = false, CanTouch = false, CanQuery = false,
-        }, workspace)
-    end
-    return r, h
-end
+            Tên = "BC_FlyFloor", Kích thước = Vector3.new(6, 0.2, 6), Độ trong suốt = 0.7,
+            Màu = Color3.fromRGB(200, 230, 255), Chất liệu = Enum.Material.Glass,
+            Cố định = true, CanCollide = false, CanTouch = false, CanQuery = false,
+        }, không gian làm việc)
+    kết thúc
+    trả về r, h
+kết thúc
 
-function MV._ReadFlyInput(cf, h)
+hàm MV._ReadFlyInput(cf, h)
     if not FL.focused or UserInputService:GetFocusedTextBox() then return Vector3.zero end
-    local x, z, y = FL.x, FL.z, FL.y
+    cục bộ x, z, y = FL.x, FL.z, FL.y
     local virtualDirection = FL.joyInput ~= nil or math.abs(x) + math.abs(z) > 0
     for _, v in pairs(FL.holds) do
-        x += v.X; y += v.Y; z += v.Z
-        if v.X ~= 0 or v.Z ~= 0 then virtualDirection = true end
-    end
+        x ± vX; y ± vY; z ± vZ
+        nếu vX ~= 0 hoặc vZ ~= 0 thì virtualDirection = true
+    kết thúc
     local w = UserInputService:IsKeyDown(Enum.KeyCode.W)
     local s = UserInputService:IsKeyDown(Enum.KeyCode.S)
     local a = UserInputService:IsKeyDown(Enum.KeyCode.A)
     local d = UserInputService:IsKeyDown(Enum.KeyCode.D)
-    if w or s or a or d then
-        x, z = (d and 1 or 0) - (a and 1 or 0), (s and 1 or 0) - (w and 1 or 0)
-    elseif not virtualDirection and h then
+    nếu w hoặc s hoặc a hoặc d thì
+        x, z = (d và 1 hoặc 0) - (a và 1 hoặc 0), (s và 1 hoặc 0) - (w và 1 hoặc 0)
+    nếu không phải virtualDirection và h thì
         local md = h.MoveDirection
         local right = Vector3.new(cf.RightVector.X, 0, cf.RightVector.Z)
         if right.Magnitude > 0.001 then right = right.Unit else right = Vector3.new(1, 0, 0) end
         local forward = Vector3.new(right.Z, 0, -right.X)
-        x, z = md:Dot(right), -md:Dot(forward)
-    end
+        x, z = md:Dot(phải), -md:Dot(tiến)
+    kết thúc
     local up = UserInputService:IsKeyDown(Enum.KeyCode.Space)
     local down = UserInputService:IsKeyDown(Enum.KeyCode.LeftShift)
-        or UserInputService:IsKeyDown(Enum.KeyCode.LeftControl)
-    if up or down then y = (up and 1 or 0) - (down and 1 or 0) end
-    return Vector3.new(x, y, z)
-end
-function MV.FlyVelocity(cf, input, speed)
-    local direction = cf.RightVector * input.X - cf.LookVector * input.Z + Vector3.new(0, input.Y, 0)
-    local magnitude = direction.Magnitude
-    if magnitude < 0.001 then return Vector3.zero end
-    if magnitude > 1 then direction = direction / magnitude end -- chéo không nhanh hơn, giữ analog
-    return direction * mvClamp(speed, 1, 2000, 50)
-end
-function MV._FlyStep()
-    if not MV.fly then return end
+        hoặc UserInputService:IsKeyDown(Enum.KeyCode.LeftControl)
+    nếu lên hoặc xuống thì y = (lên và 1 hoặc 0) - (xuống và 1 hoặc 0) kết thúc
+    trả về Vector3.new(x, y, z)
+kết thúc
+hàm MV.FlyVelocity(cf, input, speed)
+    hướng cục bộ = cf.RightVector * input.X - cf.LookVector * input.Z + Vector3.new(0, input.Y, 0)
+    Độ lớn cục bộ = hướng.Độ lớn
+    nếu độ lớn < 0.001 thì trả về Vector3.zero
+    nếu cường độ > 1 thì hướng = hướng / cường độ kết thúc -- chéo không nhanh hơn, giữ analog
+    hướng trả về * mvClamp(tốc độ, 1, 2000, 50)
+kết thúc
+hàm MV._FlyStep()
+    nếu không phải MV.fly thì trả về end
     MV._flyFrameAt = tick()
     local r, h = MV._EnsureFly()
-    if not r then return end
+    nếu không phải r thì trả về end
     local cam = workspace.CurrentCamera
-    if cam then
+    nếu có camera thì
         local cf = cam.CFrame
         MV._bv.Velocity = MV.FlyVelocity(cf, MV._ReadFlyInput(cf, h), MV.flySpeed)
         MV._bg.CFrame = CFrame.new(r.Position) * cf.Rotation
-    else
+    khác
         MV._bv.Velocity = Vector3.zero
-    end
+    kết thúc
     MV._floor.Position = r.Position - Vector3.new(0, 3.5, 0)
-end
-function MV._FlyFrame()
-    local ok, err = pcall(MV._FlyStep)
-    if not ok then
+kết thúc
+hàm MV._FlyFrame()
+    cục bộ ok, err = pcall(MV._FlyStep)
+    nếu không ổn thì
         FL.lastError = tostring(err)
         pcall(function() if MV._bv then MV._bv.Velocity = Vector3.zero end end)
-        if tick() - (FL.errorAt or -math.huge) > 2 then
+        nếu tick() - (FL.errorAt hoặc -math.huge) > 2 thì
             FL.errorAt = tick()
-            warn("[taodepzai v5.0 NOIR] 🚀 Bay: " .. FL.lastError)
-        end
-    end
-end
-function MV._BindFly()
+            Warn("[taodepzai v5.0 NOIR] 🚀 Bay: " .. FL.lastError)
+        kết thúc
+    kết thúc
+kết thúc
+hàm MV._BindFly()
     if MV._flyBound or not MV.fly then return end
-    RunService:UnbindFromRenderStep("Fly")
+    RunService:UnbindFromRenderStep("Bay")
     RunService:BindToRenderStep("Fly", Enum.RenderPriority.Camera.Value + 1, MV._FlyFrame)
     MV._flyBound = true
     MV._flyFrameAt = tick()
-end
-function MV._StopFly()
-    RunService:UnbindFromRenderStep("Fly")
+kết thúc
+hàm MV._StopFly()
+    RunService:UnbindFromRenderStep("Bay")
     MV._flyBound = false
     MV._DestroyFlyParts()
     MV._RestoreFlyHum()
     MV.ClearFlyInput()
     FL.root = nil
-end
-function MV.SetFly(on)
-    on = (on == true)
-    if on then
-        local r, h = MV.Root(), MV.Hum()
-        if not r or not h or h.Health <= 0 then return false, "chưa có nhân vật sống để bay" end
+kết thúc
+hàm MV.SetFly(on)
+    bật = (bật == đúng)
+    nếu bật thì
+        cục bộ r, h = MV.Root(), MV.Hum()
+        nếu không r hoặc không h hoặc h.Health <= 0 thì trả về false, "chưa có nhân vật sống để bay" end
         if MV.Safe and MV.Safe.on then MV.Safe.Stop() end
-        if MV._glassFlyActive then MV.StopGlassFly() end
+        nếu MV._glassFlyActive thì MV.StopGlassFly() kết thúc
         if MV._playerFlyActive then MV.StopPlayerFly() end
         if MV.runMode then MV.SetRunMode(false) end
         if not MV.fly then MV.ClearFlyInput() end
         MV.fly = true
         MV._EnsureFly()
         MV._BindFly()
-        MV._FlyFrame() -- thả phím là giữ tại chỗ ngay, không có vận tốc mặc định lúc mới bật
-    else
+        MV._FlyFrame() -- phím tắt được giữ tại chỗ ngay lập tức, không có tốc độ mặc định lúc mới bật
+    khác
         MV.fly = false
         MV._StopFly()
-    end
+    kết thúc
     MV._Watchdog()
     MV.SyncHud()
     if S.SyncTunePanel then pcall(S.SyncTunePanel) end
-    return MV.fly
-end
-function MV.SetFlySpeed(n)
+    trả về MV.fly
+kết thúc
+hàm MV.SetFlySpeed(n)
     n = tonumber(n)
-    if not n or n ~= n or n == math.huge or n == -math.huge then return false, "nhập tốc độ 1–2000" end
-    MV.flySpeed = mvClamp(n, 1, 2000, 50)
+    if not n or n ≠ n or n == math.huge or n == -math.huge then return false, "n tốc độ 1–2000" end
+    MV.flySpeed ​​= mvClamp(n, 1, 2000, 50)
     MV.SyncHud()
     if S.RefreshMovePanel then S.RefreshMovePanel() end
     if S.SyncTunePanel then pcall(S.SyncTunePanel) end
-    return true, MV.flySpeed
-end
-function MV.SetFlyHud(on)
+    trả về true, MV.flySpeed
+kết thúc
+hàm MV.SetFlyHud(on)
     FL.showHud = (on == true)
     if not FL.showHud then MV.ClearFlyInput() end
     MV.SyncHud()
-    return FL.showHud
-end
+    trả về FL.showHud
+kết thúc
 
-function MV._BuildFlyHud()
+hàm MV._BuildFlyHud()
     if FL.hud and FL.hud.Parent then return FL.hud end
     for _, c in ipairs(FL.conns) do c:Disconnect() end
     FL.conns = {}
     MV.ClearFlyInput()
-    local function connect(signal, callback)
-        local c = trackConn(signal:Connect(callback))
+    hàm cục bộ connect(signal, callback)
+        cục bộ c = trackConn(signal:Connect(callback))
         FL.conns[#FL.conns + 1] = c
-    end
-    local hud = New("Frame", {
-        Name = "BC_FlyHud", Size = UDim2.new(0, 292, 0, 184), Position = UDim2.new(0, 10, 1, -194),
+    kết thúc
+    cục bộ hud = New("Khung", {
+        Tên = "BC_FlyHud", Kích thước = UDim2.new(0, 292, 0, 184), Vị trí = UDim2.new(0, 10, 1, -194),
         BackgroundColor3 = C.SURFACE, BackgroundTransparency = 0.18, BorderSizePixel = 0,
         Visible = false, ZIndex = 25,
     }, gui)
     FL.hud = hud
-    Corner(hud, UDim.new(0, 12)); Stroke(hud, C.HAIRLINE, 1)
+    Góc(hud, UDim.new(0, 12)); Đường viền(hud, C.HAIRLINE, 1)
     D.Shade(hud, Color3.fromRGB(255,255,255), Color3.fromRGB(188,192,205), 90)
-    local title = New("TextLabel", {
-        Name = "FlyHudTitle", Size = UDim2.new(1, -76, 0, 22), Position = UDim2.new(0, 10, 0, 2),
-        Text = "🚀 Bay theo camera", Active = true, BackgroundTransparency = 1,
-        TextColor3 = C.ACCENT, Font = Enum.Font.GothamBold, TextSize = 11, ZIndex = 26,
+    tiêu đề cục bộ = Mới("Nhãn văn bản", {
+        Tên = "FlyHudTitle", Kích thước = UDim2.new(1, -76, 0, 22), Vị trí = UDim2.new(0, 10, 0, 2),
+        Văn bản = "🚀 Bay theo camera", Active = true, BackgroundTransparency = 1,
+        TextColor3 = C.ACCENT, Phông chữ = Enum.Font.GothamBold, TextSize = 11, ZIndex = 26,
         TextXAlignment = Enum.TextXAlignment.Left,
     }, hud)
-    local function button(name, text, x, y, w, h, color)
-        local b = New("TextButton", {
-            Name = name, Text = text, Size = UDim2.new(0, w, 0, h), Position = UDim2.new(0, x, 0, y),
+    nút chức năng cục bộ (tên, văn bản, x, y, w, h, màu sắc)
+        cục bộ b = New("TextButton", {
+            Tên = tên, Văn bản = văn bản, Kích thước = UDim2.new(0, w, 0, h), Vị trí = UDim2.new(0, x, 0, y),
             BackgroundColor3 = color, TextColor3 = D.BestText(color), BackgroundTransparency = 0.15,
             Font = Enum.Font.GothamBold, TextSize = 11, BorderSizePixel = 0, ZIndex = 28,
         }, hud)
-        Corner(b, UDim.new(0, 8))
-        return b
-    end
+        Góc(b, UDim.new(0, 8))
+        trả lại b
+    kết thúc
     local hide = button("FlyHudHide", "👁", 226, 2, 28, 22, C.SURFACE3)
     local close = button("FlyHudClose", "✕", 258, 2, 26, 22, C.RED)
     connect(hide.Activated, function() MV.SetFlyHud(false) end)
-    local function stop()
+    hàm cục bộ dừng()
         MV.SetFly(false)
         S.Rebuild()
-        D.Say("🚀 Bay: TẮT — công tắc xuyên tường giữ nguyên", C.YELLOW)
-    end
-    connect(close.Activated, stop)
-    local joy = New("Frame", {
-        Name = "FlyJoystick", Active = true, Size = UDim2.new(0, 104, 0, 104),
-        Position = UDim2.new(0, 10, 0, 32), BackgroundColor3 = C.SURFACE2,
+        D.Say("🚀 Bay: TẮT — công tắc Thường xuyên giữ nguyên", C.YELLOW)
+    kết thúc
+    kết nối (đóng.Đã kích hoạt, dừng)
+    niềm vui cục bộ = Mới("Khung", {
+        Tên = "FlyJoystick", Hoạt động = true, Kích thước = UDim2.new(0, 104, 0, 104),
+        Vị trí = UDim2.new(0, 10, 0, 32), Màu nền 3 = C.SURFACE2,
         BackgroundTransparency = 0.15, BorderSizePixel = 0, ZIndex = 26,
     }, hud)
     Corner(joy, UDim.new(1, 0)); Stroke(joy, C.BORDER, 1)
     FL.knob = New("Frame", {
-        Name = "FlyKnob", Size = UDim2.new(0, 28, 0, 28), Position = UDim2.new(0.5, -14, 0.5, -14),
+        Tên = "FlyKnob", Kích thước = UDim2.new(0, 28, 0, 28), Vị trí = UDim2.new(0.5, -14, 0.5, -14),
         BackgroundColor3 = C.ACCENT, BorderSizePixel = 0, ZIndex = 27,
-    }, joy)
-    Corner(FL.knob, UDim.new(1, 0))
-    local function pointer(input)
+    }, vui sướng)
+    Góc(FL.knob, UDim.new(1, 0))
+    con trỏ hàm cục bộ (đầu vào)
         return input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch
-    end
-    local function matches(held, input, moving)
-        return held == input or (held and held.UserInputType == Enum.UserInputType.MouseButton1
-            and input.UserInputType == (moving and Enum.UserInputType.MouseMovement or Enum.UserInputType.MouseButton1))
-    end
-    local function updateJoy(pos)
+    kết thúc
+    Hàm cục bộ khớp với (được giữ, đầu vào, di chuyển)
+        trả về held == input hoặc (held và held.UserInputType == Enum.UserInputType.MouseButton1)
+            và input.UserInputType == (moving và Enum.UserInputType.MouseMovement hoặc Enum.UserInputType.MouseButton1))
+    kết thúc
+    hàm cục bộ updateJoy(pos)
         local delta = Vector2.new(pos.X, pos.Y) - (joy.AbsolutePosition + joy.AbsoluteSize * 0.5)
         if delta.Magnitude > 38 then delta = delta.Unit * 38 end
-        FL.x, FL.z = delta.X / 38, delta.Y / 38
+        FL.x, FL.z = delta.X/38, delta.Y/38
         FL.knob.Position = UDim2.new(0.5, delta.X - 14, 0.5, delta.Y - 14)
-    end
-    connect(joy.InputBegan, function(input)
-        if pointer(input) and MV.fly and FL.showHud and not FL.joyInput then
+    kết thúc
+    kết nối(joy.InputBegan, function(input)
+        nếu con trỏ (đầu vào) và MV.fly và FL.showHud và không phải FL.joyInput thì
             FL.joyInput = input; updateJoy(input.Position)
-        end
-    end)
-    local function hold(name, text, x, y, w, h, axis, color)
+        kết thúc
+    kết thúc)
+    hàm cục bộ hold(name, text, x, y, w, h, axis, color)
         local b = button(name, text, x, y, w, h, color or C.SURFACE3)
-        connect(b.InputBegan, function(input)
+        kết nối(b.InputBegan, function(input)
             if pointer(input) and MV.fly and FL.showHud then FL.holds[input] = axis end
-        end)
+        kết thúc)
         connect(b.InputEnded, function(input) FL.holds[input] = nil end)
-    end
+    kết thúc
     hold("FlyForward", "↑", 150, 32, 30, 30, Vector3.new(0, 0, -1))
     hold("FlyBack", "↓", 150, 100, 30, 30, Vector3.new(0, 0, 1))
     hold("FlyLeft", "←", 116, 66, 30, 30, Vector3.new(-1, 0, 0))
     hold("FlyRight", "→", 184, 66, 30, 30, Vector3.new(1, 0, 0))
     hold("FlyUp", "⬆", 238, 32, 40, 44, Vector3.new(0, 1, 0), C.GREEN)
     hold("FlyDown", "⬇", 238, 82, 40, 44, Vector3.new(0, -1, 0), C.RED)
-    local stopBtn = button("FlyHudStop", "⏹ Dừng", 198, 144, 80, 28, C.RED)
-    connect(stopBtn.Activated, stop)
+    local stopBtn = button("FlyHudStop", "⏹ cột", 198, 144, 80, 28, C.RED)
+    kết nối(stopBtn.Activated, dừng)
     FL.status = New("TextLabel", {
-        Name = "FlyHudStatus", Size = UDim2.new(0, 182, 0, 36), Position = UDim2.new(0, 10, 0, 140),
+        Tên = "FlyHudStatus", Kích thước = UDim2.new(0, 182, 0, 36), Vị trí = UDim2.new(0, 10, 0, 140),
         BackgroundTransparency = 1, TextColor3 = C.MUTED, Font = Enum.Font.GothamMedium,
-        TextSize = 9, TextWrapped = true, TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 26,
+        Kích thước văn bản = 9, Văn bản xuống dòng = true, Căn chỉnh văn bản theo trục X = Enum.TextXAlignment.Left, Chỉ số Z = 26,
     }, hud)
-    connect(title.InputBegan, function(input)
-        if pointer(input) and not FL.dragInput then
+    kết nối(title.InputBegan, function(input)
+        nếu con trỏ (đầu vào) và không phải là FL.dragInput thì
             FL.dragInput, FL.dragStart, FL.dragPos = input, input.Position, hud.Position
-        end
-    end)
-    connect(UserInputService.InputChanged, function(input)
+        kết thúc
+    kết thúc)
+    kết nối(UserInputService.InputChanged, function(input)
         if matches(FL.joyInput, input, true) then updateJoy(input.Position) end
-        if matches(FL.dragInput, input, true) then
-            local delta = input.Position - FL.dragStart
+        nếu khớp với (FL.dragInput, input, true) thì
+            delta cục bộ = input.Position - FL.dragStart
             hud.Position = UDim2.new(FL.dragPos.X.Scale, FL.dragPos.X.Offset + delta.X,
                 FL.dragPos.Y.Scale, FL.dragPos.Y.Offset + delta.Y)
-        end
-    end)
-    connect(UserInputService.InputEnded, function(input)
+        kết thúc
+    kết thúc)
+    kết nối(UserInputService.InputEnded, function(input)
         for held in pairs(FL.holds) do if matches(held, input, false) then FL.holds[held] = nil end end
-        if matches(FL.joyInput, input, false) then
+        nếu khớp với (FL.joyInput, input, false) thì
             FL.joyInput, FL.x, FL.z = nil, 0, 0
             FL.knob.Position = UDim2.new(0.5, -14, 0.5, -14)
-        end
+        kết thúc
         if matches(FL.dragInput, input, false) then FL.dragInput = nil end
-    end)
-    connect(UserInputService.WindowFocusReleased, function()
+    kết thúc)
+    kết nối(UserInputService.WindowFocusReleased, function())
         FL.focused = false
         MV.ClearFlyInput()
-        if MV._bv then MV._bv.Velocity = Vector3.zero end
-    end)
+        nếu MV._bv thì MV._bv.Velocity = Vector3.zero
+    kết thúc)
     connect(UserInputService.WindowFocused, function() FL.focused = true end)
-    return hud
-end
-function MV.SyncFlyHud()
+    trả về hud
+kết thúc
+hàm MV.SyncFlyHud()
     if MV.fly then MV._BuildFlyHud() end
-    if FL.hud and FL.hud.Parent then
-        FL.hud.Visible = MV.fly and FL.showHud
-        FL.status.Text = string.format("💨 %g · 🧱 %s\nThả phím / cần: đứng lơ lửng", MV.flySpeed, MV.noclip and "BẬT" or "TẮT")
-    end
+    nếu FL.hud và FL.hud.Parent thì
+        FL.hud.Visible = MV.fly và FL.showHud
+        FL.status.Text = string.format("💨 %g · 🧱 %s\nThả phím / cần: đứng cân ngang", MV.flySpeed, MV.noclip và "BẬT" hoặc "TẮT")
+    kết thúc
     if S.SyncFlyPanel then S.SyncFlyPanel() end
-end
-end -- 🚀 BAY THEO CAMERA
+kết thúc
+kết thúc -- 🚀 BAY THEO CAMERA
 
--- ---------- 💨 TỐC ĐỘ THEO CAMERA (v4.37) ----------
-do
-local CS = { focused = true }
-MV.CamSpeed = CS
+--------- 💨 CAMERA TỐC ĐỘ THEO (v4.37) ----------
+LÀM
+CS cục bộ = { tập trung = true }
+MV.CamSpeed ​​= CS
 
-function MV._DestroySpeedParts()
+hàm MV._DestroySpeedParts()
     if MV._sv then MV._sv:Destroy(); MV._sv = nil end
-end
-function MV._EnsureSpeed()
-    local r, h = MV.Root(), MV.Hum()
+kết thúc
+hàm MV._EnsureSpeed()
+    cục bộ r, h = MV.Root(), MV.Hum()
     if not MV.sprint then return nil end
-    if MV.fly or (MV.Safe and MV.Safe.on) then
+    nếu MV.fly hoặc (MV.Safe và MV.Safe.on) thì
         MV._DestroySpeedParts()
         CS.root = nil
-        return nil
-    end
-    if not r or not h or h.Health <= 0 then
+        trả về nil
+    kết thúc
+    nếu không phải r hoặc không phải h hoặc h.Health <= 0 thì
         MV._DestroySpeedParts()
         CS.root = nil
-        return nil
-    end
-    if CS.root ~= r then
+        trả về nil
+    kết thúc
+    nếu CS.root ~= r thì
         MV._DestroySpeedParts()
         CS.root = r
-    end
-    if not MV._sv or MV._sv.Parent ~= r then
+    kết thúc
+    nếu MV._sv hoặc MV._sv.Parent không bằng r thì
         if MV._sv then MV._sv:Destroy() end
         MV._sv = New("BodyVelocity", {
-            Name = "BC_SpeedVel", MaxForce = Vector3.new(1e9, 0, 1e9), Velocity = Vector3.zero,
+            Tên = "BC_SpeedVel", Lực tối đa = Vector3.new(1e9, 0, 1e9), Vận tốc = Vector3.zero,
         }, r)
-    else
+    khác
         local mf = MV._sv.MaxForce
-        if mf and (mf.Y ~= 0) then
+        nếu mf và (mf.Y ~= 0) thì
             MV._sv.MaxForce = Vector3.new(1e9, 0, 1e9)
-        end
-    end
-    return r, h
-end
+        kết thúc
+    kết thúc
+    trả về r, h
+kết thúc
 
-function MV._ReadSpeedInput(cf, h)
+hàm MV._ReadSpeedInput(cf, h)
     if not CS.focused or UserInputService:GetFocusedTextBox() then return Vector3.zero end
-    local x, z = 0, 0
+    cục bộ x, z = 0, 0
     local w = UserInputService:IsKeyDown(Enum.KeyCode.W)
     local s = UserInputService:IsKeyDown(Enum.KeyCode.S)
     local a = UserInputService:IsKeyDown(Enum.KeyCode.A)
     local d = UserInputService:IsKeyDown(Enum.KeyCode.D)
-    if w or s or a or d then
-        x, z = (d and 1 or 0) - (a and 1 or 0), (s and 1 or 0) - (w and 1 or 0)
-    elseif h then
+    nếu w hoặc s hoặc a hoặc d thì
+        x, z = (d và 1 hoặc 0) - (a và 1 hoặc 0), (s và 1 hoặc 0) - (w và 1 hoặc 0)
+    nếu h thì
         local md = h.MoveDirection
         local right = Vector3.new(cf.RightVector.X, 0, cf.RightVector.Z)
         if right.Magnitude > 0.001 then right = right.Unit else right = Vector3.new(1, 0, 0) end
         local forward = Vector3.new(right.Z, 0, -right.X)
-        x, z = md:Dot(right), -md:Dot(forward)
-    end
+        x, z = md:Dot(phải), -md:Dot(tiến)
+    kết thúc
     return Vector3.new(x, 0, z)
-end
-function MV.SpeedVelocity(cf, input, speed)
+kết thúc
+hàm MV.SpeedVelocity(cf, input, speed)
     local look = Vector3.new(cf.LookVector.X, 0, cf.LookVector.Z)
     local right = Vector3.new(cf.RightVector.X, 0, cf.RightVector.Z)
-    if look.Magnitude < 0.001 then
+    nếu độ lớn nhìn < 0,001 thì
         if right.Magnitude > 0.001 then right = right.Unit else right = Vector3.new(1, 0, 0) end
         look = Vector3.new(right.Z, 0, -right.X)
-    else
-        look = look.Unit
-    end
+    khác
+        nhìn = nhìn.Đơn vị
+    kết thúc
     if right.Magnitude > 0.001 then right = right.Unit else right = Vector3.new(1, 0, 0) end
-    local direction = right * input.X - look * input.Z
-    direction = Vector3.new(direction.X, 0, direction.Z)
-    local magnitude = direction.Magnitude
-    if magnitude < 0.001 then return Vector3.zero end
-    if magnitude > 1 then direction = direction / magnitude end
-    return direction * mvClamp(speed, 1, 2000, 50)
-end
-function MV._SpeedStep()
-    if not MV.sprint then return end
+    hướng cục bộ = phải * input.X - nhìn * input.Z
+    hướng = Vector3.new(hướng.X, 0, hướng.Z)
+    Độ lớn cục bộ = hướng.Độ lớn
+    nếu độ lớn < 0.001 thì trả về Vector3.zero
+    nếu độ lớn > 1 thì hướng = hướng / độ lớn kết thúc
+    hướng trả về * mvClamp(tốc độ, 1, 2000, 50)
+kết thúc
+hàm MV._SpeedStep()
+    nếu không phải MV.sprint thì trả về end
     MV._speedFrameAt = tick()
     local r, h = MV._EnsureSpeed()
-    if not r or not MV._sv then return end
+    nếu không phải r hoặc không phải MV._sv thì trả về end
     local cam = workspace.CurrentCamera
-    if not cam then
+    nếu không phải là camera thì
         MV._sv.MaxForce = Vector3.new(0, 0, 0)
         MV._sv.Velocity = Vector3.zero
-        return
-    end
+        trở lại
+    kết thúc
     local vel = MV.SpeedVelocity(cam.CFrame, MV._ReadSpeedInput(cam.CFrame, h), MV.sprintSpeed)
-    if vel.Magnitude < 0.001 then
+    nếu vận tốc.Magnitude < 0.001 thì
         MV._sv.MaxForce = Vector3.new(0, 0, 0)
         MV._sv.Velocity = Vector3.zero
-    else
+    khác
         MV._sv.MaxForce = Vector3.new(1e9, 0, 1e9)
         MV._sv.Velocity = Vector3.new(vel.X, 0, vel.Z)
-    end
-end
-function MV._SpeedFrame()
-    local ok, err = pcall(MV._SpeedStep)
-    if not ok then
+    kết thúc
+kết thúc
+hàm MV._SpeedFrame()
+    cục bộ ok, err = pcall(MV._SpeedStep)
+    nếu không ổn thì
         CS.lastError = tostring(err)
         pcall(function() if MV._sv then MV._sv.Velocity = Vector3.zero end end)
-        if tick() - (CS.errorAt or -math.huge) > 2 then
+        nếu tick() - (CS.errorAt hoặc -math.huge) > 2 thì
             CS.errorAt = tick()
-            warn("[taodepzai v5.0 NOIR] 💨 Tốc độ: " .. CS.lastError)
-        end
-    end
-end
-function MV._BindSpeed()
+            Warn("[taodepzai v5.0 NOIR] 💨 Tốc độ: " .. CS.lastError)
+        kết thúc
+    kết thúc
+kết thúc
+hàm MV._BindSpeed()
     if MV._speedBound or not MV.sprint then return end
     RunService:UnbindFromRenderStep("BC_Speed")
     RunService:BindToRenderStep("BC_Speed", Enum.RenderPriority.Camera.Value + 1, MV._SpeedFrame)
     MV._speedBound = true
     MV._speedFrameAt = tick()
-end
-function MV._StopSpeed()
+kết thúc
+hàm MV._StopSpeed()
     RunService:UnbindFromRenderStep("BC_Speed")
     MV._speedBound = false
     MV._DestroySpeedParts()
     CS.root = nil
-end
-function MV.SetSprint(on)
-    on = (on == true)
-    if on then
-        local r, h = MV.Root(), MV.Hum()
-        if not r or not h or h.Health <= 0 then return false, "chưa có nhân vật sống để chạy" end
+kết thúc
+hàm MV.SetSprint(on)
+    bật = (bật == đúng)
+    nếu bật thì
+        cục bộ r, h = MV.Root(), MV.Hum()
+        nếu không phải r hoặc không h hoặc h.Health <= 0 thì trả về false, "chưa có nhân vật sống để chạy" end
         MV.sprint = true
         MV._EnsureSpeed()
         MV._BindSpeed()
         MV._SpeedFrame()
-    else
+    khác
         MV.sprint = false
         MV._StopSpeed()
-    end
+    kết thúc
     MV._Watchdog()
     if S.SyncSpeedPanel then S.SyncSpeedPanel() end
     if S.SyncTunePanel then pcall(S.SyncTunePanel) end
-    return MV.sprint
-end
-function MV.SetSprintSpeed(n)
+    trả về MV.sprint
+kết thúc
+hàm MV.SetSprintSpeed(n)
     n = tonumber(n)
-    if not n or n ~= n or n == math.huge or n == -math.huge then return false, "nhập tốc độ 1–2000" end
-    MV.sprintSpeed = mvClamp(n, 1, 2000, 50)
+    if not n or n ≠ n or n == math.huge or n == -math.huge then return false, "n tốc độ 1–2000" end
+    MV.sprintSpeed ​​= mvClamp(n, 1, 2000, 50)
     if S.SyncSpeedPanel then S.SyncSpeedPanel() end
     if S.SyncTunePanel then pcall(S.SyncTunePanel) end
-    return true, MV.sprintSpeed
-end
+    trả về true, MV.sprintSpeed
+kết thúc
 end -- 💨 TỐC ĐỘ THEO CAMERA
 
--- ---------- 🦘 NHẢY CAO (v4.38) ----------
-do
-local HJ = { last = 0 }
+--------- 🦘 NHẢY CAO (v4.38) ----------
+LÀM
+cục bộ HJ = { cuối cùng = 0 }
 MV.HighJump = HJ
 
-function MV.WantJumpSpeed()
+hàm MV.WantJumpSpeed()
     if MV.highJump then return mvClamp(MV.highJumpSpeed, 1, 500, 80) end
     return mvClamp(MV.jumpPower, 1, 500, 50)
-end
-function MV.HighJumpVelocity(current, speed)
+kết thúc
+hàm MV.HighJumpVelocity(current, speed)
     local vx = MV.comp(current, "X", 0)
     local vz = MV.comp(current, "Z", 0)
     return Vector3.new(vx, mvClamp(speed, 1, 500, 80), vz)
-end
-function MV._HighJumpApplyPower()
-    if not MV.highJump then return end
+kết thúc
+hàm MV._HighJumpApplyPower()
+    nếu không phải MV.highJump thì trả về end
     local h = MV.Hum()
-    if not h then return end
+    nếu không phải h thì trả về end
     local jp = mvClamp(MV.highJumpSpeed, 1, 500, 80)
     pcall(function()
-        if h.UseJumpPower ~= false then
+        nếu h.UseJumpPower ~= false thì
             if (tonumber(h.JumpPower) or 0) ~= jp then h.JumpPower = jp end
-        end
+        kết thúc
         local g = tonumber(workspace.Gravity) or 0
-        if g < 1 then g = 196.2 end
+        nếu g < 1 thì g = 196,2 kết thúc
         local jh = mvClamp((jp * jp) / (2 * g), 1, 500)
         if math.abs((tonumber(h.JumpHeight) or 0) - jh) > 0.05 then h.JumpHeight = jh end
-    end)
-end
-function MV._DoHighJump()
+    kết thúc)
+kết thúc
+hàm MV._DoHighJump()
     if not MV.highJump then return false end
-    if MV.fly or (MV.Safe and MV.Safe.on) then return false end
-    local h, r = MV.Hum(), MV.Root()
-    if not h or not r then return false end
-    if h.Sit then return false end
+    nếu MV.fly hoặc (MV.Safe và MV.Safe.on) thì trả về false.
+    cục bộ h, r = MV.Hum(), MV.Root()
+    nếu không phải h hoặc không phải r thì trả về false.
+    nếu h.Sit thì trả về false
     local st = h:GetState()
     if st == Enum.HumanoidStateType.Freefall then return false end
     local now = os.clock()
-    if HJ.last and (now - HJ.last) < 0.12 then return false end
-    HJ.last = now
+    nếu HJ.last và (now - HJ.last) < 0.12 thì trả về false.
+    HJ.last = bây giờ
     MV._HighJumpApplyPower()
     pcall(function() h:ChangeState(Enum.HumanoidStateType.Jumping) end)
     pcall(function() h.Jump = true end)
     pcall(function()
         r.AssemblyLinearVelocity = MV.HighJumpVelocity(r.AssemblyLinearVelocity, MV.highJumpSpeed)
-    end)
-    return true
-end
-function MV._HighJumpBind()
+    kết thúc)
+    trả về giá trị đúng
+kết thúc
+hàm MV._HighJumpBind()
     if HJ.conn or not MV.highJump then return end
     HJ.conn = trackConn(UserInputService.JumpRequest:Connect(function()
         pcall(MV._DoHighJump)
-    end))
+    kết thúc))
     HJ.conn2 = trackConn(UserInputService.InputBegan:Connect(function(i, gp)
-        if not MV.highJump then return end
+        nếu không phải MV.highJump thì trả về end
         pcall(function()
             local tb = UserInputService:GetFocusedTextBox()
-            if tb and tb:IsDescendantOf(gui) then return end
-            local k = i and i.KeyCode
+            nếu tb và tb:IsDescendantOf(gui) thì trả về end
+            cục bộ k = i và i.KeyCode
             if k == Enum.KeyCode.Space or k == Enum.KeyCode.ButtonA then MV._DoHighJump() end
-        end)
-    end))
-end
-function MV._HighJumpUnbind()
+        kết thúc)
+    kết thúc))
+kết thúc
+hàm MV._HighJumpUnbind()
     for _, c in ipairs({ HJ.conn, HJ.conn2 }) do
-        if c then pcall(function() c:Disconnect() end) end
-    end
+        nếu c thì pcall(function() c:Disconnect() end) end
+    kết thúc
     HJ.conn, HJ.conn2 = nil, nil
-end
-function MV.SetHighJump(on)
-    on = (on == true)
+kết thúc
+hàm MV.SetHighJump(on)
+    bật = (bật == đúng)
     if on == MV.highJump then return MV.highJump end
     local h = MV.Hum()
-    if on then
-        if h then HJ.baseJP, HJ.baseJH = h.JumpPower, h.JumpHeight end
+    nếu bật thì
+        nếu h thì HJ.baseJP, HJ.baseJH = h.JumpPower, h.JumpHeight end
         MV.highJump = true
         MV._HighJumpApplyPower()
         MV._HighJumpBind()
-    else
+    khác
         MV.highJump = false
         MV._HighJumpUnbind()
-        if h and not MV.infJump then
+        nếu h không phải là MV.infJump thì
             if HJ.baseJP ~= nil then pcall(function() h.JumpPower = HJ.baseJP end) end
             if HJ.baseJH ~= nil then pcall(function() h.JumpHeight = HJ.baseJH end) end
-        end
-        HJ.baseJP, HJ.baseJH = nil, nil
-    end
+        kết thúc
+        HJ.baseJP, HJ.baseJH = không, không
+    kết thúc
     MV._Watchdog()
     if S.SyncHighJumpPanel then S.SyncHighJumpPanel() end
     if S.SyncTunePanel then pcall(S.SyncTunePanel) end
-    return MV.highJump
-end
-function MV.SetHighJumpSpeed(n)
+    trả về MV.highJump
+kết thúc
+hàm MV.SetHighJumpSpeed(n)
     n = tonumber(n)
-    if not n or n ~= n or n == math.huge or n == -math.huge then return false, "nhập tốc độ nhảy 1–500" end
-    MV.highJumpSpeed = mvClamp(n, 1, 500, 80)
+    if not n or n ≠ n or n == math.huge or n == -math.huge then return false, "n tốc độ nhảy 1–500" end
+    MV.highJumpSpeed ​​= mvClamp(n, 1, 500, 80)
     if MV.highJump then pcall(MV._HighJumpApplyPower) end
     if S.SyncHighJumpPanel then S.SyncHighJumpPanel() end
     if S.SyncTunePanel then pcall(S.SyncTunePanel) end
-    return true, MV.highJumpSpeed
-end
-end -- 🦘 NHẢY CAO
+    trả về true, MV.highJumpSpeed
+kết thúc
+kết thúc -- 🦘 NHẢY CAO
 
-do
+LÀM
 MV.Safe = {
-    on = false,
-    auto = true,        -- ➡ tự bay (không bấm gì vẫn bay theo hướng camera)
-    radius = 25,        -- 📏 khoảng cách xác định để né (studs)
-    speed = 60,         -- 💨 tốc độ bay
-    steer = 4,          -- 🌀 né gắt (1–10)
-    shield = true,      -- 🔲 bức tường trong suốt hình vuông bao quanh (nhìn thấy vùng né)
-    shieldThk = 0.4,    -- độ dày vách
-    shieldH = 0,        -- v4.23: 0 = chiều cao TỰ ĐỘNG theo nhân vật (trước đây cố định 16)
-    shieldSize = 0,     -- v4.23: nửa cạnh khiên (studs). 0 = TỰ ĐỘNG ôm sát nhân vật; 📏 Né KHÔNG kéo giãn khiên
-    shieldT = 0.86,     -- độ trong suốt (càng nhỏ càng thấy rõ)
-    avoidPlayers = true,-- 👤 né cả NGƯỜI CHƠI khác (dù họ đứng yên)
-    circle = true,      -- ⭕ không có mối nguy nào -> tự bay VÒNG TRÒN
-    circleR = 20,       -- ⭕ bán kính vòng tròn
-    lookTime = 1.0,     -- 👁 nhìn trước bao nhiêu giây để né vật ĐANG BAY TỚI mình
-    lookMul = 1.6,      -- 👁 quét xa hơn vùng né bấy nhiêu lần (bắt vật từ xa lao tới)
-    _holdAt = 0,        -- thời điểm cuối cùng còn mối nguy (né thêm 0,35s cho chắc)
-    _myV = Vector3.new(0, 0, 0),   -- vận tốc mình ĐANG định bay (để tính tốc độ lao vào nhau)
-    _ang = 0, _center = nil,       -- ⭕ góc + tâm vòng tròn
-    noclip = true,      -- 🧱 tự bật Xuyên Tường để đẩy được xuyên vật cản
-    _ncPrev = nil,      -- trạng thái Xuyên Tường TRƯỚC KHI bật 🛡 (để trả lại đúng)
-    _shield = nil,      -- 4 vách trong suốt
+    bật = false,
+    auto = true, -- ➡ auto bay (không nhấn gì vẫn bay theo camera hướng)
+    bán kính = 25, -- 📏 cách xác định khoảng cách để né (đinh tán)
+    tốc độ = 60, -- 💨 tốc độ bay
+    lái = 4, -- 🌀 né gạt (1–10)
+    lá chắn = true, -- 🔲 bức tường trong suốt hình vuông bao quanh (nhìn thấy vùng né)
+    ShieldThk = 0.4, -- độ dày vách
+    ShieldH = 0, -- v4.23: 0 = chiều cao TỰ ĐỘNG theo nhân vật (trước đây cố định 16)
+    ShieldSize = 0, -- v4.23: nửa viền viền (đinh tán). 0 = Tự động vật vật; 📏 KHÔNG kéo giãn giãn
+    lá chắnT = 0,86, -- độ trong suốt (càng nhỏ càng rõ)
+    tránhPlayers = true,-- 👤 né cả NGƯỜI CHƠI khác (dù họ đứng yên)
+    Circle = true, -- ⭕ không có mối nguy hiểm nào -> tự bay VÒNG TRÒN
+    roundR = 20, -- ⭕ bán kính tròn
+    lookTime = 1.0, -- 👁 nhìn trước bao nhiêu giây để né vật ĐANG BAY TỚI mình
+    lookMul = 1.6, -- 👁 quét xa hơn vùng né bấy nhiêu lần (bắt vật từ xa lao tới)
+    _holdAt = 0, -- thời điểm cuối cùng còn mối nguy (né more 0,35s cho chắc)
+    _myV = Vector3.new(0, 0, 0), -- Vận tốc mình ĐANG định bay ( để tính tốc độ lao vào nhau)
+    _ang = 0, _center = nil, -- ⭕ góc + tâm vòng
+    noclip = true, -- 🧱 tự bật Xuyên Tường để đưa ra nhiều vật cản
+    _ncPrev = nil, -- trạng thái Xuyên Tường TRƯỚC KHI bật 🛡 (để trả lại đúng)
+    _shield = nil, -- 4 vách trong suốt
     _shieldPos = nil,
-    _hum = nil,         -- Humanoid mà Safe Fly đã thay đổi trạng thái
+    _hum = nil, -- Humanoid mà Safe Fly đã thay đổi trạng thái
     _platformStandPrev = nil,
     _autoRotatePrev = nil,
-    _root = nil,        -- v4.23: nhân vật đang gắn (đổi là tự dựng lại part bay + khiên)
-    _bound = false,     -- v4.23: vòng lặp riêng "BC_Safe" đã gắn chưa
-    _lastFrameAt = 0,   -- v4.23: lần cuối vòng lặp 🛡 chạy (watchdog soi còn sống không)
+    _root = nil, -- v4.23: nhân vật đang gắn kết (đổi là tự động khôi phục phần bay + xương)
+    _bound = false, -- v4.23: unmount "BC_Safe" riêng biệt của vòng lặp
+    _lastFrameAt = 0, -- v4.23: vòng lặp cuối cùng 🛡 chạy (watchdog soi còn sống không)
     playerThreats = 0,
-    threats = 0, nearest = nil,     -- để hiện trạng thái
-    _rep = Vector3.new(0, 0, 0),    -- vector đẩy của lần quét gần nhất
+    mối đe dọa = 0, gần nhất = nil, -- để hiện trạng thái
+    _rep = Vector3.new(0, 0, 0), -- vector Đẩy của lần quét gần nhất
     _seen = {}, _cache = nil, _listAcc = 0, _sc = 0,
     _virtX = 0, _virtZ = 0, _virtY = 0,
     showHud = true,
@@ -6633,743 +7002,743 @@ MV.Safe = {
     _joyBG = nil, _joyKnob = nil, _dragging = false,
     _bv = nil, _bg = nil,
 }
-local SF = MV.Safe
+SF cục bộ = MV.Safe
 
-local function sfIsPart(d)
-    if d == nil then return false end
-    local okA, isPart = pcall(function() return d:IsA("BasePart") end)   -- game thật: IsA có sẵn
+hàm cục bộ sfIsPart(d)
+    nếu d == nil thì trả về false
+    local okA, isPart = pcall(function() return d:IsA("BasePart") end) -- game thật: IsA có sẵn
     if okA and isPart ~= nil then return isPart == true end
     local okC, cls = pcall(function() return tostring(d.ClassName or "") end)
-    if not okC then return false end
-    return (cls == "Part" or cls == "MeshPart" or cls == "WedgePart" or cls == "TrussPart"
-            or cls == "CornerWedgePart" or cls == "UnionOperation" or cls == "NegateOperation"
-            or cls == "IntersectOperation" or cls == "Ball" or cls == "Cylinder"
-            or cls == "SpawnLocation" or cls == "Seat" or cls == "VehicleSeat" or cls == "Platform")
-end
-local function sfIgnore(d, char)
+    nếu không phải okC thì trả về false.
+    return (cls == "Part" or cls == "MeshPart" or cls == "WedgePart" or cls == "TrussPart")
+            hoặc cls == "CornerWedgePart" hoặc cls == "UnionOperation" hoặc cls == "NegateOperation"
+            hoặc cls == "IntersectOperation" hoặc cls == "Ball" hoặc cls == "Cylinder"
+            hoặc cls == "SpawnLocation" hoặc cls == "Seat" hoặc cls == "VehicleSeat" hoặc cls == "Platform")
+kết thúc
+hàm cục bộ sfIgnore(d, char)
     local nm = tostring(d.Name or "")
     if nm:sub(1, 3) == "BC_" then return true end
     if char and d:IsDescendantOf(char) then return true end
-    local floor = MV._floor
+    sàn cục bộ = MV._floor
     if floor and floor.Parent and d:IsDescendantOf(floor) then return true end
-    return false
-end
-local function sfOverlap(char)
+    trả về false
+kết thúc
+hàm cục bộ sfOverlap(char)
     if SF._op and SF._opChar == char then return SF._op end
-    local ok, op = pcall(function() return OverlapParams.new() end)
+    cục bộ ok, op = pcall(function() return OverlapParams.new() end)
     if not ok or op == nil then return nil end
-    pcall(function() op.MaxParts = 0 end)                                  -- 0 = không giới hạn
-    pcall(function() op.RespectCanCollide = false end)                     -- vật không va chạm vẫn tính
-    pcall(function() op.FilterType = Enum.RaycastFilterType.Exclude end)   -- API mới
-    pcall(function() op.FilterDescendantsInstances = { char } end)         -- bỏ qua part của chính mình
+    pcall(function() op.MaxParts = 0 end) -- 0 = không giới hạn
+    pcall(function() op.RespectCanCollide = false end) -- vật không và vi hạt vẫn tính
+    pcall(function() op.FilterType = Enum.RaycastFilterType.Exclude end) -- API mới
+    pcall(function() op.FilterDescendantsInstances = { char } end) -- bỏ qua một phần của chính mình
     SF._op, SF._opChar = op, char
-    return op
-end
-local function sfCandidates(pos, dt, reach)
-    local r0 = reach or SF.radius
+    trả lại op
+kết thúc
+hàm cục bộ sfCandidates(pos, dt, reach)
+    r0 cục bộ = phạm vi hoặc bán kính SF
     local char0 = MV.Char()
     local op0 = sfOverlap(char0)
     local okL, list = pcall(function() return workspace:GetPartBoundsInRadius(pos, r0, op0) end)
     if not okL then okL, list = pcall(function() return workspace:GetPartBoundsInRadius(pos, r0) end) end
-    if okL and type(list) == "table" then return list end
-    SF._listAcc = (SF._listAcc or 0) + (dt or 0.15)
-    if not SF._cache or SF._listAcc >= 2 then
+    nếu okL và kiểu (danh sách) == "table" thì trả về danh sách kết thúc
+    SF._listAcc = (SF._listAcc hoặc 0) + (dt hoặc 0,15)
+    nếu SF._cache hoặc SF._listAcc không lớn hơn hoặc bằng 2 thì
         SF._listAcc = 0
-        local out = {}
+        đầu ra cục bộ = {}
         local ok2, desc = pcall(function() return workspace:GetDescendants() end)
-        if ok2 and type(desc) == "table" then
+        nếu ok2 và type(desc) == "table" thì
             for _, d in ipairs(desc) do
-                if #out >= 600 then break end
-                if sfIsPart(d) then out[#out + 1] = d end
-            end
-        end
+                nếu #out >= 600 thì thoát.
+                nếu sfIsPart(d) thì out[#out + 1] = d end
+            kết thúc
+        kết thúc
         SF._cache = out
-    end
-    return SF._cache or {}
-end
-local function sfPlayers(pos, rad, rep0, near0)
-    local rep, n, near = rep0, 0, near0
-    if not SF.avoidPlayers then return rep, n, near end
+    kết thúc
+    trả về SF._cache hoặc {}
+kết thúc
+hàm cục bộ sfPlayers(pos, rad, rep0, near0)
+    đại diện cục bộ, n, gần = đại diện0, 0, gần0
+    nếu không phải SF.avoidPlayers thì trả về rep, n, gần cuối
     local char = MV.Char()
-    local ok, list = pcall(function() return Players:GetPlayers() end)
-    if not ok or type(list) ~= "table" then return rep, n, near end
+    cục bộ ok, danh sách = pcall(function() return Players:GetPlayers() end)
+    Nếu không ổn hoặc kiểu (danh sách) ~= "bảng" thì trả về rep, n, gần cuối.
     for _, pl in ipairs(list) do
-        if pl ~= player then
+        nếu pl ~= player thì
             local ch = pl.Character
-            if ch and ch ~= char then
+            nếu ch và ch ~= char thì
                 local hrp = ch:FindFirstChild("HumanoidRootPart") or ch:FindFirstChildOfClass("BasePart")
-                local pp = hrp and hrp.Position
-                if pp then
-                    local delta = pp - pos
-                    local dist = delta.Magnitude
-                    if dist <= rad and dist > 0.01 then
+                pp cục bộ = hrp và hrp.Vị trí
+                nếu pp thì
+                    delta cục bộ = pp - pos
+                    khoảng cách cục bộ = delta.Độ lớn
+                    nếu dist <= rad và dist > 0,01 thì
                         n = n + 1
                         if near == nil or dist < near then near = dist end
-                        local w = 1 - (dist / rad)
-                        rep = rep - (delta / dist) * (0.5 + w * w * 3)   -- TRỪ = đẩy RA XA
-                    end
-                end
-            end
-        end
-    end
-    return rep, n, near
-end
-function MV.Safe.Scan(pos, dt)
+                        w cục bộ = 1 - (khoảng cách / rad)
+                        Rep = Rep - (delta / dist) * (0.5 + w * w * 3) -- TRỪ = Đưa RA XA
+                    kết thúc
+                kết thúc
+            kết thúc
+        kết thúc
+    kết thúc
+    trả lại rep, n, gần
+kết thúc
+hàm MV.Safe.Scan(pos, dt)
     local char = MV.Char()
-    local rad = mvClamp(SF.radius, 1, 300, 25)
-    local reach = rad * mvClamp(SF.lookMul, 1, 4, 1.6)
+    bán kính cục bộ = mvClamp(SF.radius, 1, 300, 25)
+    tầm với cục bộ = rad * mvClamp(SF.lookMul, 1, 4, 1.6)
     local lookT = mvClamp(SF.lookTime, 0.1, 3, 1.0)
-    local myV = SF._myV or Vector3.new(0, 0, 0)     -- vận tốc MÌNH (mình bay tới nó cũng tính)
+    local myV = SF._myV hoặc Vector3.new(0, 0, 0) -- vận tốc MÌNH (mình bay tới nó cũng tính)
     local rep = Vector3.new(0, 0, 0)
-    local n, near = 0, nil
-    local now = tick()
-    local seen = {}
-    local pchars = {}
+    cục bộ n, gần = 0, nil
+    cục bộ hiện tại = tick()
+    cục bộ đã thấy = {}
+    cục bộ pchars = {}
     local pls = Players:GetPlayers()
-    if type(pls) == "table" then
+    nếu type(pls) == "table" thì
         for _, pl in ipairs(pls) do
-            if pl ~= player then
+            nếu pl ~= player thì
                 local ch2 = pl.Character
                 if ch2 ~= nil and ch2 ~= char then pchars[ch2] = true end
-            end
-        end
-    end
+            kết thúc
+        kết thúc
+    kết thúc
     local hasPChar = (next(pchars) ~= nil)
-    local function inPChar(d)
-        if not hasPChar then return false end
+    hàm cục bộ trongPChar(d)
+        nếu không có ký tự PChar thì trả về false.
         for ch2 in pairs(pchars) do
-            if d:IsDescendantOf(ch2) then return true end
-        end
-        return false
-    end
-    SF._mvCount = 0                       -- v4.20: đếm vật ĐANG CHẠY trong tầm (để soi trạng thái)
+            nếu d:IsDescendantOf(ch2) thì trả về true
+        kết thúc
+        trả về false
+    kết thúc
+    SF._mvCount = 0 -- v4.20: đếm vật ĐANG CHẠY trong tầm (để soi trạng thái)
     for _, d in ipairs(sfCandidates(pos, dt, reach)) do
-        if sfIsPart(d) and not sfIgnore(d, char) and not inPChar(d) then
-            local p = d.Position
-            if p then
-                local delta = p - pos
-                local dist = delta.Magnitude
-                local rr = 0
+        nếu sfIsPart(d) và không phải sfIgnore(d, char) và không phải inPChar(d) thì
+            vị trí cục bộ p = d.Vị trí
+            nếu p thì
+                delta cục bộ = p - pos
+                khoảng cách cục bộ = delta.Độ lớn
+                rr cục bộ = 0
                 local sz = d.Size
-                if sz then
+                nếu sz thì
                     local mx = math.max(sz.X, sz.Y, sz.Z)
                     if type(mx) == "number" then rr = mx * 0.5 end
-                end
-                if rr > rad * 0.75 then rr = rad * 0.75 end
-                local surf = dist - rr
-                if surf < 0 then surf = 0 end
-                if surf <= reach and dist > 0.01 then
-                    local dir = delta / dist                 -- hướng TỚI vật
-                    local moving, closing = false, 0
+                kết thúc
+                nếu rr > rad * 0.75 thì rr = rad * 0.75
+                sóng cục bộ = khoảng cách - rr
+                nếu surf < 0 thì surf = 0
+                nếu surf <= reach và dist > 0.01 thì
+                    local dir = delta / dist -- hướng TỚI vật
+                    di chuyển cục bộ, đóng = false, 0
                     local v = d.AssemblyLinearVelocity
-                    if v and v.Magnitude then
-                        if v.Magnitude > 1.5 then moving = true end
-                        closing = -(v.X * dir.X + v.Y * dir.Y + v.Z * dir.Z)
-                    end
-                    local old = SF._seen[d]
-                    if old then
+                    nếu v và v.Magnitude thì
+                        nếu v.Magnitude > 1.5 thì moving = true end
+                        closing = -(vX * dir.X + vY * dir.Y + vZ * dir.Z)
+                    kết thúc
+                    cục bộ cũ = SF._seen[d]
+                    nếu cũ thì
                         local dd = (p - old.p).Magnitude
                         local ddt = math.max(now - old.t, 0.02)
-                        if dd > 0.35 or (dd / ddt) > 1.5 then moving = true end
-                        if closing <= 0.5 and dd > 0.1 then
+                        nếu dd > 0,35 hoặc (dd / ddt) > 1,5 thì moving = true end
+                        nếu closing <= 0.5 và dd > 0.1 thì
                             closing = math.max(closing, dd / ddt)
-                        end
-                    end
-                    if not moving then
+                        kết thúc
+                    kết thúc
+                    nếu không di chuyển thì
                         local hum0 = d:FindFirstAncestorOfClass("Humanoid")
-                        if hum0 == nil then
-                            local anc = d.Parent
+                        nếu hum0 == nil thì
+                            anc cục bộ = d.Cha
                             if anc then hum0 = anc:FindFirstChildOfClass("Humanoid") end
-                        end
-                        if hum0 ~= nil then
+                        kết thúc
+                        nếu hum0 ~= nil thì
                             local md = hum0.MoveDirection
                             local mdMag = 0
-                            if md then
-                                local m2 = md.Magnitude
+                            nếu md thì
+                                cục bộ m2 = md.Độ lớn
                                 if type(m2) == "number" then mdMag = m2 end
-                            end
-                            if mdMag > 0.05 then moving = true end
-                        end
-                    end
-                    if moving and surf <= reach then SF._mvCount = (SF._mvCount or 0) + 1 end
-                    seen[d] = { p = p, t = now }
-                    local danger = (surf <= rad and moving)
+                            kết thúc
+                            nếu mdMag > 0.05 thì moving = true end
+                        kết thúc
+                    kết thúc
+                    nếu đang di chuyển và lướt sóng <= đạt tới thì SF._mvCount = (SF._mvCount hoặc 0) + 1 kết thúc
+                    đã thấy[d] = { p = p, t = bây giờ }
+                    Nguy hiểm cục bộ = (sóng <= bức xạ và đang di chuyển)
                     local tHit = nil
-                    if closing > 0.5 then
-                        tHit = (surf - rad * 0.35) / closing      -- còn bao lâu thì MẶT vật tới sát mình
-                        if tHit <= lookT then danger = true end
-                    end
-                    if danger then
+                    nếu giá đóng cửa > 0,5 thì
+                        tHit = (surf - rad * 0.35) / đóng -- còn bao lâu thì MẶT vật tới sát mình
+                        nếu tHit <= lookT thì danger = true end
+                    kết thúc
+                    nếu có nguy hiểm thì
                         n = n + 1
                         if near == nil or surf < near then near = surf end
                         local w = mvClamp(1 - (surf / (rad * mvClamp(SF.lookMul, 1, 4, 1.6))), 0.2, 1)
-                        local myDot = mvClamp(myV.X * dir.X + myV.Y * dir.Y + myV.Z * dir.Z, 0, 200)
-                        local boost = 1 + mvClamp(closing, 0, 200) / 60 + myDot / 240
-                        local pv = p
-                        if v and v.Magnitude > 0.1 then pv = p + v * 0.35 end
+                        myDot cục bộ = mvClamp(myV.X * dir.X + myV.Y * dir.Y + myV.Z * dir.Z, 0, 200)
+                        Tăng cường cục bộ = 1 + mvClamp(đóng, 0, 200) / 60 + myDot / 240
+                        cục bộ pv = p
+                        nếu v và v.Magnitude > 0.1 thì pv = p + v * 0.35
                         local pdir = pv - pos
-                        if pdir.Magnitude > 0.01 then
+                        nếu pdir.Magnitude > 0.01 thì
                             pdir = pdir.Unit
-                            if (pdir.X * dir.X + pdir.Y * dir.Y + pdir.Z * dir.Z) < 0 then pdir = dir end
-                        else
+                            nếu (pdir.X * dir.X + pdir.Y * dir.Y + pdir.Z * dir.Z) < 0 thì pdir = dir end
+                        khác
                             pdir = dir
-                        end
+                        kết thúc
                         rep = rep - pdir * (0.35 + w * w * 3) * boost
-                    end
-                end
-            end
-        end
-    end
-    local pn0 = n
+                    kết thúc
+                kết thúc
+            kết thúc
+        kết thúc
+    kết thúc
+    cục bộ pn0 = n
     rep, n, near = sfPlayers(pos, rad, rep, near)
     SF.playerThreats = n
     n = pn0 + n
-    SF._seen = seen
+    SF._seen = đã thấy
     SF._rep = rep
-    SF.movers = SF._mvCount or 0
+    SF.movers = SF._mvCount hoặc 0
     SF._mvCount = nil
-    SF.threats, SF.nearest = n, near
-    if n > 0 then
-        SF._holdAt = now
-        SF._lastThreatAt = now                                     -- v4.20: nhớ vừa bị gí (để né tiếp)
-        if rep.Magnitude > 0 then SF._lastRep = rep end            -- nhớ HƯỚNG đang né
-    end
-    return n, near, rep
-end
--- ---------- v4.18: 🔲 BỨC TƯỜNG TRONG SUỐT HÌNH VUÔNG bao quanh mình ----------
-function MV.Safe.KillShield()
+    SF.threats, SF.nearest = n, gần
+    nếu n > 0 thì
+        SF._holdAt = bây giờ
+        SF._lastThreatAt = now -- v4.20: nhớ vừa đủ (để né tiếp)
+        if Rep.Magnitude > 0 thì SF._lastRep = Rep end -- nhớ HƯỚNG đang né
+    kết thúc
+    trả lại n, gần, rep
+kết thúc
+--------- v4.18: 🔲 BỨC TƯỜNG TRONG SUỐT HÌNH VUÔNG bao quanh mình ----------
+hàm MV.Safe.KillShield()
     for i = 1, 4 do
-        local w = SF._shield and SF._shield[i]
-        if w then pcall(function() w:Destroy() end) end
-    end
+        cục bộ w = SF._shield và SF._shield[i]
+        nếu w thì pcall(function() w:Destroy() end) end
+    kết thúc
     SF._shield, SF._shieldPos = nil, nil
-end
-function MV.Safe.ShieldHalf()
+kết thúc
+hàm MV.Safe.ShieldHalf()
     local n = tonumber(SF.shieldSize)
-    if n and n > 0 then return mvClamp(n, 0.5, 300, 3) end          -- chỉnh tay
-    local w = 2
-    local r = MV.Root()
+    nếu n và n > 0 thì trả về mvClamp(n, 0.5, 300, 3) kết thúc -- chỉnh tay
+    cục bộ w = 2
+    cục bộ r = MV.Root()
     if r then pcall(function() w = math.max(tonumber(r.Size.X) or 2, tonumber(r.Size.Z) or 2) end) end
-    return mvClamp(w * 0.5 + 1.6, 2, 8, 3)                          -- người thường: 2,6 stud (cạnh ~5,2)
-end
-function MV.Safe.ShieldHeight()
-    local n = tonumber(SF.shieldH)
-    if n and n > 0 then return mvClamp(n, 1, 100, 8) end
-    local hh = 2
-    local r = MV.Root()
-    if r then pcall(function() hh = tonumber(r.Size.Y) or 2 end) end
-    return mvClamp(hh * 3 + 2, 4, 14, 8)                            -- người thường: 8 stud
-end
-function MV.Safe.BuildShield()
+    return mvClamp(w * 0.5 + 1.6, 2, 8, 3) -- người thường: 2,6 stud (cạnh ~5,2)
+kết thúc
+hàm MV.Safe.ShieldHeight()
+    cục bộ n = tonumber(SF.shieldH)
+    nếu n và n > 0 thì trả về mvClamp(n, 1, 100, 8) kết thúc
+    cục bộ hh = 2
+    cục bộ r = MV.Root()
+    nếu r thì pcall(function() hh = tonumber(r.Size.Y) or 2 end) end
+    return mvClamp(hh * 3 + 2, 4, 14, 8) -- người thường: 8 stud
+kết thúc
+hàm MV.Safe.BuildShield()
     MV.Safe.KillShield()
-    local side, h = MV.Safe.ShieldHalf(), MV.Safe.ShieldHeight()
+    phía cục bộ, h = MV.Safe.ShieldHalf(), MV.Safe.ShieldHeight()
     local thk = SF.shieldThk
     SF._shield = {}
     for i = 1, 4 do
         local long = (i <= 2)
-        local w = New("Part", {
-            Name = "BC_Shield" .. i,
-            Size = long and Vector3.new(side * 2 + thk, h, thk) or Vector3.new(thk, h, side * 2 + thk),
-            Transparency = SF.shieldT,
-            Color = Color3.fromRGB(120, 225, 255),
-            Material = Enum.Material.Glass,
-            Anchored = true, CanCollide = false, CastShadow = false,
-        }, workspace)
+        cục bộ w = New("Phần", {
+            Tên = "BC_Shield" .. i,
+            Kích thước = long và Vector3.new(side * 2 + thk, h, thk) hoặc Vector3.new(thk, h, side * 2 + thk),
+            Độ trong suốt = SF.shieldT,
+            Màu = Color3.fromRGB(120, 225, 255),
+            Vật liệu = Enum.Material.Glass,
+            Cố định = true, CanCollide = false, CastShadow = false,
+        }, không gian làm việc)
         SF._shield[i] = w
-    end
-end
-function MV.Safe.UpdateShield(pos)
-    if not (SF.on and SF.shield) then
+    kết thúc
+kết thúc
+hàm MV.Safe.UpdateShield(pos)
+    nếu không (SF.on và SF.shield) thì
         if SF._shield then MV.Safe.KillShield() end
-        return
-    end
+        trở lại
+    kết thúc
     local side = MV.Safe.ShieldHalf()
     local wallH = MV.Safe.ShieldHeight()
-    local need = (SF._shield == nil)
-    if not need then
+    nhu cầu địa phương = (SF._shield == nil)
+    nếu không cần thiết thì
         for i = 1, 4 do
-            local w = SF._shield[i]
+            cục bộ w = SF._shield[i]
             if not w or not w.Parent then need = true break end
-        end
-    end
-    if need then pcall(MV.Safe.BuildShield) end
-    if not SF._shield or not SF._shield[1] then return end
-    local q = SF._shieldPos
-    if q and math.abs(q.X - pos.X) < 0.05 and math.abs(q.Y - pos.Y) < 0.05 and math.abs(q.Z - pos.Z) < 0.05
-       and math.abs((q.S or 0) - side) < 0.01 and math.abs((q.H or 0) - wallH) < 0.01 then
-        return
-    end
-    SF._shieldPos = { X = pos.X, Y = pos.Y, Z = pos.Z, S = side, H = wallH }
+        kết thúc
+    kết thúc
+    nếu cần thì pcall(MV.Safe.BuildShield) end
+    nếu không phải SF._shield hoặc không phải SF._shield[1] thì trả về kết thúc
+    cục bộ q = SF._shieldPos
+    nếu q và math.abs(qX - pos.X) < 0.05 và math.abs(qY - pos.Y) < 0.05 và math.abs(qZ - pos.Z) < 0.05
+       và math.abs((qS hoặc 0) - side) < 0.01 và math.abs((qH hoặc 0) - wallH) < 0.01 thì
+        trở lại
+    kết thúc
+    SF._shieldPos = { X = vị trí X, Y = vị trí Y, Z = vị trí Z, S = cạnh, H = chiều cao tường }
     for i = 1, 4 do
-        local w = SF._shield[i]
-        if w then
-            local dx, dz = 0, 0
-            if i == 1 then dz = side elseif i == 2 then dz = -side
+        cục bộ w = SF._shield[i]
+        nếu w thì
+            dx, dz cục bộ = 0, 0
+            Nếu i == 1 thì dz = cạnh, ngược lại nếu i == 2 thì dz = -cạnh
             elseif i == 3 then dx = side else dx = -side end
             local okS = pcall(function()
-                w.Size = (i <= 2) and Vector3.new(side * 2 + SF.shieldThk, wallH, SF.shieldThk)
-                                      or Vector3.new(SF.shieldThk, wallH, side * 2 + SF.shieldThk)
+                w.Size = (i <= 2) và Vector3.new(side * 2 + SF.shieldThk, wallH, SF.shieldThk)
+                                      hoặc Vector3.new(SF.shieldThk, wallH, side * 2 + SF.shieldThk)
                 w.CFrame = CFrame.new(pos.X + dx, pos.Y, pos.Z + dz)
-            end)
+            kết thúc)
             if not okS then MV.Safe.KillShield(); return end
-        end
-    end
-end
-function MV.Safe._EnsureBV()
-    local r = MV.Root()
-    if not r then return nil, nil end
-    if SF._bv and SF._bv.Parent == r and SF._bg and SF._bg.Parent == r then
-        return SF._bv, SF._bg
-    end
+        kết thúc
+    kết thúc
+kết thúc
+hàm MV.Safe._EnsureBV()
+    cục bộ r = MV.Root()
+    nếu không phải r thì trả về nil, nil end
+    nếu SF._bv và SF._bv.Parent == r và SF._bg và SF._bg.Parent == r thì
+        trả về SF._bv, SF._bg
+    kết thúc
     pcall(function() if SF._bv then SF._bv:Destroy() end end)
     pcall(function() if SF._bg then SF._bg:Destroy() end end)
     local bv = New("BodyVelocity", { Name = "BC_SafeFlyVel", MaxForce = Vector3.new(1e9, 1e9, 1e9), Velocity = Vector3.new(0,0,0) }, r)
     local bg = New("BodyGyro", { Name = "BC_SafeFlyGyro", MaxTorque = Vector3.new(1e9, 1e9, 1e9), P = 1e4, D = 50 }, r)
     SF._bv, SF._bg = bv, bg
     local h = MV.Hum()
-    if h then
-        if SF._hum ~= h then
+    nếu h thì
+        nếu SF._hum ~= h thì
             SF._hum = h
             pcall(function() SF._platformStandPrev = h.PlatformStand end)
             pcall(function() SF._autoRotatePrev = h.AutoRotate end)
-        end
+        kết thúc
         pcall(function() h.PlatformStand = true end)
         pcall(function() h.AutoRotate = false end)
-    end
-    return bv, bg
-end
+    kết thúc
+    trả về bv, bg
+kết thúc
 
-function MV.Safe._RestoreHum()
-    local h = SF._hum
-    if h and h.Parent then
-        if SF._platformStandPrev ~= nil then
+hàm MV.Safe._RestoreHum()
+    cục bộ h = SF._hum
+    nếu h và h.Parent thì
+        nếu SF._platformStandPrev khác nil thì
             pcall(function() h.PlatformStand = SF._platformStandPrev end)
-        end
-        if SF._autoRotatePrev ~= nil then
+        kết thúc
+        nếu SF._autoRotatePrev khác nil thì
             pcall(function() h.AutoRotate = SF._autoRotatePrev end)
-        end
-    end
+        kết thúc
+    kết thúc
     SF._hum = nil
     SF._platformStandPrev = nil
     SF._autoRotatePrev = nil
-end
+kết thúc
 
-function MV.Safe.Repair()
-    local r = MV.Root()
-    if not r then return false end
+hàm MV.Safe.Repair()
+    cục bộ r = MV.Root()
+    nếu không phải r thì trả về false kết thúc
     local bv, bg = MV.Safe._EnsureBV()
-    if not bv or MV.Root() ~= r then
-        return false
-    end
-    MV.flySpeed = mvClamp(SF.speed, 1, 2000, 60)
-    return true
-end
-function MV.Safe.Bind()
-    if SF._bound then return true end
+    nếu không phải bv hoặc MV.Root() ~= r thì
+        trả về false
+    kết thúc
+    MV.flySpeed ​​= mvClamp(SF.speed, 1, 2000, 60)
+    trả về giá trị đúng
+kết thúc
+hàm MV.Safe.Bind()
+    nếu SF._bound thì trả về true
     SF._bound = pcall(function() RunService:BindToRenderStep("BC_Safe", 2, MV.Safe._Frame) end)
-    return SF._bound == true
-end
-function MV.Safe.Unbind()
+    trả về SF._bound == true
+kết thúc
+hàm MV.Safe.Unbind()
     SF._bound = false
     pcall(function() RunService:UnbindFromRenderStep("BC_Safe") end)
-end
+kết thúc
 function MV.Safe._Frame(dt) pcall(MV.Safe.Step, dt) end
-function MV.Safe.Step(dt)
-    if not SF.on then return end
+hàm MV.Safe.Step(dt)
+    nếu không phải SF.on thì trả về end
     SF._lastFrameAt = tick()
-    local r, h = MV.Root(), MV.Hum()
-    if not r then
+    cục bộ r, h = MV.Root(), MV.Hum()
+    nếu không phải r thì
         if SF._shield then pcall(MV.Safe.KillShield) end
         SF._root = nil
-        return
-    end
-    if SF._root ~= r then
+        trở lại
+    kết thúc
+    nếu SF._root ~= r thì
         SF._root = r
         pcall(MV.Safe.Reset)
         SF._shieldPos = nil
         if SF.shield then pcall(MV.Safe.KillShield) end
         pcall(MV.Safe._EnsureBV)
-    end
-    if not (SF._bv and SF._bv.Parent == r) then
+    kết thúc
+    nếu không (SF._bv và SF._bv.Parent == r) thì
         pcall(MV.Safe._EnsureBV)
-    end
+    kết thúc
     local bv = SF._bv
-    if not (bv and bv.Parent == r) then return end
+    nếu không (bv và bv.Parent == r) thì trả về end
     local bg = SF._bg
-    if h then
+    nếu h thì
         if h.PlatformStand ~= true then pcall(function() h.PlatformStand = true end) end
         if h.AutoRotate ~= false then pcall(function() h.AutoRotate = false end) end
-    end
+    kết thúc
     local dtv = tonumber(dt) or 0.016
-    SF._sc = (SF._sc or 0) + dtv
+    SF._sc = (SF._sc hoặc 0) + dtv
     local sinceThreat = tick() - (SF._lastThreatAt or 0)
     local ivScan = (((SF.threats or 0) > 0) or sinceThreat < 1.0) and 0.05 or 0.15
-    if SF._sc >= ivScan then
+    nếu SF._sc >= ivScan thì
         local okS = pcall(MV.Safe.Scan, r.Position, SF._sc)
         SF._sc = 0
         if not okS then SF.threats, SF.nearest = 0, nil end
-    end
-    local now = tick()
-    local contact = ((SF.threats or 0) > 0) or ((now - (SF._holdAt or 0)) < 0.35)
-    local keys = (h and h.MoveDirection) or Vector3.new(0, 0, 0)
+    kết thúc
+    cục bộ hiện tại = tick()
+    liên hệ cục bộ = ((SF.threats hoặc 0) > 0) hoặc ((hiện tại - (SF._holdAt hoặc 0)) < 0,35)
+    các khóa cục bộ = (h và h.MoveDirection) hoặc Vector3.new(0, 0, 0)
     local vX = tonumber(SF._virtX) or 0
     local vZ = tonumber(SF._virtZ) or 0
-    if math.abs(vX) > 0.01 or math.abs(vZ) > 0.01 then
+    nếu math.abs(vX) > 0.01 hoặc math.abs(vZ) > 0.01 thì
         keys = Vector3.new(vX, 0, vZ)
-    end
-    local busy = keys.Magnitude >= 0.01                  -- đang bấm WASD / joystick ảo -> nhường quyền cho bạn
-    local dir = keys
-    if dir.Magnitude < 0.01 and SF.auto then
+    kết thúc
+    local busy = Keys.Magnitude >= 0.01 -- đang nhấn WASD / joystick Virtual -> nhường quyền cho bạn
+    thư mục cục bộ = khóa
+    nếu dir.Magnitude < 0.01 và SF.auto thì
         local cam = workspace.CurrentCamera
-        if cam then
-            local look = cam.CFrame.LookVector
+        nếu có camera thì
+            góc nhìn cục bộ = cam.CFrame.LookVector
             dir = Vector3.new(look.X, 0, look.Z)
-        end
-    end
+        kết thúc
+    kết thúc
     if dir.Magnitude > 0 then dir = dir.Unit else dir = Vector3.new(0, 0, 0) end
     local up = UserInputService:IsKeyDown(Enum.KeyCode.Space)
     local down = UserInputService:IsKeyDown(Enum.KeyCode.LeftShift)
-              or UserInputService:IsKeyDown(Enum.KeyCode.LeftControl)
+              hoặc UserInputService:IsKeyDown(Enum.KeyCode.LeftControl)
     local vY = tonumber(SF._virtY) or 0
-    local vv
-    if math.abs(vY) > 0.01 then
+    địa phương vv
+    nếu math.abs(vY) > 0.01 thì
         vv = vY
-    else
-        vv = (up and 1 or 0) - (down and 1 or 0)
-    end
-    local spd = mvClamp(SF.speed, 1, 2000, 60)
-    local target
-    if SF.circle and SF.auto and (not busy) and (not contact) then
+    khác
+        vv = (lên cộng 1 hoặc 0) - (xuống cộng 1 hoặc 0)
+    kết thúc
+    tốc độ cục bộ = mvClamp(SF.speed, 1, 2000, 60)
+    mục tiêu địa phương
+    nếu SF.circle và SF.auto và (không bận) và (không liên lạc) thì
         local R = mvClamp(SF.circleR, 3, 300, 20)
         local cx, cy, cz = r.Position.X, r.Position.Y, r.Position.Z
         if SF._center then cx, cy, cz = SF._center.X, SF._center.Y, SF._center.Z end
         local dxz = math.sqrt((r.Position.X - cx) ^ 2 + (r.Position.Z - cz) ^ 2)
-        if dxz > R * 1.6 then
+        nếu dxz > R * 1.6 thì
             SF._center = nil
             cx, cy, cz = r.Position.X, r.Position.Y, r.Position.Z
-        elseif SF._center == nil then
+        nếu SF._center == nil thì
             SF._center = { X = cx, Y = cy, Z = cz }
-        end
-        SF._ang = (SF._ang or 0) + dtv * (spd / math.max(R, 1))     -- bay đều quanh tâm
+        kết thúc
+        SF._ang = (SF._ang or 0) + dtv * (spd / math.max(R, 1)) -- bay đều quanh tâm
         local tx = cx + math.cos(SF._ang) * R
-        local tz = cz + math.sin(SF._ang) * R
-        local tang = Vector3.new(-math.sin(SF._ang), 0, math.cos(SF._ang)) * spd
+        tz địa phương = cz + math.sin(SF._ang) * R
+        tang cục bộ = Vector3.new(-math.sin(SF._ang), 0, math.cos(SF._ang)) * spd
         local want = Vector3.new(tx - r.Position.X, cy - r.Position.Y, tz - r.Position.Z)
-        target = tang + want * 2.2 + Vector3.new(0, vv * spd, 0)
+        mục tiêu = tang + muốn * 2.2 + Vector3.new(0, vv * spd, 0)
         if target.Magnitude > spd then target = target.Unit * spd end
-    else
-        SF._center = nil                                    -- rời chế độ vòng tròn -> tâm mới lần sau
-        target = (dir + Vector3.new(0, vv, 0)) * spd
-    end
-    local rep = SF._rep
-    if (rep == nil or rep.Magnitude < 0.01) and SF._lastRep ~= nil then
+    khác
+        SF._center = nil -- rời khỏi vòng tròn chế độ -> tâm mới sau
+        mục tiêu = (dir + Vector3.new(0, vv, 0)) * spd
+    kết thúc
+    đại diện địa phương = SF._rep
+    nếu (rep == nil hoặc rep.Magnitude < 0.01) và SF._lastRep ~= nil thì
         local el = now - (SF._lastThreatAt or 0)
-        if el < 0.9 then rep = SF._lastRep * (1 - el / 0.9) end       -- vơi dần, không lật hướng
-    end
-    if rep and rep.Magnitude > 0 then
-        target = target + rep * (spd * (0.25 + 0.09 * mvClamp(SF.steer, 1, 10, 4)))
-        local cap = spd * 2
+        if el < 0.9 then Rep = SF._lastRep * (1 - el / 0.9) end -- tăng tăng, không cô hướng
+    kết thúc
+    nếu rep và rep.Magnitude > 0 thì
+        mục tiêu = mục tiêu + rep * (spd * (0.25 + 0.09 * mvClamp(SF.steer, 1, 10, 4)))
+        công suất cục bộ = tốc độ * 2
         if target.Magnitude > cap then target = target.Unit * cap end
-    end
-    if SF.nearest and SF.nearest < mvClamp(SF.radius, 1, 300, 25) * 0.4 then
-        target = target + Vector3.new(0, spd * 0.75, 0)
-    end
-    SF._myV = target
-    bv.Velocity = target
-    if bg and target.Magnitude > 0.1 then
+    kết thúc
+    nếu SF.nearest và SF.nearest < mvClamp(SF.radius, 1, 300, 25) * 0.4 thì
+        mục tiêu = mục tiêu + Vector3.new(0, spd * 0.75, 0)
+    kết thúc
+    SF._myV = mục tiêu
+    bv.Vận tốc = mục tiêu
+    nếu bg và target.Magnitude > 0.1 thì
         local lookPos = r.Position + Vector3.new(target.X, 0, target.Z)
-        if (lookPos - r.Position).Magnitude > 0.1 then
+        nếu (lookPos - r.Position).Magnitude > 0.1 thì
             bg.CFrame = CFrame.new(r.Position, lookPos)
-        end
-    end
+        kết thúc
+    kết thúc
     if SF.shield then pcall(MV.Safe.UpdateShield, r.Position) end
-    SF._hudAcc = (SF._hudAcc or 0) + dtv
-    if SF._hudAcc >= 0.3 then
+    SF._hudAcc = (SF._hudAcc hoặc 0) + dtv
+    nếu SF._hudAcc >= 0.3 thì
         SF._hudAcc = 0
         if SF._hudUpdate then pcall(SF._hudUpdate) end
-    end
-end
-function MV.Safe.Set(on)
-    if on == true and MV.fly then MV.SetFly(false) end -- không để hai BodyVelocity tranh lực
+    kết thúc
+kết thúc
+hàm MV.Safe.Set(on)
+    if on == true và MV.fly thì MV.SetFly(false) end -- không để hai BodyVelocity tranh lực
     SF.on = (on == true)
-    if SF.on then
-        if SF.noclip and SF._ncPrev == nil then
+    nếu SF.on thì
+        nếu SF.noclip và SF._ncPrev == nil thì
             SF._ncPrev = MV.noclip == true
             pcall(function() MV.SetNoclip(true) end)
-        end
+        kết thúc
         pcall(MV.Safe._EnsureBV)
-        MV.flySpeed = mvClamp(SF.speed, 1, 2000, 60)
+        MV.flySpeed ​​= mvClamp(SF.speed, 1, 2000, 60)
         SF._root = MV.Root()
         pcall(MV._Watchdog)
         SF._lastFrameAt = tick()
         pcall(MV.Safe.Bind)
         pcall(function() MV.Safe.UpdateShield(MV.Root() and MV.Root().Position or Vector3.new(0, 0, 0)) end)
         pcall(function() MV.Safe.SyncHud() end)
-    else
+    khác
         pcall(MV.Safe.Unbind)
         MV.Safe.Reset()
         pcall(function() MV.Safe.ClearVirt() end)
         pcall(function() if SF._bv then SF._bv:Destroy() end end)
         pcall(function() if SF._bg then SF._bg:Destroy() end end)
         SF._bv, SF._bg = nil, nil
-        if not MV.fly then
+        nếu không phải MV.fly thì
             pcall(MV.Safe._RestoreHum)
-        end
+        kết thúc
         MV.Safe.KillShield()
         SF._root = nil
-        if SF._ncPrev ~= nil then
+        nếu SF._ncPrev ~= nil thì
             local was = SF._ncPrev
             SF._ncPrev = nil
-            local stillFlying = (MV._glassFlyActive == true) or (MV._playerFlyActive == true)
-            if not stillFlying then
+            local stillFlying = (MV._glassFlyActive == true) hoặc (MV._playerFlyActive == true)
+            nếu không còn bay nữa thì
                 pcall(function() MV.SetNoclip(was) end)
-            end
-        end
+            kết thúc
+        kết thúc
         pcall(function() MV.Safe.SyncHud() end)
-    end
-    return SF.on
-end
-function MV.Safe.SetNoclipAuto(b)
+    kết thúc
+    trả lại SF.on
+kết thúc
+hàm MV.Safe.SetNoclipAuto(b)
     SF.noclip = (b == true)
-    if SF.on then
-        if SF.noclip then
+    nếu SF.on thì
+        nếu SF.noclip thì
             if SF._ncPrev == nil then SF._ncPrev = MV.noclip == true end
             pcall(function() MV.SetNoclip(true) end)
         elseif SF._ncPrev ~= nil then
             local was = SF._ncPrev
             SF._ncPrev = nil
             pcall(function() MV.SetNoclip(was) end)
-        end
-    end
-    return SF.noclip
-end
-function MV.Safe.SetShield(b)
+        kết thúc
+    kết thúc
+    trả về SF.noclip
+kết thúc
+hàm MV.Safe.SetShield(b)
     SF.shield = (b == true)
-    if SF.on and SF.shield then
-        local r = MV.Root()
+    nếu SF.on và SF.shield thì
+        cục bộ r = MV.Root()
         if r then pcall(MV.Safe.UpdateShield, r.Position) end
-    else
+    khác
         MV.Safe.KillShield()
-    end
-    return SF.shield
-end
-function MV.Safe.SetAvoidPlayers(b)
+    kết thúc
+    trả lại SF.shield
+kết thúc
+hàm MV.Safe.SetAvoidPlayers(b)
     SF.avoidPlayers = (b == true)
     MV.Safe.Reset()
-    return SF.avoidPlayers
-end
-function MV.Safe.Reset()                 -- quên dấu vết cũ (không dọa ma vật đã biến mất)
+    trả về SF.avoidPlayers
+kết thúc
+function MV.Safe.Reset() -- quên dấu vết cũ (không chắc ma vật biến mất)
     SF._seen, SF._cache = {}, nil
     SF._rep = Vector3.new(0, 0, 0)
     SF.threats, SF.nearest, SF.playerThreats = 0, nil, 0
-    SF.movers, SF._lastRep, SF._lastThreatAt, SF._mvCount = 0, nil, nil, nil   -- v4.20
+    SF.movers, SF._lastRep, SF._lastThreatAt, SF._mvCount = 0, nil, nil, nil -- v4.20
     SF._holdAt, SF._center, SF._ang = 0, nil, 0
     SF._myV = Vector3.new(0, 0, 0)
-end
+kết thúc
 function MV.Safe.Stop() return MV.Safe.Set(false) end
-function MV.Safe.SetCircle(b)
+hàm MV.Safe.SetCircle(b)
     SF.circle = (b == true)
     SF._center = nil
-    return SF.circle
-end
-function MV.Safe.SetCircleR(n)
+    trả về SF.circle
+kết thúc
+hàm MV.Safe.SetCircleR(n)
     SF.circleR = mvClamp(n, 3, 300, 20)
     SF._center = nil
-    return SF.circleR
-end
-function MV.Safe.Recenter()
+    trả về SF.circleR
+kết thúc
+hàm MV.Safe.Recenter()
     SF._center = nil
-    return true
-end
-function MV.Safe.SetLook(t)        -- 👁 nhìn trước (giây) để né vật đang bay tới
+    trả về giá trị đúng
+kết thúc
+function MV.Safe.SetLook(t) -- 👁 nhìn trước (giây) để né vật đang bay tới
     SF.lookTime = mvClamp(t, 0.1, 3, 1.0)
-    return SF.lookTime
-end
-function MV.Safe.SetRadius(n)
+    trả về SF.lookTime
+kết thúc
+hàm MV.Safe.SetRadius(n)
     SF.radius = mvClamp(n, 1, 300, 25)
     MV.Safe.Reset()
-    SF._shieldPos = nil                    -- đổi bán kính -> vẽ lại khiên theo cỡ mới
-    if SF.on and SF.shield then
-        local r = MV.Root()
+    SF._shieldPos = nil --thay đổi kính -> vẽ lại theo kích thước mới
+    nếu SF.on và SF.shield thì
+        cục bộ r = MV.Root()
         if r then pcall(MV.Safe.UpdateShield, r.Position) end
-    end
-    return SF.radius
-end
+    kết thúc
+    trả về bán kính SF.
+kết thúc
 
-function MV.Safe.SetShieldSize(n)
+hàm MV.Safe.SetShieldSize(n)
     SF.shieldSize = mvClamp(n, 0, 300, 0)
     SF._shieldPos = nil
-    if SF.on and SF.shield then
-        local r = MV.Root()
+    nếu SF.on và SF.shield thì
+        cục bộ r = MV.Root()
         if r then pcall(MV.Safe.UpdateShield, r.Position) end
-    end
-    return SF.shieldSize
-end
-function MV.Safe.SetSpeed(n)
+    kết thúc
+    trả về SF.shieldSize
+kết thúc
+hàm MV.Safe.SetSpeed(n)
     SF.speed = mvClamp(n, 1, 2000, 60)
-    MV.flySpeed = SF.speed            -- để khung ⚙ và bảng trạng thái hiện cùng một số
-    return SF.speed
-end
+    MV.flySpeed ​​= SF.speed -- for frame ⚙ và một số trạng thái tương tự
+    trả về SF.speed
+kết thúc
 function MV.Safe.SetSteer(n) SF.steer = mvClamp(n, 1, 10, 4); return SF.steer end
 function MV.Safe.SetAuto(b) SF.auto = (b == true); return SF.auto end
-function MV.Safe.Status()
-    if not SF.on then return "🛡 bay an toàn: đang TẮT (khiên đã dọn, Xuyên Tường trả lại như cũ)" end
+hàm MV.Safe.Status()
+    if not SF.on then return "🛡 bay an toàn: đang TẮT (khiên up, Xuyên Tường trả lại như cũ)" end
     local s = string.format("🛡 bay an toàn: BẬT · 💨 %g · 📏 né trong %gm · 🌀 %g",
         SF.speed, SF.radius, SF.steer)
     if SF.auto then s = s .. " · ➡ tự bay" end
-    if SF.shield then
+    nếu SF.shield thì
         local half = MV.Safe.ShieldHalf()
-        s = s .. string.format(" · 🔲 khiên %g m/cạnh%s", half * 2, (tonumber(SF.shieldSize) or 0) > 0 and "" or " (tự)")
-    end
-    if SF.circle and SF.auto then
-        local busy = false
+        s = s .. string.format(" · 🔲 %gm/c%s", half * 2, (tonumber(SF.shieldSize) or 0) > 0 and "" or " (tự)")
+    kết thúc
+    nếu SF.circle và SF.auto thì
+        cục bộ bận = sai
         local hum0 = MV.Hum()
         local md0 = hum0 and hum0.MoveDirection
         if md0 and md0.Magnitude and md0.Magnitude >= 0.01 then busy = true end
         if math.abs(tonumber(SF._virtX) or 0) > 0.01 or math.abs(tonumber(SF._virtZ) or 0) > 0.01 then busy = true end
-        if (SF.threats or 0) > 0 then
+        nếu (SF.threats hoặc 0) > 0 thì
             s = s .. " · ⭕ tạm dừng (đang né)"
-        elseif busy then
-            s = s .. " · ⭕ tạm dừng (đang bấm phím)"
-        else
+        nếu bận thì
+            s = s .. " · ⭕ tạm dừng (đang nhấn phím)"
+        khác
             s = s .. " · ⭕ bay vòng tròn " .. tostring(math.floor(SF.circleR + 0.5)) .. "m"
-        end
-    end
-    if (SF.movers or 0) > 0 and (SF.threats or 0) == 0 then
-        s = s .. string.format(" · 🐾 thấy %d vật đang chạy", SF.movers)
-    end
-    if SF.noclip then s = s .. " · 🧱 xuyên vật cản" end
-    if (SF.threats or 0) > 0 then
+        kết thúc
+    kết thúc
+    nếu (SF.movers hoặc 0) > 0 và (SF.threats hoặc 0) == 0 thì
+        s = s .. string.format(" · 🐾 thấy %d vật thể đang chạy", SF.movers)
+    kết thúc
+    nếu SF.noclip thì s = s.. " · 🧱 xuyên vật cản" end
+    nếu (SF.threats hoặc 0) > 0 thì
         s = s .. string.format(" · ⚠️ đang né %d mối nguy (gần nhất %gm)", SF.threats,
             math.floor((SF.nearest or 0) + 0.5))
         if (SF.playerThreats or 0) > 0 then s = s .. string.format(" — có %d người chơi", SF.playerThreats) end
-    else
-        s = s .. " · ✅ quanh đây không có gì lao tới mình"
-    end
-    if SF.showHud and SF.on then
+    khác
+        s = s.. " · ✅ quanh đây không có gì lao tới mình"
+    kết thúc
+    nếu SF.showHud và SF.on thì
         s = s .. " · 📱 nút ảo BẬT"
-    end
-    return s
-end
+    kết thúc
+    trả về s
+kết thúc
 
-function MV.Safe.SetVirt(x, z, y)
+hàm MV.Safe.SetVirt(x, z, y)
     SF._virtX = mvClamp(tonumber(x) or 0, -1, 1, 0)
     SF._virtZ = mvClamp(tonumber(z) or 0, -1, 1, 0)
     SF._virtY = mvClamp(tonumber(y) or 0, -1, 1, 0)
-    return SF._virtX, SF._virtZ, SF._virtY
-end
-function MV.Safe.ClearVirt()
+    Trả về SF._virtX, SF._virtZ, SF._virtY
+kết thúc
+hàm MV.Safe.ClearVirt()
     SF._virtX, SF._virtZ, SF._virtY = 0, 0, 0
-    return true
-end
-function MV.Safe.SetShowHud(b)
+    trả về giá trị đúng
+kết thúc
+hàm MV.Safe.SetShowHud(b)
     SF.showHud = (b == true)
-    if not SF.showHud then
+    nếu không phải SF.showHud thì
         pcall(function() MV.Safe.ClearVirt() end)
         pcall(function()
             if SF._joyKnob then SF._joyKnob.Position = UDim2.new(0.5, -16, 0.5, -16) end
-        end)
+        kết thúc)
         SF._dragging = false
-    end
+    kết thúc
     pcall(function() MV.Safe.SyncHud() end)
-    return SF.showHud
-end
-function MV.Safe._BuildHud()
+    trả về SF.showHud
+kết thúc
+hàm MV.Safe._BuildHud()
     if SF._hud and SF._hud.Parent then return SF._hud end
-    local hud = New("Frame", {
-        Name = "BC_SafeHud",
-        Size = UDim2.new(0, 300, 0, 190),
-        Position = UDim2.new(0, 10, 1, -200),
+    cục bộ hud = New("Khung", {
+        Tên = "BC_SafeHud",
+        Kích thước = UDim2.new(0, 300, 0, 190),
+        Vị trí = UDim2.new(0, 10, 1, -200),
         BackgroundColor3 = C.SURFACE,
-        BackgroundTransparency = 0.18,
+        Độ trong suốt của nền = 0.18,
         BorderSizePixel = 0,
-        Visible = false,
-        ZIndex = 25,
+        Hiển thị = false,
+        Chỉ số Z = 25,
     }, gui)
-    Corner(hud, UDim.new(0, 12))
+    Góc(hud, UDim.new(0, 12))
     Stroke(hud, C.HAIRLINE, 1)
     D.Shade(hud, Color3.fromRGB(255,255,255), Color3.fromRGB(188,192,205), 90)
 
-    local title = New("TextLabel", {
-        Size = UDim2.new(1, -70, 0, 18), Position = UDim2.new(0, 10, 0, 4),
+    tiêu đề cục bộ = Mới("Nhãn văn bản", {
+        Kích thước = UDim2.new(1, -70, 0, 18), Vị trí = UDim2.new(0, 10, 0, 4),
         Text = "🛡 Bay An Toàn - Nút Ảo", BackgroundTransparency = 1,
-        TextColor3 = C.ACCENT, Font = Enum.Font.GothamBold, TextSize = 10,
+        TextColor3 = C.ACCENT, Phông chữ = Enum.Font.GothamBold, TextSize = 10,
         TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 26,
     }, hud)
 
     local hideBtn = New("TextButton", {
-        Size = UDim2.new(0, 28, 0, 20), Position = UDim2.new(1, -62, 0, 2),
-        Text = "👁", BackgroundColor3 = C.SURFACE3, BackgroundTransparency = 0.15,
+        Kích thước = UDim2.new(0, 28, 0, 20), Vị trí = UDim2.new(1, -62, 0, 2),
+        Văn bản = "👁", Màu nền 3 = C.SURFACE3, Độ trong suốt nền = 0.15,
         TextColor3 = C.MUTED, Font = Enum.Font.GothamBold, TextSize = 10,
         BorderSizePixel = 0, ZIndex = 26,
     }, hud)
-    Corner(hideBtn, UDim.new(0, 6))
+    Góc(hideBtn, UDim.new(0, 6))
     hideBtn.Activated:Connect(function()
         MV.Safe.SetShowHud(false)
         D.Say("📱 đã ẩn nút ảo 🛡 (vào khung 🛡 trong 📚 Script Hub để BẬT lại)", C.MUTED)
-    end)
+    kết thúc)
 
     local closeBtn = New("TextButton", {
-        Size = UDim2.new(0, 28, 0, 20), Position = UDim2.new(1, -32, 0, 2),
-        Text = "✕", BackgroundColor3 = C.RED, BackgroundTransparency = 0.2,
+        Kích thước = UDim2.new(0, 28, 0, 20), Vị trí = UDim2.new(1, -32, 0, 2),
+        Văn bản = "✕", Màu nền 3 = Đỏ đậm, Độ trong suốt nền = 0.2,
         TextColor3 = C.WHITE, Font = Enum.Font.GothamBold, TextSize = 10,
         BorderSizePixel = 0, ZIndex = 26,
     }, hud)
-    Corner(closeBtn, UDim.new(0, 6))
+    Góc(closeBtn, UDim.new(0, 6))
     closeBtn.Activated:Connect(function()
         MV.Safe.Stop()
-        D.Say("🚫 đã tắt 🛡 Bay An Toàn", C.YELLOW)
-    end)
+        D.Say("🚫 đã tắt 🛡 Bảy An Toàn", C.YELLOW)
+    kết thúc)
 
     local joyBG = New("Frame", {
-        Name = "JoyBG",
-        Size = UDim2.new(0, 110, 0, 110), Position = UDim2.new(0, 10, 0, 26),
+        Tên = "JoyBG",
+        Kích thước = UDim2.new(0, 110, 0, 110), Vị trí = UDim2.new(0, 10, 0, 26),
         BackgroundColor3 = C.SURFACE2, BackgroundTransparency = 0.15,
         BorderSizePixel = 0, ZIndex = 26,
     }, hud)
-    Corner(joyBG, UDim.new(0, 14))
-    Stroke(joyBG, C.BORDER, 1)
+    Góc(joyBG, UDim.new(0, 14))
+    Đột quỵ (joyBG, C.BORDER, 1)
     SF._joyBG = joyBG
 
     local joyKnob = New("Frame", {
-        Name = "JoyKnob",
-        Size = UDim2.new(0, 32, 0, 32), Position = UDim2.new(0.5, -16, 0.5, -16),
+        Tên = "JoyKnob",
+        Kích thước = UDim2.new(0, 32, 0, 32), Vị trí = UDim2.new(0.5, -16, 0.5, -16),
         BackgroundColor3 = C.ACCENT, BackgroundTransparency = 0.15,
         BorderSizePixel = 0, ZIndex = 27,
     }, joyBG)
-    Corner(joyKnob, UDim.new(1, 0))
+    Góc(joyKnob, UDim.new(1, 0))
     Stroke(joyKnob, C.WHITE, 1)
     SF._joyKnob = joyKnob
 
-    local function dirBtn(txt, x, y, vx, vz)
-        local b = New("TextButton", {
-            Size = UDim2.new(0, 28, 0, 28), Position = UDim2.new(0, x, 0, y),
-            Text = txt, BackgroundColor3 = C.SURFACE3, BackgroundTransparency = 0.2,
+    hàm cục bộ dirBtn(txt, x, y, vx, vz)
+        cục bộ b = New("TextButton", {
+            Kích thước = UDim2.new(0, 28, 0, 28), Vị trí = UDim2.new(0, x, 0, y),
+            Văn bản = txt, Màu nền 3 = C.SURFACE3, Độ trong suốt nền = 0.2,
             TextColor3 = C.DARK, Font = Enum.Font.GothamBold, TextSize = 12,
             BorderSizePixel = 0, ZIndex = 27,
         }, joyBG)
-        Corner(b, UDim.new(1, 0))
-        local holding = false
+        Góc(b, UDim.new(1, 0))
+        nắm giữ địa phương = sai
         b.InputBegan:Connect(function(inp)
-            if inp.UserInputType == Enum.UserInputType.MouseButton1 or inp.UserInputType == Enum.UserInputType.Touch then
-                holding = true
+            nếu inp.UserInputType == Enum.UserInputType.MouseButton1 hoặc inp.UserInputType == Enum.UserInputType.Touch thì
+                giữ = đúng
                 MV.Safe.SetVirt(vx, vz, SF._virtY)
-            end
-        end)
+            kết thúc
+        kết thúc)
         b.InputEnded:Connect(function(inp)
-            if inp.UserInputType == Enum.UserInputType.MouseButton1 or inp.UserInputType == Enum.UserInputType.Touch then
-                holding = false
+            nếu inp.UserInputType == Enum.UserInputType.MouseButton1 hoặc inp.UserInputType == Enum.UserInputType.Touch thì
+                giữ = sai
                 if not SF._dragging then MV.Safe.SetVirt(0, 0, SF._virtY) end
-            end
-        end)
-        return b
-    end
+            kết thúc
+        kết thúc)
+        trả lại b
+    kết thúc
     dirBtn("↑", 41, 2, 0, -1)
     dirBtn("↓", 41, 80, 0, 1)
     dirBtn("←", 2, 41, -1, 0)
     dirBtn("→", 80, 41, 1, 0)
 
-    local function updateJoy(inputPos)
+    hàm cục bộ updateJoy(inputPos)
         local okPos, absPos = pcall(function() return joyBG.AbsolutePosition end)
         local okSize, absSize = pcall(function() return joyBG.AbsoluteSize end)
         if not (okPos and okSize and absPos and absSize) then return end
@@ -7377,278 +7746,278 @@ function MV.Safe._BuildHud()
         local cy = absPos.Y + absSize.Y * 0.5
         local dx = inputPos.X - cx
         local dy = inputPos.Y - cy
-        local maxR = 38
-        local mag = math.sqrt(dx*dx + dy*dy)
-        if mag > maxR then
+        giá trị R tối đa cục bộ = 38
+        độ lớn cục bộ = math.sqrt(dx*dx + dy*dy)
+        nếu mag > maxR thì
             dx = dx / mag * maxR
             dy = dy / mag * maxR
             mag = maxR
-        end
+        kết thúc
         pcall(function()
             joyKnob.Position = UDim2.new(0.5, dx - 16, 0.5, dy - 16)
-        end)
-        local nx = dx / maxR
+        kết thúc)
+        nx cục bộ = dx / maxR
         local nz = dy / maxR
         pcall(function() MV.Safe.SetVirt(nx, nz, SF._virtY) end)
-    end
-    local function resetJoy()
+    kết thúc
+    hàm cục bộ resetJoy()
         SF._dragging = false
         pcall(function()
             joyKnob.Position = UDim2.new(0.5, -16, 0.5, -16)
-        end)
+        kết thúc)
         MV.Safe.SetVirt(0, 0, SF._virtY)
-    end
+    kết thúc
 
     joyBG.InputBegan:Connect(function(inp)
-        if inp.UserInputType == Enum.UserInputType.MouseButton1 or inp.UserInputType == Enum.UserInputType.Touch then
+        nếu inp.UserInputType == Enum.UserInputType.MouseButton1 hoặc inp.UserInputType == Enum.UserInputType.Touch thì
             SF._dragging = true
             updateJoy(inp.Position)
-        end
-    end)
+        kết thúc
+    kết thúc)
     joyBG.InputChanged:Connect(function(inp)
-        if SF._dragging and (inp.UserInputType == Enum.UserInputType.MouseMovement or inp.UserInputType == Enum.UserInputType.Touch) then
+        nếu SF._dragging và (inp.UserInputType == Enum.UserInputType.MouseMovement hoặc inp.UserInputType == Enum.UserInputType.Touch) thì
             updateJoy(inp.Position)
-        end
-    end)
+        kết thúc
+    kết thúc)
     trackConn(UserInputService.InputChanged:Connect(function(inp)
-        if SF._dragging and (inp.UserInputType == Enum.UserInputType.MouseMovement or inp.UserInputType == Enum.UserInputType.Touch) then
+        nếu SF._dragging và (inp.UserInputType == Enum.UserInputType.MouseMovement hoặc inp.UserInputType == Enum.UserInputType.Touch) thì
             local ok, pos = pcall(function() return inp.Position end)
-            if ok and pos then updateJoy(pos) end
-        end
-    end))
+            nếu ok và pos thì cập nhậtJoy(pos) kết thúc
+        kết thúc
+    kết thúc))
     trackConn(UserInputService.InputEnded:Connect(function(inp)
-        if inp.UserInputType == Enum.UserInputType.MouseButton1 or inp.UserInputType == Enum.UserInputType.Touch then
-            if SF._dragging then resetJoy() end
-        end
-    end))
+        nếu inp.UserInputType == Enum.UserInputType.MouseButton1 hoặc inp.UserInputType == Enum.UserInputType.Touch thì
+            nếu SF._dragging thì đặt lại Joy()
+        kết thúc
+    kết thúc))
 
-    local function vBtn(txt, x, y, w, h, color, cb)
-        local b = New("TextButton", {
-            Size = UDim2.new(0, w, 0, h), Position = UDim2.new(0, x, 0, y),
-            Text = txt, BackgroundColor3 = color or C.SURFACE3, BackgroundTransparency = 0.15,
+    hàm cục bộ vBtn(txt, x, y, w, h, color, cb)
+        cục bộ b = New("TextButton", {
+            Kích thước = UDim2.new(0, w, 0, h), Vị trí = UDim2.new(0, x, 0, y),
+            Văn bản = txt, Màu nền 3 = màu hoặc C.SURFACE3, Độ trong suốt nền = 0.15,
             TextColor3 = D.BestText(color or C.SURFACE3), Font = Enum.Font.GothamBold, TextSize = 11,
             BorderSizePixel = 0, ZIndex = 27,
         }, hud)
-        Corner(b, UDim.new(0, 8))
+        Góc(b, UDim.new(0, 8))
         Stroke(b, C.BORDER, 1)
-        local hold = false
-        if cb then
+        giữ cục bộ = sai
+        nếu cb thì
             b.InputBegan:Connect(function(inp)
-                if inp.UserInputType == Enum.UserInputType.MouseButton1 or inp.UserInputType == Enum.UserInputType.Touch then
-                    hold = true
+                nếu inp.UserInputType == Enum.UserInputType.MouseButton1 hoặc inp.UserInputType == Enum.UserInputType.Touch thì
+                    giữ = đúng
                     pcall(cb, true)
-                end
-            end)
+                kết thúc
+            kết thúc)
             b.InputEnded:Connect(function(inp)
-                if inp.UserInputType == Enum.UserInputType.MouseButton1 or inp.UserInputType == Enum.UserInputType.Touch then
-                    hold = false
+                nếu inp.UserInputType == Enum.UserInputType.MouseButton1 hoặc inp.UserInputType == Enum.UserInputType.Touch thì
+                    giữ = sai
                     pcall(cb, false)
-                end
-            end)
+                kết thúc
+            kết thúc)
             b.Activated:Connect(function() pcall(cb, nil) end)
-        end
-        return b
-    end
+        kết thúc
+        trả lại b
+    kết thúc
 
     vBtn("⬆", 130, 26, 40, 36, Color3.fromRGB(0,150,0), function(isDown)
         if isDown == true then MV.Safe.SetVirt(SF._virtX, SF._virtZ, 1)
         elseif isDown == false then MV.Safe.SetVirt(SF._virtX, SF._virtZ, 0)
-        else
+        khác
             pcall(function() MV.Nudge(2.5) end)
-        end
-    end)
+        kết thúc
+    kết thúc)
     vBtn("⬇", 130, 66, 40, 36, Color3.fromRGB(150,0,0), function(isDown)
         if isDown == true then MV.Safe.SetVirt(SF._virtX, SF._virtZ, -1)
         elseif isDown == false then MV.Safe.SetVirt(SF._virtX, SF._virtZ, 0)
-        else
+        khác
             pcall(function() MV.Nudge(-2.5) end)
-        end
-    end)
+        kết thúc
+    kết thúc)
 
-    vBtn("⏹ Dừng", 130, 108, 82, 26, C.RED, function() MV.Safe.Stop() end)
+    vBtn("⏹ cột", 130, 108, 82, 26, C.RED, function() MV.Safe.Stop() end)
     vBtn("⭕ Tâm", 216, 108, 52, 26, C.PURPLE, function() MV.Safe.Recenter() end)
 
     vBtn("↻", 174, 26, 36, 36, C.SURFACE3, function()
-        SF._ang = (SF._ang or 0) + 0.6
-    end)
+        SF._ang = (SF._ang hoặc 0) + 0,6
+    kết thúc)
 
-    local autoTog = vBtn("➡ Tự: BẬT", 10, 142, 82, 24, C.GREEN, function()
+    local autoTog = vBtn("➡Tự: BẬT", 10, 142, 82, 24, C.GREEN, function()
         MV.Safe.SetAuto(not SF.auto)
-        D.Say(SF.auto and "➡ tự bay: BẬT" or "➡ tự bay: TẮT", C.ACCENT)
+        D.Say(SF.auto và "➡ tự bay: BẬT" hoặc "➡ tự bay: TẮT", C.ACCENT)
         pcall(function() if S.SyncSafePanel then S.SyncSafePanel() end end)
         pcall(function() MV.Safe.SyncHud() end)
-    end)
-    local circTog = vBtn("⭕ Vòng: BẬT", 96, 142, 82, 24, C.GREEN, function()
+    kết thúc)
+    local CircTog = vBtn("⭕ Vòng: BẬT", 96, 142, 82, 24, C.GREEN, function()
         MV.Safe.SetCircle(not SF.circle)
-        D.Say(SF.circle and "⭕ vòng tròn: BẬT" or "⭕ vòng tròn: TẮT", C.ACCENT)
+        D.Say(SF.circle và "⭕ vòng tròn: BẬT" hoặc "⭕ vòng tròn: TẮT", C.ACCENT)
         pcall(function() if S.SyncSafePanel then S.SyncSafePanel() end end)
         pcall(function() MV.Safe.SyncHud() end)
-    end)
+    kết thúc)
 
-    local speedLbl = New("TextLabel", {
-        Size = UDim2.new(0, 108, 0, 24), Position = UDim2.new(0, 182, 0, 142),
-        Text = "💨 60", BackgroundTransparency = 1, TextColor3 = C.MUTED,
+    tốc độ cục bộ = New("TextLabel", {
+        Kích thước = UDim2.new(0, 108, 0, 24), Vị trí = UDim2.new(0, 182, 0, 142),
+        Văn bản = "💨 60", Độ trong suốt nền = 1, Màu chữ 3 = C.MUTED,
         Font = Enum.Font.GothamMedium, TextSize = 9, TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 27,
     }, hud)
 
-    do
-        local dragging, startPos, startInput
-        title.InputBegan:Connect(function(inp)
-            if inp.UserInputType == Enum.UserInputType.MouseButton1 or inp.UserInputType == Enum.UserInputType.Touch then
-                dragging = true
+    LÀM
+        kéo cục bộ, vị trí bắt đầu, đầu vào bắt đầu
+        tiêu đề.Đầu vàoBắt đầu:Kết nối(hàm(inp)
+            nếu inp.UserInputType == Enum.UserInputType.MouseButton1 hoặc inp.UserInputType == Enum.UserInputType.Touch thì
+                kéo = đúng
                 startInput = inp.Position
                 startPos = hud.Position
-            end
-        end)
+            kết thúc
+        kết thúc)
         trackConn(UserInputService.InputChanged:Connect(function(inp)
-            if dragging and (inp.UserInputType == Enum.UserInputType.MouseMovement or inp.UserInputType == Enum.UserInputType.Touch) then
+            nếu kéo và (inp.UserInputType == Enum.UserInputType.MouseMovement hoặc inp.UserInputType == Enum.UserInputType.Touch) thì
                 local delta = inp.Position - startInput
                 hud.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-            end
-        end))
+            kết thúc
+        kết thúc))
         trackConn(UserInputService.InputEnded:Connect(function(inp)
-            if inp.UserInputType == Enum.UserInputType.MouseButton1 or inp.UserInputType == Enum.UserInputType.Touch then
-                dragging = false
-            end
-        end))
-    end
+            nếu inp.UserInputType == Enum.UserInputType.MouseButton1 hoặc inp.UserInputType == Enum.UserInputType.Touch thì
+                kéo lê = sai
+            kết thúc
+        kết thúc))
+    kết thúc
 
-    function SF._hudUpdate()
+    hàm SF._hudUpdate()
         pcall(function()
-            if autoTog then
-                autoTog.Text = SF.auto and "➡ Tự: BẬT" or "➡ Tự: TẮT"
-                autoTog.BackgroundColor3 = SF.auto and C.GREEN or C.SURFACE3
+            nếu autoTog thì
+                autoTog.Text = SF.auto và "➡ Tự: BẬT" hoặc "➡ Tự: TẮT"
+                autoTog.BackgroundColor3 = SF.auto và C.GREEN hoặc C.SURFACE3
                 autoTog.TextColor3 = D.BestText(autoTog.BackgroundColor3)
-            end
-            if circTog then
-                circTog.Text = SF.circle and "⭕ Vòng: BẬT" or "⭕ Vòng: TẮT"
+            kết thúc
+            nếu circTog thì
+                CircTog.Text = SF.circle và "⭕ Vòng: BẬT" hoặc "⭕ Vòng: TẮT"
                 circTog.BackgroundColor3 = SF.circle and C.GREEN or C.SURFACE3
-                circTog.TextColor3 = D.BestText(circTog.BackgroundColor3)
-            end
-            if speedLbl then
-                local thr = SF.threats or 0
+                CircTog.TextColor3 = D.BestText(circTog.BackgroundColor3)
+            kết thúc
+            nếu tốc độLbl thì
+                mối đe dọa cục bộ = SF.threats hoặc 0
                 speedLbl.Text = string.format("💨 %g · %s%d", SF.speed or 60, thr>0 and "⚠️" or "✅", thr)
-                speedLbl.TextColor3 = thr>0 and C.YELLOW or C.MUTED
-            end
-        end)
-    end
+                speedLbl.TextColor3 = thr>0 và C.YELLOW hoặc C.MUTED
+            kết thúc
+        kết thúc)
+    kết thúc
 
     SF._hud = hud
-    return hud
-end
+    trả về hud
+kết thúc
 
-function MV.Safe.SyncHud()
+hàm MV.Safe.SyncHud()
     pcall(function()
         local hud = MV.Safe._BuildHud()
-        if hud then
+        nếu hud thì
             local should = (SF.on == true) and (SF.showHud ~= false)
-            hud.Visible = should
+            hud.Visible = nên
             if should and SF._hudUpdate then SF._hudUpdate() end
-        end
-        if SF.on then
-            local old = MV._hud
-            if old then old.Visible = false end
-        else
+        kết thúc
+        nếu SF.on thì
+            cục bộ cũ = MV._hud
+            nếu cũ thì old.Visible = false kết thúc
+        khác
             pcall(function() MV.SyncHud() end)
-        end
-    end)
-end
+        kết thúc
+    kết thúc)
+kết thúc
 
-end   -- hết khối 🛡 BAY AN TOÀN (v4.18)
+end -- hết khối 🛡 BAY AN TOÀN (v4.18)
 
--- ---------- 🪩 THẢM KÍNH (chỉnh Rộng × Cao × Dài + khoảng cách tới chân) ----------
--- Có hai chế độ độc lập:
---   • SetCarpet: thảm bám dưới chân để tương thích API cũ.
---   • PlaceGlass: các tấm kính CỐ ĐỊNH, được lưu trong _placedGlasses và không bị
---     tấm mới ghi đè. UI dùng các record { id, part, position, size } bên dưới.
-function MV.SetCarpetSize(w, h, l)
-    MV.carpetW = mvClamp(w, 0.5, 100, MV.carpetW or 6)
-    MV.carpetH = mvClamp(h, 0.1, 20, MV.carpetH or 0.5)
-    MV.carpetL = mvClamp(l, 0.5, 100, MV.carpetL or 6)
-    if MV._carpet and MV._carpet.Parent then
+--------- 🪩 THẢM KÍNH (chỉnh ngắn × Cao × Dài + khoảng cách tới chân) ----------
+-- Có hai chế độ cài đặt độc lập:
+-- • SetCarpet: thảm bám dưới chân để tương thích API cũ.
+-- • PlaceGlass: các tấm kính CỐ ĐỊNH, được lưu trong _placedGlasses và không bị
+-- tấm mới ghi đè. UI use record { id, part, location, size } bên dưới.
+Hàm MV.SetCarpetSize(w, h, l)
+    MV.carpetW = mvClamp(w, 0.5, 100, MV.carpetW hoặc 6)
+    MV.carpetH = mvClamp(h, 0.1, 20, MV.carpetH hoặc 0.5)
+    MV.carpetL = mvClamp(l, 0.5, 100, MV.carpetL hoặc 6)
+    nếu MV._carpet và MV._carpet.Parent thì
         pcall(function()
             MV._carpet.Size = Vector3.new(MV.carpetW, MV.carpetH, MV.carpetL)
             MV._MakeEdge(MV._carpet)
-        end)
-    end
-    return MV.carpetW, MV.carpetH, MV.carpetL
-end
-function MV.SetCarpetGap(g)
-    MV.carpetGap = mvClamp(g, -10, 50, MV.carpetGap or 0.2)
-    return MV.carpetGap
-end
-function MV.FootY()
-    local r = MV.Root()
-    if not r then return nil end
-    return r.Position.Y - 3.0
-end
-function MV._StopCarpet()
+        kết thúc)
+    kết thúc
+    Trả về MV.carpetW, MV.carpetH, MV.carpetL
+kết thúc
+hàm MV.SetCarpetGap(g)
+    MV.carpetGap = mvClamp(g, -10, 50, MV.carpetGap hoặc 0.2)
+    trả về MV.carpetGap
+kết thúc
+hàm MV.FootY()
+    cục bộ r = MV.Root()
+    nếu không phải r thì trả về nil.
+    trả về r.Vị trí.Y - 3.0
+kết thúc
+hàm MV._StopCarpet()
     if MV._carpet then pcall(function() MV._carpet:Destroy() end) end
     MV._carpet = nil
     MV.carpetY = nil
     pcall(function() RunService:UnbindFromRenderStep("Carpet") end)
-end
-function MV.CarpetHost()
-    return workspace
-end
-function MV._MakeEdge(cp)
-    if not cp then return end
-    local old = nil
+kết thúc
+hàm MV.CarpetHost()
+    trả về không gian làm việc
+kết thúc
+hàm MV._MakeEdge(cp)
+    nếu không phải cp thì trả về end
+    cục bộ cũ = nil
     pcall(function() old = cp:FindFirstChild("BC_GlassEdge") end)
-    if not MV.carpetEdge then
-        if old then pcall(function() old:Destroy() end) end
-        return
-    end
-    if old then return end
+    nếu không phải MV.carpetEdge thì
+        nếu cũ thì pcall(function() old:Destroy() end) end
+        trở lại
+    kết thúc
+    nếu cũ thì trả về cuối
     pcall(function()
-        local edge = Instance.new("SelectionBox")
+        cạnh cục bộ = Instance.new("SelectionBox")
         edge.Name = "BC_GlassEdge"
         edge.Adornee = cp
-        edge.LineThickness = 0.035
-        edge.SurfaceTransparency = 1
+        độ dày đường viền = 0,035
+        cạnh.SurfaceTransparency = 1
         edge.Color3 = C.ACCENT
-        edge.Parent = cp
-    end)
-end
-function MV.SetCarpetEdge(on)
+        cạnh.Cha = cp
+    kết thúc)
+kết thúc
+hàm MV.SetCarpetEdge(on)
     MV.carpetEdge = (on == true)
     pcall(function() MV._MakeEdge(MV._carpet) end)
     for _, rec in ipairs(MV.GetPlacedGlasses and MV.GetPlacedGlasses() or {}) do
         pcall(function() MV._MakeEdge(rec.part) end)
-    end
-    return MV.carpetEdge
-end
-function MV.SetCarpetHold(on)
+    kết thúc
+    trả về MV.carpetEdge
+kết thúc
+hàm MV.SetCarpetHold(on)
     MV.carpetHold = (on == true)
-    return MV.carpetHold
-end
-function MV.SetCarpetSlack(n)
-    MV.carpetSlack = mvClamp(n, 0, 50, MV.carpetSlack or 0.5)
-    return MV.carpetSlack
-end
-function MV.CreateCarpet(y)
-    local r = MV.Root()
-    if not r then return nil end
+    trả lại MV.carpetHold
+kết thúc
+hàm MV.SetCarpetSlack(n)
+    MV.carpetSlack = mvClamp(n, 0, 50, MV.carpetSlack hoặc 0.5)
+    trả về MV.carpetSlack
+kết thúc
+hàm MV.CreateCarpet(y)
+    cục bộ r = MV.Root()
+    nếu không phải r thì trả về nil.
     local cp = MV._carpet
-    if not cp or not cp.Parent then
+    nếu không phải cp hoặc không phải cp.Parent thì
         pcall(function() if cp then cp:Destroy() end end)
         cp = New("Part", {
-            Name = "BC_GlassCarpet_Follow",
-            Size = Vector3.new(MV.carpetW or 6, MV.carpetH or 0.5, MV.carpetL or 6),
-            Anchored = true, CanCollide = true, CanTouch = false,
-            Material = Enum.Material.Glass, Color = Color3.fromRGB(116, 221, 255),
-            Transparency = 0.42, Reflectance = 0.04, CastShadow = false,
+            Tên = "BC_GlassCarpet_Follow",
+            Kích thước = Vector3.new(MV.carpetW hoặc 6, MV.carpetH hoặc 0.5, MV.carpetL hoặc 6),
+            Cố định = true, CanCollide = true, CanTouch = false,
+            Vật liệu = Enum.Material.Glass, Màu sắc = Color3.fromRGB(116, 221, 255),
+            Độ trong suốt = 0.42, Độ phản xạ = 0.04, Bóng đổ = false,
         }, MV.CarpetHost())
         MV._carpet = cp
-    end
+    kết thúc
     local hh = mvClamp(MV.carpetH, 0.1, 20, 0.5)
-    local cy = tonumber(y)
-    if cy == nil then
+    cục bộ cy = tonumber(y)
+    nếu cy == nil thì
         cy = MV.carpetY
-        if cy == nil then
-            cy = (MV.FootY() or r.Position.Y - 3.0) - (MV.carpetGap or 0.2) - hh / 2
-        end
-    end
+        nếu cy == nil thì
+            cy = (MV.FootY() hoặc r.Position.Y - 3.0) - (MV.carpetGap hoặc 0.2) - hh / 2
+        kết thúc
+    kết thúc
     MV.carpetY = cy
     pcall(function()
         cp.Size = Vector3.new(
@@ -7664,422 +8033,422 @@ function MV.CreateCarpet(y)
         cp.Transparency = 0.42
         cp.Color = Color3.fromRGB(116, 221, 255)
         MV._MakeEdge(cp)
-    end)
-    return cp
-end
-function MV.SetCarpet(on)
-    on = (on == true)
-    if not on then
+    kết thúc)
+    trả về cp
+kết thúc
+hàm MV.SetCarpet(on)
+    bật = (bật == đúng)
+    nếu không bật thì
         MV.carpet = false
         MV._StopCarpet()
         MV._carpetRetries = 0
         pcall(function() if MV.SyncHud then MV.SyncHud() end end)
-        return false
-    end
-    if not MV.Root() then
+        trả về false
+    kết thúc
+    nếu không phải MV.Root() thì
         return false, "chưa có nhân vật để tạo thảm"
-    end
+    kết thúc
     MV.carpet = true
     MV._carpetRetries = 0
     MV.carpetY = nil
     local cp = MV.CreateCarpet()
-    if not cp then
+    nếu không phải là CP thì
         MV.carpet = false
-        return false, "không tạo được thảm kính"
-    end
+        return false, "không thể tạo được kính râm"
+    kết thúc
     pcall(function() RunService:UnbindFromRenderStep("Carpet") end)
     local okBind = pcall(function()
         RunService:BindToRenderStep("Carpet", Enum.RenderPriority.Character.Value + 1, function()
-            if not MV.carpet then return end
-            local root = MV.Root()
-            if not root then return end
-            if not MV._carpet or not MV._carpet.Parent then
-                MV._carpetRetries = (MV._carpetRetries or 0) + 1
-                if MV._carpetRetries <= 3 then
+            nếu không phải MV.carpet thì trả về end
+            gốc cục bộ = MV.Root()
+            nếu không phải là root thì trả về end
+            nếu không phải MV._carpet hoặc không phải MV._carpet.Parent thì
+                MV._carpetRetries = (MV._carpetRetries hoặc 0) + 1
+                nếu MV._carpetRetries <= 3 thì
                     MV.CreateCarpet(MV.carpetY)
-                end
-                return
-            end
-            local y = MV.carpetY
-            if y == nil then
-                y = (MV.FootY() or root.Position.Y - 3.0) - (MV.carpetGap or 0.2) - (MV.carpetH or 0.5) / 2
+                kết thúc
+                trở lại
+            kết thúc
+            cục bộ y = MV.carpetY
+            nếu y == nil thì
+                y = (MV.FootY() hoặc căn bậc hai của vị trí Y - 3.0) - (MV.carpetGap hoặc 0.2) - (MV.carpetH hoặc 0.5) / 2
                 MV.carpetY = y
-            end
+            kết thúc
             pcall(function() MV._carpet.CFrame = CFrame.new(root.Position.X, y, root.Position.Z) end)
-        end)
-    end)
-    if not okBind then
+        kết thúc)
+    kết thúc)
+    nếu không phải okBind thì
         MV.SetCarpet(false)
-        return false, "executor không bind được thảm kính"
-    end
+        trả về sai, "người thực thi không liên kết được kính kính"
+    kết thúc
     pcall(function() if MV.SyncHud then MV.SyncHud() end end)
-    return true
-end
+    trả về giá trị đúng
+kết thúc
 
--- ---------- v4.24: ĐẶT KÍNH DƯỚI CHÂN (đặt nhiều tấm kính cố định) ----------
-MV._placedGlasses = MV._placedGlasses or {}
+--------- v4.24: ĐẶT KÍNH DƯỚI CHÂN (đặt nhiều tấm kính cố định) ----------
+MV._placedGlasses = MV._placedGlasses hoặc {}
 MV._glassId = tonumber(MV._glassId) or 0
 MV.autoGlass = MV.autoGlass == true
-MV._lastGlassPos = MV._lastGlassPos or nil
+MV._lastGlassPos = MV._lastGlassPos hoặc nil
 MV.glassMax = mvClamp(MV.glassMax, 1, 1000, 250)
 MV._autoGlassBound = MV._autoGlassBound == true
 
-function MV._GlassPart(entry)
+hàm MV._GlassPart(entry)
     if type(entry) == "table" then return entry.part or entry.Part end
-    return entry
-end
-function MV._GlassRecord(entry, fallbackId)
-    if type(entry) == "table" then
+    mục nhập trả lại
+kết thúc
+hàm MV._GlassRecord(entry, fallbackId)
+    nếu type(entry) == "table" thì
         local p = MV._GlassPart(entry)
-        if p then
-            entry.part = p
+        nếu p thì
+            phần nhập = p
             entry.id = tonumber(entry.id) or fallbackId
-            return entry
-        end
-        return nil
-    end
-    if entry then
-        return { id = fallbackId, part = entry }
-    end
-    return nil
-end
-function MV._GlassChanged()
-    local refresh = S.GlassRefreshList
+            mục nhập trả lại
+        kết thúc
+        trả về nil
+    kết thúc
+    nếu nhập liệu thì
+        trả về { id = fallbackId, part = entry }
+    kết thúc
+    trả về nil
+kết thúc
+hàm MV._GlassChanged()
+    làm mới cục bộ = S.GlassRefreshList
     if type(refresh) ~= "function" then return end
-    if MV._glassRefreshQueued then return end
+    nếu MV._glassRefreshQueued thì trả về end
     MV._glassRefreshQueued = true
-    local function run()
-        MV._glassRefreshQueued = false
+    hàm cục bộ run()
+        MV._glassRefreshQueued = sai
         pcall(refresh)
-    end
+    kết thúc
     if task and type(task.defer) == "function" then task.defer(run) else run() end
-end
-function MV._GlassPosition(root)
-    root = root or MV.Root()
-    if not root then return nil end
+kết thúc
+hàm MV._GlassPosition(root)
+    root = root hoặc MV.Root()
+    nếu không phải là root thì trả về nil.
     local h = mvClamp(MV.carpetH, 0.1, 20, 0.5)
-    local foot = MV.FootY() or (root.Position.Y - root.Size.Y / 2)
-    return Vector3.new(
+    chân cục bộ = MV.FootY() hoặc (root.Position.Y - root.Size.Y / 2)
+    trả về Vector3.new(
         root.Position.X,
         foot - mvClamp(MV.carpetGap, -10, 50, 0.2) - h / 2,
         root.Position.Z
     )
-end
-function MV._CreateGlassAt(pos)
-    if not pos then return nil, "không có vị trí đặt kính" end
-    local list = MV._placedGlasses
-    if type(list) ~= "table" then
-        list = {}
-        MV._placedGlasses = list
-    end
-    if #list >= mvClamp(MV.glassMax, 1, 1000, 250) then
+kết thúc
+hàm MV._CreateGlassAt(pos)
+    nếu không phải pos thì trả về nil, "không có vị trí đặt kính" end
+    danh sách cục bộ = MV._placedGlasses
+    nếu kiểu dữ liệu (danh sách) khác với "bảng" thì
+        danh sách = {}
+        MV._placedGlasses = danh sách
+    kết thúc
+    nếu #list >= mvClamp(MV.glassMax, 1, 1000, 250) thì
         return nil, "đã đạt giới hạn " .. tostring(MV.glassMax) .. " tấm kính"
-    end
+    kết thúc
     MV._glassId = (tonumber(MV._glassId) or 0) + 1
-    local id = MV._glassId
+    ID cục bộ = MV._glassId
     local w = mvClamp(MV.carpetW, 0.5, 100, 6)
     local h = mvClamp(MV.carpetH, 0.1, 20, 0.5)
     local l = mvClamp(MV.carpetL, 0.5, 100, 6)
-    local part = New("Part", {
-        Name = string.format("BC_GlassCarpet_%03d", id),
-        Size = Vector3.new(w, h, l), CFrame = CFrame.new(pos),
-        Anchored = true, CanCollide = true, CanTouch = false,
-        Material = Enum.Material.Glass, Color = Color3.fromRGB(116, 221, 255),
-        Transparency = 0.42, Reflectance = 0.04, CastShadow = false,
+    phần cục bộ = Mới("Phần", {
+        Tên = chuỗi.format("BC_GlassCarpet_%03d", id),
+        Kích thước = Vector3.new(w, h, l), CFrame = CFrame.new(pos),
+        Cố định = true, CanCollide = true, CanTouch = false,
+        Vật liệu = Enum.Material.Glass, Màu sắc = Color3.fromRGB(116, 221, 255),
+        Độ trong suốt = 0.42, Độ phản xạ = 0.04, Bóng đổ = false,
     }, MV.CarpetHost())
     pcall(function()
         part:SetAttribute("BananaCatGlass", true)
         part:SetAttribute("BananaCatGlassId", id)
         part:SetAttribute("BananaCatGlassFixed", true)
-    end)
+    kết thúc)
     local rec = { id = id, part = part, position = pos, size = Vector3.new(w, h, l), createdAt = os.clock() }
     table.insert(list, rec)
     MV._MakeEdge(part)
-    return rec
-end
-function MV._RecoverPlacedGlasses()
+    trả lại bản ghi
+kết thúc
+hàm MV._RecoverPlacedGlasses()
     if type(MV._placedGlasses) ~= "table" then MV._placedGlasses = {} end
-    local recovered = {}
-    local ok, children = pcall(function() return workspace:GetChildren() end)
+    cục bộ đã hồi phục = {}
+    cục bộ ok, children = pcall(function() return workspace:GetChildren() end)
     if not ok or type(children) ~= "table" then return 0 end
     for _, child in ipairs(children) do
         local idText = nil
         pcall(function()
             if child:IsA("BasePart") then idText = tostring(child.Name):match("^BC_GlassCarpet_(%d+)$") end
-        end)
-        local id = tonumber(idText)
-        if id then
+        kết thúc)
+        ID cục bộ = tonumber(idText)
+        nếu id thì
             recovered[#recovered + 1] = { id = id, part = child, position = child.Position, size = child.Size }
             if id > (tonumber(MV._glassId) or 0) then MV._glassId = id end
             pcall(function() MV._MakeEdge(child) end)
-        end
-    end
+        kết thúc
+    kết thúc
     table.sort(recovered, function(a, b) return (a.id or 0) < (b.id or 0) end)
     for _, rec in ipairs(recovered) do table.insert(MV._placedGlasses, rec) end
-    return #recovered
-end
+    trả về #đã phục hồi
+kết thúc
 if type(MV._placedGlasses) ~= "table" then MV._placedGlasses = {} end
 if #MV._placedGlasses == 0 then pcall(MV._RecoverPlacedGlasses) end
 
-function MV.PlaceGlass(silent)
-    local root = MV.Root()
-    if not root then return false, "chưa có nhân vật để đặt kính" end
-    local pos = MV._GlassPosition(root)
+hàm MV.PlaceGlass(silent)
+    gốc cục bộ = MV.Root()
+    nếu không root thì trả về false, "chưa có nhân vật để đặt kính" end
+    vị trí cục bộ = MV._GlassPosition(root)
     local rec, err = MV._CreateGlassAt(pos)
-    if not rec then return false, err end
+    nếu không nhận được thì trả về false, lỗi kết thúc
     MV._lastGlassPos = root.Position
-    if not silent then MV._GlassChanged() end
-    return true, rec.part, rec
-end
-function MV.ClearPlacedGlasses()
+    nếu không im lặng thì MV._GlassChanged() kết thúc
+    trả về true, rec.part, rec
+kết thúc
+hàm MV.ClearPlacedGlasses()
     pcall(function() if MV.StopGlassFly then MV.StopGlassFly() end end)
     if MV.autoGlass then pcall(function() MV.SetAutoGlass(false) end) end
-    local n = 0
-    if type(MV._placedGlasses) == "table" then
+    cục bộ n = 0
+    nếu type(MV._placedGlasses) == "table" thì
         for _, entry in ipairs(MV._placedGlasses) do
-            local part = MV._GlassPart(entry)
-            if part and part.Parent then
+            phần cục bộ = MV._GlassPart(entry)
+            nếu phần và phần cha thì
                 pcall(function() part:Destroy() end)
                 n = n + 1
-            end
-        end
-    end
+            kết thúc
+        kết thúc
+    kết thúc
     MV._placedGlasses = {}
     MV._lastGlassPos = nil
     MV._GlassChanged()
-    return n
-end
-function MV.RemoveGlassAt(idx)
+    trả về n
+kết thúc
+hàm MV.RemoveGlassAt(idx)
     local n = math.floor(tonumber(idx) or 0)
-    if n < 1 or type(MV._placedGlasses) ~= "table" then return false, "không tìm thấy tấm kính" end
-    local entry = MV._placedGlasses[n]
-    if not entry then return false, "không tìm thấy tấm kính" end
-    local part = MV._GlassPart(entry)
-    if MV._glassFlyTarget == entry or MV._glassFlyIdx == n then
+    if n < 1 hoặc type(MV._placedGlasses) ~= "table" thì trả về false, "không tìm thấy ống kính" end
+    mục nhập cục bộ = MV._placedGlasses[n]
+    nếu không nhập thì trả về false, "không tìm thấy tấm kính" end
+    phần cục bộ = MV._GlassPart(entry)
+    nếu MV._glassFlyTarget == entry hoặc MV._glassFlyIdx == n thì
         pcall(function() MV.StopGlassFly() end)
-    end
+    kết thúc
     table.remove(MV._placedGlasses, n)
     if part and part.Parent then pcall(function() part:Destroy() end) end
     MV._GlassChanged()
-    return true, part, entry
-end
-function MV.RemoveGlass(part)
-    if not part or type(MV._placedGlasses) ~= "table" then return false, "không tìm thấy tấm kính" end
+    trả về giá trị đúng, phần, mục nhập
+kết thúc
+hàm MV.RemoveGlass(part)
+    if not part or type(MV._placedGlasses) ~= "table" thì trả về false, "không tìm thấy tấm kính" end
     for i, entry in ipairs(MV._placedGlasses) do
         if MV._GlassPart(entry) == part then return MV.RemoveGlassAt(i) end
-    end
-    return false, "không tìm thấy tấm kính"
-end
-function MV.GetPlacedGlasses()
-    local out = {}
+    kết thúc
+    return false, "không tìm thấy ống kính"
+kết thúc
+hàm MV.GetPlacedGlasses()
+    đầu ra cục bộ = {}
     if type(MV._placedGlasses) ~= "table" then MV._placedGlasses = {} end
     for i = #MV._placedGlasses, 1, -1 do
-        local old = MV._placedGlasses[i]
-        local rec = MV._GlassRecord(old, i)
-        local part = rec and rec.part
-        if not part or not part.Parent then
+        cục bộ cũ = MV._placedGlasses[i]
+        rec cục bộ = MV._GlassRecord(cũ, i)
+        phần cục bộ = rec và rec.part
+        nếu không phải là một phần hoặc không phải là một phần của cha mẹ thì
             table.remove(MV._placedGlasses, i)
-        else
+        khác
             rec.position = part.Position
             rec.size = part.Size
             out[i] = rec
-        end
-    end
-    local compact = {}
+        kết thúc
+    kết thúc
+    cục bộ nhỏ gọn = {}
     for i = 1, #MV._placedGlasses do
-        local rec = MV._GlassRecord(MV._placedGlasses[i], i)
+        rec cục bộ = MV._GlassRecord(MV._placedGlasses[i], i)
         if rec and rec.part and rec.part.Parent then compact[#compact + 1] = rec end
-    end
+    kết thúc
     if #compact ~= #MV._placedGlasses then MV._placedGlasses = compact end
-    return compact
-end
-function MV.SetAutoGlass(on)
-    local want = (on == true)
-    MV.autoGlass = want
-    if not want then
+    trả lại nhỏ gọn
+kết thúc
+hàm MV.SetAutoGlass(on)
+    mong muốn cục bộ = (bật == đúng)
+    MV.autoGlass = muốn
+    nếu không muốn thì
         MV._autoGlassBound = false
         pcall(function() RunService:UnbindFromRenderStep("BC_AutoGlass") end)
         MV._GlassChanged()
-        return false
-    end
-    if not MV._autoGlassBound then
-        local ok = pcall(function()
+        trả về false
+    kết thúc
+    nếu không phải MV._autoGlassBound thì
+        cục bộ ok = pcall(function()
             RunService:BindToRenderStep("BC_AutoGlass", Enum.RenderPriority.Camera.Value - 5, function()
                 pcall(function()
-                    local root = MV.Root()
+                    gốc cục bộ = MV.Root()
                     if root then MV._AutoGlassTick(root.Position) end
-                end)
-            end)
-        end)
+                kết thúc)
+            kết thúc)
+        kết thúc)
         MV._autoGlassBound = ok
-    end
-    local root = MV.Root()
+    kết thúc
+    gốc cục bộ = MV.Root()
     if root then pcall(function() MV._AutoGlassTick(root.Position) end) end
     MV._GlassChanged()
-    return MV.autoGlass
-end
-function MV._AutoGlassTick(curPos)
+    trả về MV.autoGlass
+kết thúc
+hàm MV._AutoGlassTick(curPos)
     if not MV.autoGlass or not curPos then return false end
     local last = MV._lastGlassPos
     local w = mvClamp(MV.carpetW, 0.5, 100, 6)
     local l = mvClamp(MV.carpetL, 0.5, 100, 6)
-    local step = mvClamp(math.min(w, l) * 0.65, 1, 100, 3)
-    if last then
+    bước cục bộ = mvClamp(math.min(w, l) * 0.65, 1, 100, 3)
+    nếu cuối cùng thì
         local dx, dz = curPos.X - last.X, curPos.Z - last.Z
-        if dx * dx + dz * dz < step * step then return false end
-    end
+        nếu dx * dx + dz * dz < step * step thì trả về false
+    kết thúc
     local ok = MV.PlaceGlass(true)
-    if ok then
+    nếu được thì
         MV._lastGlassPos = curPos
         MV._GlassChanged()
-        return true
-    end
-    return false
-end
+        trả về giá trị đúng
+    kết thúc
+    trả về false
+kết thúc
 
--- ---------- v4.27: BAY TỚI TẤM KÍNH (đổi đặt kính thành bay tới kính, chỉnh được tốc độ) ----------
-MV.glassFlySpeed = mvClamp(MV.glassFlySpeed, 1, 2000, 60)
-MV._glassFlyTarget = MV._glassFlyTarget or nil
+--------- v4.27: BAY TẤM KÍNH (đổi đặt kính thành bay tới kính, chỉnh tốc độ) ----------
+MV.glassFlySpeed ​​= mvClamp(MV.glassFlySpeed, 1, 2000, 60)
+MV._glassFlyTarget = MV._glassFlyTarget hoặc không
 MV._glassFlyActive = MV._glassFlyActive == true
-MV._glassFlyIdx = MV._glassFlyIdx or nil
-MV._glassFlyBV = MV._glassFlyBV or nil
-MV._glassFlyBG = MV._glassFlyBG or nil
-MV._glassFlyNcPrev = MV._glassFlyNcPrev or nil
-MV._glassFlyHum = MV._glassFlyHum or nil
+MV._glassFlyIdx = MV._glassFlyIdx hoặc không
+MV._glassFlyBV = MV._glassFlyBV hoặc không
+MV._glassFlyBG = MV._glassFlyBG hoặc không
+MV._glassFlyNcPrev = MV._glassFlyNcPrev hoặc nil
+MV._glassFlyHum = MV._glassFlyHum hoặc không
 MV._glassFlyPlatformStandPrev = MV._glassFlyPlatformStandPrev
 MV._glassFlyAutoRotatePrev = MV._glassFlyAutoRotatePrev
 
-function MV.SetGlassFlySpeed(n)
-    local v = tonumber(n)
-    if v == nil or v ~= v then return false, "nhập tốc độ bay 1-2000" end
-    MV.glassFlySpeed = mvClamp(v, 1, 2000, MV.glassFlySpeed or 60)
-    return true, MV.glassFlySpeed
-end
-function MV._EnsureGlassFlyBV()
-    local r = MV.Root()
-    if not r then return nil, nil end
-    if MV._glassFlyBV and MV._glassFlyBV.Parent == r and MV._glassFlyBG and MV._glassFlyBG.Parent == r then
+hàm MV.SetGlassFlySpeed(n)
+    cục bộ v = tonumber(n)
+    if v == nil hoặc v ~= v thì trả về false, "nhập tốc độ bay 1-2000" end
+    MV.glassFlySpeed ​​= mvClamp(v, 1, 2000, MV.glassFlySpeed ​​hoặc 60)
+    trả về true, MV.glassFlySpeed
+kết thúc
+hàm MV._EnsureGlassFlyBV()
+    cục bộ r = MV.Root()
+    nếu không phải r thì trả về nil, nil end
+    nếu MV._glassFlyBV và MV._glassFlyBV.Parent == r và MV._glassFlyBG và MV._glassFlyBG.Parent == r thì
         local h = MV.Hum()
-        if h and MV._glassFlyHum ~= h then
+        nếu h và MV._glassFlyHum ~= h thì
             MV._glassFlyHum = h
             pcall(function() MV._glassFlyPlatformStandPrev = h.PlatformStand end)
             pcall(function() MV._glassFlyAutoRotatePrev = h.AutoRotate end)
             pcall(function() h.PlatformStand = true; h.AutoRotate = false end)
-        end
-        return MV._glassFlyBV, MV._glassFlyBG
-    end
-    pcall(function() if MV._glassFlyBV then MV._glassFlyBV:Destroy() end end)
+        kết thúc
+        trả về MV._glassFlyBV, MV._glassFlyBG
+    kết thúc
+    pcall(function() nếu MV._glassFlyBV thì MV._glassFlyBV:Destroy() kết thúc)
     pcall(function() if MV._glassFlyBG then MV._glassFlyBG:Destroy() end end)
-    MV._glassFlyBV, MV._glassFlyBG = nil, nil
+    MV._glassFlyBV, MV._glassFlyBG = không, không
     local bv = New("BodyVelocity", {
-        Name = "BC_GlassFlyVel", MaxForce = Vector3.new(1e9, 1e9, 1e9), Velocity = Vector3.new(0, 0, 0)
+        Tên = "BC_GlassFlyVel", Lực tối đa = Vector3.new(1e9, 1e9, 1e9), Vận tốc = Vector3.new(0, 0, 0)
     }, r)
-    local bg = New("BodyGyro", {
-        Name = "BC_GlassFlyGyro", MaxTorque = Vector3.new(1e9, 1e9, 1e9), P = 1e4, D = 50
+    cục bộ bg = New("BodyGyro", {
+        Tên = "BC_GlassFlyGyro", Mô-men xoắn cực đại = Vector3.new(1e9, 1e9, 1e9), P = 1e4, D = 50
     }, r)
     MV._glassFlyBV, MV._glassFlyBG = bv, bg
     local h = MV.Hum()
-    if h then
+    nếu h thì
         MV._glassFlyHum = h
         pcall(function() MV._glassFlyPlatformStandPrev = h.PlatformStand end)
         pcall(function() MV._glassFlyAutoRotatePrev = h.AutoRotate end)
         pcall(function() h.PlatformStand = true; h.AutoRotate = false end)
-    end
-    return bv, bg
-end
-function MV.StopGlassFly()
+    kết thúc
+    trả về bv, bg
+kết thúc
+hàm MV.StopGlassFly()
     MV._glassFlyActive = false
     MV._glassFlyTarget = nil
     MV._glassFlyIdx = nil
     pcall(function() RunService:UnbindFromRenderStep("BC_GlassFly") end)
-    pcall(function() if MV._glassFlyBV then MV._glassFlyBV:Destroy() end end)
+    pcall(function() nếu MV._glassFlyBV thì MV._glassFlyBV:Destroy() kết thúc)
     pcall(function() if MV._glassFlyBG then MV._glassFlyBG:Destroy() end end)
-    MV._glassFlyBV, MV._glassFlyBG = nil, nil
-    local h = MV._glassFlyHum
+    MV._glassFlyBV, MV._glassFlyBG = không, không
+    cục bộ h = MV._glassFlyHum
     local safeOn = MV.Safe and MV.Safe.on == true
-    if h and h.Parent and not MV.fly and not MV._playerFlyActive and not safeOn then
-        if MV._glassFlyPlatformStandPrev ~= nil then pcall(function() h.PlatformStand = MV._glassFlyPlatformStandPrev end) end
-        if MV._glassFlyAutoRotatePrev ~= nil then pcall(function() h.AutoRotate = MV._glassFlyAutoRotatePrev end) end
-    end
+    nếu h và h.Parent và không phải MV.fly và không phải MV._playerFlyActive và không phải safeOn thì
+        nếu MV._glassFlyPlatformStandPrev ~= nil thì pcall(function() h.PlatformStand = MV._glassFlyPlatformStandPrev end) end
+        nếu MV._glassFlyAutoRotatePrev ~= nil thì pcall(function() h.AutoRotate = MV._glassFlyAutoRotatePrev end) end
+    kết thúc
     MV._glassFlyHum = nil
     MV._glassFlyPlatformStandPrev = nil
     MV._glassFlyAutoRotatePrev = nil
-    if MV._glassFlyNcPrev ~= nil then
-        local was = MV._glassFlyNcPrev
+    nếu MV._glassFlyNcPrev ~= nil thì
+        địa phương là = MV._glassFlyNcPrev
         MV._glassFlyNcPrev = nil
         local safeOwnsNoclip = safeOn and MV.Safe.noclip == true
-        if not MV._playerFlyActive and not safeOwnsNoclip then
+        nếu không phải MV._playerFlyActive và không phải safeOwnsNoclip thì
             pcall(function() MV.SetNoclip(was) end)
-        end
-    end
-    return true
-end
-function MV._GlassFlyStep(dt)
+        kết thúc
+    kết thúc
+    trả về giá trị đúng
+kết thúc
+hàm MV._GlassFlyStep(dt)
     if not MV._glassFlyActive then return end
-    local rec = MV._glassFlyTarget
-    local part = MV._GlassPart(rec)
-    if not part or not part.Parent then
+    rec cục bộ = MV._glassFlyTarget
+    phần cục bộ = MV._GlassPart(rec)
+    nếu không phải là một phần hoặc không phải là một phần của cha mẹ thì
         MV.StopGlassFly()
         MV._GlassChanged()
-        return
-    end
-    local root = MV.Root()
-    if not root then return end -- respawn: giữ mục tiêu, Refresh/khung sau sẽ gắn lực vào root mới
+        trở lại
+    kết thúc
+    gốc cục bộ = MV.Root()
+    nếu không phải root thì return end -- respawn: giữ mục tiêu, Refresh/khung sau sẽ gắn sức mạnh vào root mới
     local topY = part.Position.Y + part.Size.Y / 2
     local want = Vector3.new(part.Position.X, topY + 3.2, part.Position.Z)
-    local pos = root.Position
+    vị trí cục bộ = gốc.Vị trí
     local dx, dy, dz = want.X - pos.X, want.Y - pos.Y, want.Z - pos.Z
     local dist = math.sqrt(dx * dx + dy * dy + dz * dz)
-    if dist <= 0.75 then
+    nếu dist <= 0,75 thì
         pcall(function() root.CFrame = CFrame.new(want) end)
         MV.StopGlassFly()
-        return
-    end
-    local speed = mvClamp(MV.glassFlySpeed, 1, 2000, 60)
-    if dist < 2 then speed = math.max(4, speed * 0.15)
+        trở lại
+    kết thúc
+    tốc độ cục bộ = mvClamp(MV.glassFlySpeed, 1, 2000, 60)
+    nếu dist < 2 thì speed = math.max(4, speed * 0.15)
     elseif dist < 5 then speed = math.max(8, speed * 0.45) end
     pcall(function() MV.SetNoclip(true) end)
     local bv, bg = MV._EnsureGlassFlyBV()
     local dir = Vector3.new(dx / dist, dy / dist, dz / dist)
-    if bv then bv.Velocity = dir * speed end
+    nếu bv thì vận tốc của bv bằng hướng * tốc độ kết thúc
     local horizontal = Vector3.new(want.X - pos.X, 0, want.Z - pos.Z)
-    if bg and horizontal.Magnitude > 0.05 then
+    nếu bg và horizontal.Magnitude > 0,05 thì
         pcall(function() bg.CFrame = CFrame.new(pos, Vector3.new(want.X, pos.Y, want.Z)) end)
-    end
-    if not bv then
-        local step = math.min(dist, speed * (tonumber(dt) or 0.05))
+    kết thúc
+    nếu không phải BV thì
+        bước cục bộ = math.min(dist, speed * (tonumber(dt) or 0.05))
         pcall(function() root.CFrame = CFrame.new(pos + dir * step) end)
-    end
-end
-function MV.NearestGlassIndex()
-    local root = MV.Root()
-    if not root then return nil end
-    local best, bestD = nil, math.huge
+    kết thúc
+kết thúc
+hàm MV.NearestGlassIndex()
+    gốc cục bộ = MV.Root()
+    nếu không phải là root thì trả về nil.
+    tốt nhất cục bộ, bestD = nil, math.huge
     for i, rec in ipairs(MV.GetPlacedGlasses()) do
-        local part = MV._GlassPart(rec)
-        if part and part.Parent then
+        phần cục bộ = MV._GlassPart(rec)
+        nếu phần và phần cha thì
             local d = (part.Position - root.Position).Magnitude
-            if d < bestD then best, bestD = i, d end
-        end
-    end
-    return best
-end
-function MV.FlyToGlass(idx)
+            nếu d < bestD thì best, bestD = i, d kết thúc
+        kết thúc
+    kết thúc
+    trả lại tốt nhất
+kết thúc
+hàm MV.FlyToGlass(idx)
     local list = MV.GetPlacedGlasses()
     local n = math.floor(tonumber(idx) or 0)
-    local rec = (n >= 1 and list[n]) or nil
-    if not rec and n > 0 then
+    bản ghi cục bộ = (n >= 1 và danh sách[n]) hoặc nil
+    nếu không phải bản ghi và n > 0 thì
         for i, item in ipairs(list) do
             if tonumber(item.id) == n then rec, n = item, i break end
-        end
-    end
-    if not rec then return false, "không tìm thấy tấm kính" end
-    if not MV.Root() then return false, "chưa có nhân vật để bay" end
+        kết thúc
+    kết thúc
+    nếu không rec thì trả về false, "không tìm thấy tấm kính" end
+    nếu không phải MV.Root() thì trả về false, kết thúc "chưa có nhân vật để bay"
     if MV.fly then pcall(function() MV.SetFly(false) end) end
     if MV._playerFlyActive then pcall(function() MV.StopPlayerFly() end) end
-    if MV._glassFlyNcPrev == nil and (not MV.Safe or MV.Safe.noclip ~= true) then
+    nếu MV._glassFlyNcPrev == nil và (không phải MV.Safe hoặc MV.Safe.noclip ~= true) thì
         MV._glassFlyNcPrev = MV.noclip == true
-    end
+    kết thúc
     MV._glassFlyTarget = rec
     MV._glassFlyIdx = n
     MV._glassFlyActive = true
@@ -8087,72 +8456,72 @@ function MV.FlyToGlass(idx)
     pcall(function() MV._EnsureGlassFlyBV() end)
     pcall(function() RunService:UnbindFromRenderStep("BC_GlassFly") end)
     local okBind = pcall(function()
-        RunService:BindToRenderStep("BC_GlassFly", Enum.RenderPriority.Camera.Value - 1, function(dt)
+        RunService:BindToRenderStep("BC_GlassFly", Enum.RenderPriority.Camera.Value - 1, hàm(dt)
             pcall(MV._GlassFlyStep, dt)
-        end)
-    end)
-    if not okBind then
+        kết thúc)
+    kết thúc)
+    nếu không phải okBind thì
         MV.StopGlassFly()
-        return false, "executor không bind được bay tới kính"
-    end
+        trả về sai, "người thực thi không thể liên kết bay tới kính"
+    kết thúc
     pcall(MV._Watchdog)
-    return true, rec
-end
+    trả về giá trị true, nhận
+kết thúc
 
--- ---------- v4.28: BAY TỚI NGƯỜI CHƠI (xuyên tường, chỉnh tốc độ, 0=auto lấy tốc độ game) ----------
-MV.playerFlySpeed = MV.playerFlySpeed or 0
-MV._playerFlyTarget = MV._playerFlyTarget or nil
-MV._playerFlyActive = MV._playerFlyActive or false
-MV._playerFlyPos = MV._playerFlyPos or nil
-MV._playerFlyBV = MV._playerFlyBV or nil
-MV._playerFlyBG = MV._playerFlyBG or nil
-MV._playerFlyNcPrev = MV._playerFlyNcPrev or nil
+--------- v4.28: BAY TỚI NGƯỜI CHƠI (xuyên tường, chỉnh tốc độ, 0=auto lấy tốc độ game) ----------
+MV.playerFlySpeed ​​= MV.playerFlySpeed ​​hoặc 0
+MV._playerFlyTarget = MV._playerFlyTarget hoặc nil
+MV._playerFlyActive = MV._playerFlyActive hoặc false
+MV._playerFlyPos = MV._playerFlyPos hoặc nil
+MV._playerFlyBV = MV._playerFlyBV hoặc nil
+MV._playerFlyBG = MV._playerFlyBG hoặc nil
+MV._playerFlyNcPrev = MV._playerFlyNcPrev hoặc nil
 
-function MV.SetPlayerFlySpeed(n)
-    local v = tonumber(n)
-    if v == nil then return false, "nhập số 0-500 (0=auto)" end
-    if v == 0 then
-        MV.playerFlySpeed = 0
-        return true, 0
-    end
-    MV.playerFlySpeed = mvClamp(v, 1, 500, MV.playerFlySpeed or 0)
-    return true, MV.playerFlySpeed
-end
+hàm MV.SetPlayerFlySpeed(n)
+    cục bộ v = tonumber(n)
+    if v == nil thì trả về false, "nhập số 0-500 (0=auto)" end
+    nếu v == 0 thì
+        MV.playerFlySpeed ​​= 0
+        trả về true, 0
+    kết thúc
+    MV.playerFlySpeed ​​= mvClamp(v, 1, 500, MV.playerFlySpeed ​​or 0)
+    trả về true, MV.playerFlySpeed
+kết thúc
 
-function MV.GetPlayerFlySpeed()
+hàm MV.GetPlayerFlySpeed()
     local s = tonumber(MV.playerFlySpeed) or 0
-    if s == 0 then
-        local base = tonumber(MV._baseWS) or 16
+    nếu s == 0 thì
+        cơ sở cục bộ = tonumber(MV._baseWS) hoặc 16
         local flySp = tonumber(MV.flySpeed) or 60
-        if MV._playerFlyActive or MV.fly then
-            return flySp
-        else
-            return base > 0 and base or 16
-        end
-    end
-    return s
-end
+        nếu MV._playerFlyActive hoặc MV.fly thì
+            trả về flySp
+        khác
+            trả về cơ sở > 0 và cơ sở hoặc 16
+        kết thúc
+    kết thúc
+    trả về s
+kết thúc
 
-function MV._EnsurePlayerFlyBV()
-    local r = MV.Root()
-    if not r then return nil, nil end
-    if MV._playerFlyBV and MV._playerFlyBV.Parent == r then
-        return MV._playerFlyBV, MV._playerFlyBG
-    end
+hàm MV._EnsurePlayerFlyBV()
+    cục bộ r = MV.Root()
+    nếu không phải r thì trả về nil, nil end
+    nếu MV._playerFlyBV và MV._playerFlyBV.Parent == r thì
+        trả về MV._playerFlyBV, MV._playerFlyBG
+    kết thúc
     pcall(function() if MV._playerFlyBV then MV._playerFlyBV:Destroy() end end)
     pcall(function() if MV._playerFlyBG then MV._playerFlyBG:Destroy() end end)
     local bv = New("BodyVelocity", { Name = "BC_PlayerFlyVel", MaxForce = Vector3.new(1e9, 1e9, 1e9), Velocity = Vector3.new(0,0,0) }, r)
     local bg = New("BodyGyro", { Name = "BC_PlayerFlyGyro", MaxTorque = Vector3.new(1e9, 1e9, 1e9), P = 1e4, D = 50 }, r)
     MV._playerFlyBV, MV._playerFlyBG = bv, bg
     local h = MV.Hum()
-    if h then
+    nếu h thì
         pcall(function() h.PlatformStand = true end)
         pcall(function() h.AutoRotate = false end)
-    end
-    return bv, bg
-end
+    kết thúc
+    trả về bv, bg
+kết thúc
 
-function MV.StopPlayerFly()
+hàm MV.StopPlayerFly()
     MV._playerFlyActive = false
     MV._playerFlyTarget = nil
     MV._playerFlyPos = nil
@@ -8160,94 +8529,94 @@ function MV.StopPlayerFly()
     pcall(function() if MV._playerFlyBV then MV._playerFlyBV:Destroy() end end)
     pcall(function() if MV._playerFlyBG then MV._playerFlyBG:Destroy() end end)
     MV._playerFlyBV, MV._playerFlyBG = nil, nil
-    if not MV.fly then
+    nếu không phải MV.fly thì
         local h = MV.Hum()
-        if h then
+        nếu h thì
             pcall(function() h.PlatformStand = false end)
             pcall(function() h.AutoRotate = true end)
-        end
-    end
-    if MV._playerFlyNcPrev ~= nil then
-        local was = MV._playerFlyNcPrev
+        kết thúc
+    kết thúc
+    nếu MV._playerFlyNcPrev khác nil thì
+        cục bộ là = MV._playerFlyNcPrev
         MV._playerFlyNcPrev = nil
         local stillFlying = (MV.Safe and MV.Safe.on == true)
-        if not stillFlying then
-            if was == false then
+        nếu không còn bay nữa thì
+            nếu là == false thì
                 pcall(function() MV.SetNoclip(false) end)
-            end
-        end
-    end
-    return true
-end
+            kết thúc
+        kết thúc
+    kết thúc
+    trả về giá trị đúng
+kết thúc
 
-function MV._PlayerFlyStep(dt)
+hàm MV._PlayerFlyStep(dt)
     if not MV._playerFlyActive then return end
     local targetPlayer = MV._playerFlyTarget
-    if not targetPlayer or not targetPlayer.Parent then
+    nếu không phải là targetPlayer hoặc không phải là targetPlayer.Parent thì
         MV.StopPlayerFly()
-        return
-    end
-    local c, r = nil, nil
+        trở lại
+    kết thúc
+    cục bộ c, r = nil, nil
     pcall(function()
         local char = targetPlayer.Character
-        if char then
+        nếu char thì
             r = char:FindFirstChild("HumanoidRootPart")
-            c = char
-        end
-    end)
-    if not r then
-        return
-    end
+            c = ký tự
+        kết thúc
+    kết thúc)
+    nếu không phải r thì
+        trở lại
+    kết thúc
     local myRoot = MV.Root()
-    if not myRoot then
+    nếu không phải là myRoot thì
         MV.StopPlayerFly()
-        return
-    end
+        trở lại
+    kết thúc
     local want = r.Position + Vector3.new(0, 3.5, 0)
-    MV._playerFlyPos = want
-    local pos = myRoot.Position
-    local dx = want.X - pos.X
+    MV._playerFlyPos = muốn
+    vị trí cục bộ = myRoot.Position
+    dx cục bộ = want.X - pos.X
     local dy = want.Y - pos.Y
     local dz = want.Z - pos.Z
     local dist = math.sqrt(dx*dx + dy*dy + dz*dz)
-    local speed = tonumber(MV.GetPlayerFlySpeed()) or 16
+    tốc độ cục bộ = tonumber(MV.GetPlayerFlySpeed()) hoặc 16
     local close = dist < 2
-    if close then
-        speed = math.max(2, speed * 0.15)
-    elseif dist < 3.5 then
-        speed = math.max(6, speed * 0.45)
-    end
-    MV.SetNoclip(true)                       -- ⚡ v4.34: gọi thẳng (hàm nội bộ, đã tự bọc pcall)
+    nếu gần thì
+        tốc độ = math.max(2, tốc độ * 0.15)
+    nếu dist < 3.5 thì
+        tốc độ = math.max(6, tốc độ * 0.45)
+    kết thúc
+    MV.SetNoclip(true) -- ⚡ v4.34: gọi thẳng (hàm nội bộ, đã tự động bọc pcal)
     local bv, bg = MV._EnsurePlayerFlyBV()
-    local dir = Vector3.zero
-    if dist > 0.1 then
+    thư mục cục bộ = Vector3.zero
+    nếu dist > 0.1 thì
         dir = Vector3.new(dx / dist, dy / dist, dz / dist)
-    end
-    if bv then
-        if close then
+    kết thúc
+    nếu bv thì
+        nếu gần thì
             local targetVel = (r and r.Velocity) or Vector3.new(0, 0, 0)
             bv.Velocity = targetVel + dir * speed
-        else
-            bv.Velocity = dir * speed
-        end
-    end
-    if bg then
+        khác
+            Vận tốc bv = hướng * tốc độ
+        kết thúc
+    kết thúc
+    nếu bg thì
         bg.CFrame = CFrame.new(pos, Vector3.new(want.X, pos.Y, want.Z))
-    end
-    if not bv and dist > 0.1 then
-        local step = math.min(dist, speed * (tonumber(dt) or 0.05))
+    kết thúc
+    nếu bv và dist > 0,1 thì
+        bước cục bộ = math.min(dist, speed * (tonumber(dt) or 0.05))
         myRoot.CFrame = CFrame.new(pos.X + dir.X * step, pos.Y + dir.Y * step, pos.Z + dir.Z * step)
-    end
-end
+    kết thúc
+kết thúc
 
-function MV.FlyToPlayer(p)
-    if not p or not p.Parent then return false, "người chơi không tồn tại" end
-    if p == player then return false, "không thể bay tới chính mình" end
-    if not MV.Root() then return false, "chưa có nhân vật" end
+hàm MV.FlyToPlayer(p)
+    nếu không p hoặc không p.Parent thì trả về false, "người chơi không tồn tại" end
+    nếu p == player thì trả về false, "không thể bay tới chính mình" end
+    nếu không phải MV.Root() thì trả về false, kết thúc "chưa có nhân vật"
     if MV.fly then MV.SetFly(false) end
-    if MV._playerFlyNcPrev == nil and (not MV.Safe or MV.Safe._ncPrev == nil) then
+    nếu MV._playerFlyNcPrev == nil và (không phải MV.Safe hoặc MV.Safe._ncPrev == nil) thì
         MV._playerFlyNcPrev = MV.noclip == true
-    end
+    kết thúc
     MV._playerFlyTarget = p
     MV._playerFlyActive = true
     MV._playerFlyPos = nil
@@ -8255,1071 +8624,1071 @@ function MV.FlyToPlayer(p)
     pcall(function() MV._EnsurePlayerFlyBV() end)
     pcall(function() RunService:UnbindFromRenderStep("BC_PlayerFly") end)
     pcall(function()
-        RunService:BindToRenderStep("BC_PlayerFly", Enum.RenderPriority.Camera.Value - 1, function(dt)
+        RunService:BindToRenderStep("BC_PlayerFly", Enum.RenderPriority.Camera.Value - 1, hàm(dt)
             pcall(MV._PlayerFlyStep, dt)
-        end)
-    end)
+        kết thúc)
+    kết thúc)
     MV._Watchdog()
-    return true, p
-end
+    trả về giá trị đúng, p
+kết thúc
 
--- ---------- v5.1: 🚀 BAY TỚI VẬT ĐANG ĐỊNH VỊ (bám theo vật, tự dừng nếu vật biến mất) ----------
-MV.objectFlySpeed = mvClamp(MV.objectFlySpeed, 1, 2000, 60)
-MV._objFlyTarget = MV._objFlyTarget or nil
+--------- v5.1: 🚀 BAY TỚI VẬT ĐANG ĐỊNH VỊ (bám theo vật, tự dừng nếu vật biến mất) ----------
+MV.objectFlySpeed ​​= mvClamp(MV.objectFlySpeed, 1, 2000, 60)
+MV._objFlyTarget = MV._objFlyTarget hoặc nil
 MV._objFlyActive = MV._objFlyActive == true
-MV._objFlyBV = MV._objFlyBV or nil
-MV._objFlyBG = MV._objFlyBG or nil
-MV._objFlyNcPrev = MV._objFlyNcPrev or nil
-MV._objFlyHum = MV._objFlyHum or nil
+MV._objFlyBV = MV._objFlyBV hoặc nil
+MV._objFlyBG = MV._objFlyBG hoặc nil
+MV._objFlyNcPrev = MV._objFlyNcPrev hoặc nil
+MV._objFlyHum = MV._objFlyHum hoặc nil
 MV._objFlyPS = MV._objFlyPS
 MV._objFlyAR = MV._objFlyAR
 
-function MV.SetObjectFlySpeed(n)
-    local v = tonumber(n)
-    if v == nil or v ~= v then return false, "nhập tốc độ bay 1-2000" end
-    MV.objectFlySpeed = mvClamp(v, 1, 2000, MV.objectFlySpeed or 60)
-    return true, MV.objectFlySpeed
-end
+hàm MV.SetObjectFlySpeed(n)
+    cục bộ v = tonumber(n)
+    if v == nil hoặc v ~= v thì trả về false, "nhập tốc độ bay 1-2000" end
+    MV.objectFlySpeed ​​= mvClamp(v, 1, 2000, MV.objectFlySpeed ​​or 60)
+    trả về true, MV.objectFlySpeed
+kết thúc
 
--- Vật cần bay tới có thể là BasePart hoặc Model -> luôn hỏi lại mỗi khung hình
--- nên vật bị dựng lại/đổi part vẫn bám đúng.
-function MV._ObjFlyPart()
+-- Vật cần bay tới có thể là BasePart hoặc Model -> luôn hỏi lại từng khung hình
+-- nên một phần được thiết lập lại/sửa đổi vẫn bám đúng.
+hàm MV._ObjFlyPart()
     local t = MV._objFlyTarget
     if t == nil then return nil end
-    local ok, part = pcall(function()
-        if S.ObjTrack and S.ObjTrack.PartOf then return S.ObjTrack.PartOf(t) end
-        if t:IsA("BasePart") then return t end
+    cục bộ ổn, phần = pcall(function()
+        nếu S.ObjTrack và S.ObjTrack.PartOf thì trả về S.ObjTrack.PartOf(t) end
+        nếu t:IsA("BasePart") thì trả về t
         if t.PrimaryPart then return t.PrimaryPart end
-        return t:FindFirstChildWhichIsA("BasePart")
-    end)
-    if ok and part and part.Parent then return part end
-    return nil
-end
+        trả về t:TìmChiLẻĐầuTiênLàMột("BasePart")
+    kết thúc)
+    nếu ổn và một phần và một phần.Cha thì trả về phần kết thúc
+    trả về nil
+kết thúc
 
-function MV._EnsureObjFlyBV()
-    local r = MV.Root()
-    if not r then return nil, nil end
-    if MV._objFlyBV and MV._objFlyBV.Parent == r and MV._objFlyBG and MV._objFlyBG.Parent == r then
+hàm MV._EnsureObjFlyBV()
+    cục bộ r = MV.Root()
+    nếu không phải r thì trả về nil, nil end
+    nếu MV._objFlyBV và MV._objFlyBV.Parent == r và MV._objFlyBG và MV._objFlyBG.Parent == r thì
         local h = MV.Hum()
-        if h and MV._objFlyHum ~= h then
+        nếu h và MV._objFlyHum ~= h thì
             MV._objFlyHum = h
             pcall(function() MV._objFlyPS = h.PlatformStand end)
             pcall(function() MV._objFlyAR = h.AutoRotate end)
             pcall(function() h.PlatformStand = true; h.AutoRotate = false end)
-        end
-        return MV._objFlyBV, MV._objFlyBG
-    end
+        kết thúc
+        trả về MV._objFlyBV, MV._objFlyBG
+    kết thúc
     pcall(function() if MV._objFlyBV then MV._objFlyBV:Destroy() end end)
     pcall(function() if MV._objFlyBG then MV._objFlyBG:Destroy() end end)
-    MV._objFlyBV, MV._objFlyBG = nil, nil
+    MV._objFlyBV, MV._objFlyBG = không, không
     local bv = New("BodyVelocity", {
-        Name = "BC_ObjFlyVel", MaxForce = Vector3.new(1e9, 1e9, 1e9), Velocity = Vector3.new(0, 0, 0)
+        Tên = "BC_ObjFlyVel", Lực tối đa = Vector3.new(1e9, 1e9, 1e9), Vận tốc = Vector3.new(0, 0, 0)
     }, r)
-    local bg = New("BodyGyro", {
-        Name = "BC_ObjFlyGyro", MaxTorque = Vector3.new(1e9, 1e9, 1e9), P = 1e4, D = 50
+    cục bộ bg = New("BodyGyro", {
+        Tên = "BC_ObjFlyGyro", Mô-men xoắn cực đại = Vector3.new(1e9, 1e9, 1e9), P = 1e4, D = 50
     }, r)
     MV._objFlyBV, MV._objFlyBG = bv, bg
     local h = MV.Hum()
-    if h then
+    nếu h thì
         MV._objFlyHum = h
         pcall(function() MV._objFlyPS = h.PlatformStand end)
         pcall(function() MV._objFlyAR = h.AutoRotate end)
         pcall(function() h.PlatformStand = true; h.AutoRotate = false end)
-    end
-    return bv, bg
-end
+    kết thúc
+    trả về bv, bg
+kết thúc
 
-function MV.StopObjectFly()
+hàm MV.StopObjectFly()
     MV._objFlyActive = false
     MV._objFlyTarget = nil
     pcall(function() RunService:UnbindFromRenderStep("BC_ObjFly") end)
     pcall(function() if MV._objFlyBV then MV._objFlyBV:Destroy() end end)
     pcall(function() if MV._objFlyBG then MV._objFlyBG:Destroy() end end)
-    MV._objFlyBV, MV._objFlyBG = nil, nil
-    local h = MV._objFlyHum
+    MV._objFlyBV, MV._objFlyBG = không, không
+    cục bộ h = MV._objFlyHum
     local safeOn = MV.Safe and MV.Safe.on == true
-    if h and h.Parent and not MV.fly and not MV._playerFlyActive and not MV._glassFlyActive and not safeOn then
+    nếu h và h.Parent và không phải MV.fly và không phải MV._playerFlyActive và không phải MV._glassFlyActive và không phải safeOn thì
         if MV._objFlyPS ~= nil then pcall(function() h.PlatformStand = MV._objFlyPS end) end
         if MV._objFlyAR ~= nil then pcall(function() h.AutoRotate = MV._objFlyAR end) end
-    end
-    MV._objFlyHum, MV._objFlyPS, MV._objFlyAR = nil, nil, nil
-    if MV._objFlyNcPrev ~= nil then
-        local was = MV._objFlyNcPrev
+    kết thúc
+    MV._objFlyHum, MV._objFlyPS, MV._objFlyAR = không, không, không
+    nếu MV._objFlyNcPrev ~= nil thì
+        cục bộ là = MV._objFlyNcPrev
         MV._objFlyNcPrev = nil
-        if not MV._playerFlyActive and not MV._glassFlyActive and not safeOn then
+        nếu không phải MV._playerFlyActive và không phải MV._glassFlyActive và không phải safeOn thì
             pcall(function() MV.SetNoclip(was) end)
-        end
-    end
+        kết thúc
+    kết thúc
     pcall(function() if S.ObjTrack and S.ObjTrack.OnFlyChange then S.ObjTrack.OnFlyChange() end end)
-    return true
-end
+    trả về giá trị đúng
+kết thúc
 
-function MV._ObjectFlyStep(dt)
+hàm MV._ObjectFlyStep(dt)
     if not MV._objFlyActive then return end
     local part = MV._ObjFlyPart()
-    if not part then
+    nếu không phải là một phần thì
         pcall(MV.StopObjectFly)
         pcall(function() if D.Say then D.Say("🌳 vật đang bay tới đã biến mất — đã dừng bay", C.YELLOW) end end)
-        return
-    end
+        trở lại
+    kết thúc
     local myRoot = MV.Root()
-    if not myRoot then return end   -- respawn: giữ mục tiêu, khung sau gắn lực vào root mới
+    nếu không phải myRoot thì return end -- respawn: giữ mục tiêu, khung sau gắn lực vào root mới
     local want = part.Position + Vector3.new(0, 3.2, 0)
-    local pos = myRoot.Position
+    vị trí cục bộ = myRoot.Position
     local dx, dy, dz = want.X - pos.X, want.Y - pos.Y, want.Z - pos.Z
     local dist = math.sqrt(dx * dx + dy * dy + dz * dz)
-    local speed = mvClamp(MV.objectFlySpeed, 1, 2000, 60)
+    tốc độ cục bộ = mvClamp(MV.objectFlySpeed, 1, 2000, 60)
     local close = (dist <= 2.5)
-    if close then speed = math.max(2, speed * 0.15)
+    nếu gần thì tốc độ = math.max(2, tốc độ * 0.15)
     elseif dist < 5 then speed = math.max(6, speed * 0.45) end
     pcall(function() MV.SetNoclip(true) end)
     local bv, bg = MV._EnsureObjFlyBV()
     local dir = Vector3.new(0, 0, 0)
     if dist > 0.1 then dir = Vector3.new(dx / dist, dy / dist, dz / dist) end
-    if bv then
-        local pv = nil
+    nếu bv thì
+        cục bộ pv = nil
         pcall(function() pv = part.AssemblyLinearVelocity end)
-        if close and pv then
-            bv.Velocity = pv + dir * speed
-        else
-            bv.Velocity = dir * speed
-        end
-    end
-    if bg and (dist > 0.05) then
+        nếu gần và pv thì
+            Vận tốc bv = pv + dir * tốc độ
+        khác
+            Vận tốc bv = hướng * tốc độ
+        kết thúc
+    kết thúc
+    nếu bg và (dist > 0,05) thì
         pcall(function() bg.CFrame = CFrame.new(pos, Vector3.new(want.X, pos.Y, want.Z)) end)
-    end
-    if not bv and dist > 0.1 then
-        local step = math.min(dist, speed * (tonumber(dt) or 0.05))
+    kết thúc
+    nếu bv và dist > 0,1 thì
+        bước cục bộ = math.min(dist, speed * (tonumber(dt) or 0.05))
         pcall(function() myRoot.CFrame = CFrame.new(pos + dir * step) end)
-    end
-end
+    kết thúc
+kết thúc
 
-function MV.FlyToObject(target, speed)
-    if target == nil then return false, "chưa có vật để bay tới" end
-    if not MV.Root() then return false, "chưa có nhân vật để bay" end
-    local part = nil
+hàm MV.FlyToObject(target, speed)
+    if target == nil thì trả về false, "chưa có vật phẩm để bay tới" end
+    nếu không phải MV.Root() thì trả về false, kết thúc "chưa có nhân vật để bay"
+    phần cục bộ = nil
     pcall(function()
         if S.ObjTrack and S.ObjTrack.PartOf then part = S.ObjTrack.PartOf(target) end
-    end)
-    if not part then return false, "vật không còn trong game" end
+    kết thúc)
+    nếu không có phần thì trả về false, "vật không còn trong game" end
     if speed ~= nil then pcall(function() MV.SetObjectFlySpeed(speed) end) end
     if MV.fly then pcall(function() MV.SetFly(false) end) end
     if MV._playerFlyActive then pcall(function() MV.StopPlayerFly() end) end
     if MV._glassFlyActive then pcall(function() MV.StopGlassFly() end) end
     if MV._objFlyNcPrev == nil then MV._objFlyNcPrev = (MV.noclip == true) end
-    MV._objFlyTarget = target
+    MV._objFlyTarget = mục tiêu
     MV._objFlyActive = true
     pcall(function() MV.SetNoclip(true) end)
     pcall(function() MV._EnsureObjFlyBV() end)
     pcall(function() RunService:UnbindFromRenderStep("BC_ObjFly") end)
     local okBind = pcall(function()
-        RunService:BindToRenderStep("BC_ObjFly", Enum.RenderPriority.Camera.Value - 1, function(dt)
+        RunService:BindToRenderStep("BC_ObjFly", Enum.RenderPriority.Camera.Value - 1, hàm(dt)
             pcall(MV._ObjectFlyStep, dt)
-        end)
-    end)
-    if not okBind then
+        kết thúc)
+    kết thúc)
+    nếu không phải okBind thì
         MV.StopObjectFly()
-        return false, "executor không bind được bay tới vật"
-    end
+        return false, "người thực thi không thể liên kết bay tới vật"
+    kết thúc
     pcall(function() if S.ObjTrack and S.ObjTrack.OnFlyChange then S.ObjTrack.OnFlyChange() end end)
-    return true, target
-end
+    trả về giá trị đúng, mục tiêu
+kết thúc
 
--- ---------- ⬆⬇ nâng/hạ: thảm thì đổi độ cao, bay thì đẩy người ----------
-function MV.Nudge(dy)
-    if MV.carpet then
-        MV.carpetY = (MV.carpetY or MV.FootY() or 0) + dy
-        return true, "thảm"
-    elseif MV.fly then
-        local r = MV.Root()
+-- ---------- ⬆⬇ nâng cao/hạ: thảm thì đổi độ cao, bay thì Đưa người ----------
+hàm MV.Nudge(dy)
+    nếu MV.carpet thì
+        MV.carpetY = (MV.carpetY hoặc MV.FootY() hoặc 0) + dy
+        trả về giá trị true, "thảm"
+    nếu MV.fly thì
+        cục bộ r = MV.Root()
         if r then r.CFrame = CFrame.new(r.Position.X, r.Position.Y + dy, r.Position.Z) end
-        return true, "bay"
-    end
-    return false, nil
-end
+        trả về giá trị true, "bay"
+    kết thúc
+    trả về false, nil
+kết thúc
 
--- ---------- HUD: cụm nút NỔI TRÊN MÀN HÌNH GAME (⬆ 🪩 ⬇ ✕) ----------
-function MV._HudNudge(dy)
-    local ok, what = MV.Nudge(dy)
+--------- HUD: Cụm nút NỔI TRÊN HÌNH THỨC (⬆ 🪩 ⬇ ✕) ----------
+hàm MV._HudNudge(dy)
+    cục bộ ổn, cái gì = MV.Nudge(dy)
     MV._HudSay(ok and ((dy > 0 and "⬆ nâng " or "⬇ hạ ") .. tostring(what) .. " 2.5")
-                   or "⬆⬇ bật Bay trước đã")
-end
-function MV._BuildHud()
+                   hoặc "⬆⬇ bật Bay trước đó")
+kết thúc
+hàm MV._BuildHud()
     if MV._hud then return MV._hud end
-    local hud = New("Frame", {
-        Name = "BC_MoveHud",
-        Size = UDim2.new(0, 180, 0, 160), Position = UDim2.new(1, -190, 0.5, -80),
+    cục bộ hud = New("Khung", {
+        Tên = "BC_MoveHud",
+        Kích thước = UDim2.new(0, 180, 0, 160), Vị trí = UDim2.new(1, -190, 0.5, -80),
         BackgroundTransparency = 1, Visible = false, ZIndex = 20,
     }, gui)
-    local function obtn(txt, y, size, color, cb)
-        local b = New("TextButton", {
-            Size = UDim2.new(0, size, 0, size), Position = UDim2.new(0.5, -size / 2, 0, y),
-            Text = txt, BackgroundColor3 = color or C.BLUE, BackgroundTransparency = 0.3,
+    hàm cục bộ obtn(txt, y, size, color, cb)
+        cục bộ b = New("TextButton", {
+            Kích thước = UDim2.new(0, kích thước, 0, kích thước), Vị trí = UDim2.new(0.5, -kích thước / 2, 0, y),
+            Văn bản = txt, Màu nền 3 = màu hoặc C.BLUE, Độ trong suốt nền = 0.3,
             TextColor3 = C.WHITE, Font = Enum.Font.GothamBold, TextSize = 20,
             BorderSizePixel = 0, ZIndex = 21,
         }, hud)
-        Corner(b, UDim.new(1, 0))
+        Góc(b, UDim.new(1, 0))
         Stroke(b, C.WHITE, 2)
-        b.Activated:Connect(function() pcall(cb) end)
-        return b
-    end
+        b.Đã kích hoạt:Connect(function() pcall(cb) end)
+        trả lại b
+    kết thúc
     MV._hudCarpet = nil -- [REMOVED] tham kinh
-    MV._hudUp   = obtn("⬆", 60,  50, Color3.fromRGB(0, 150, 0),   function() MV._HudNudge(2.5) end)
-    MV._hudDown = obtn("⬇", 120, 50, Color3.fromRGB(150, 0, 0),   function() MV._HudNudge(-2.5) end)
+    MV._hudUp = obtn("⬆", 60, 50, Color3.fromRGB(0, 150, 0), function() MV._HudNudge(2.5) end)
+    MV._hudDown = obtn("⬇", 120, 50, Color3.fromRGB(150, 0, 0), function() MV._HudNudge(-2.5) end)
     MV._hudClose = New("TextButton", {
-        Size = UDim2.new(0, 34, 0, 34), Position = UDim2.new(1, -44, 0, 10),
-        Text = "✕", BackgroundColor3 = C.RED, BackgroundTransparency = 0.3,
+        Kích thước = UDim2.new(0, 34, 0, 34), Vị trí = UDim2.new(1, -44, 0, 10),
+        Văn bản = "✕", Màu nền 3 = Đỏ đậm, Độ trong suốt nền = 0.3,
         TextColor3 = C.WHITE, Font = Enum.Font.GothamBold, TextSize = 18,
         BorderSizePixel = 0, ZIndex = 21,
     }, hud)
-    Corner(MV._hudClose, UDim.new(1, 0))
+    Góc(MV._hudClose, UDim.new(1, 0))
     Stroke(MV._hudClose, C.WHITE, 2)
     MV._hudClose.Activated:Connect(function()
         MV.SetRunMode(false)
         MV._HudSay("🛑 đã tắt chế độ chạy trên thảm")
-    end)
+    kết thúc)
     MV._hud = hud
-    return hud
-end
-function MV._HudSay(msg)
+    trả về hud
+kết thúc
+hàm MV._HudSay(msg)
     pcall(function() if D.hubStatus then D.hubStatus.Text = msg end end)
-end
-function MV.SyncHud()
+kết thúc
+hàm MV.SyncHud()
     pcall(function()
         local hud = MV._BuildHud()
         local safeOn = (MV.Safe and MV.Safe.on == true)
         local on = (MV.fly or MV.runMode)
-        if safeOn or MV.fly then on = false end -- 🚀 dùng HUD điều khiển tay, 🪩/🏃 giữ HUD cũ
+        if safeOn hoặc MV.fly thì on = false end -- 🚀 dùng HUD điều khiển tay, 🪩/🏃 giữ HUD cũ
         hud.Visible = (on == true)
-        if MV._hudCarpet then                       -- xám như bản gốc, XANH khi thảm đang bật
-            MV._hudCarpet.BackgroundColor3 = MV.carpet and C.GREEN or C.GRAY
-        end
-    end)
+        if MV._hudCarpet then -- xám như bản gốc, XANH khi thảm bật
+            MV._hudCarpet.BackgroundColor3 = MV.carpet và C.GREEN hoặc C.GRAY
+        kết thúc
+    kết thúc)
     if MV.SyncFlyHud then MV.SyncFlyHud() end
-end
+kết thúc
 
--- ---------- 🏃 CHẠY TRÊN THẢM = "🕹️ BAY CHẠY BỘ" của aiaiaitao3 (v4.12.4: GIỐNG 100%) ----------
-function MV.SetRunMode(on)
+--------- 🏃 CHẠY TRÊN THẢM = "🕹️ BAY CHẠY BỘ" của aiaiaitao3 (v4.12.4: GIỐNG 100%) ----------
+hàm MV.SetRunMode(on)
     MV.runMode = false
     pcall(function() if main then main.Visible = true end end)
     pcall(function() if togBtn then togBtn.Text = (main and main.Visible) and "✕" or "" end end)
     MV._menuWasOpen = nil
     MV.SyncHud()
     return false, "tinh nang chay tren tham da bi xoa"
-end
+kết thúc
 
--- ---------- tắt hết / khôi phục sau respawn / tóm tắt trạng thái ----------
-function MV.StopAll()
+-- ----------tắt hết / khôi phục sau hồi sinh / trạng thái summ tắt ----------
+hàm MV.StopAll()
     pcall(function() if S.Free and S.Free.Stop then S.Free.Stop() end end)
     if MV.Safe and MV.Safe.on then pcall(function() MV.Safe.Stop() end) end
     pcall(function() MV.StopGlassFly() end)
     pcall(function() MV.StopPlayerFly() end)
-    pcall(function() MV.StopObjectFly() end)   -- v5.1: tắt luôn bay tới vật đang định vị
+    pcall(function() MV.StopObjectFly() end) -- v5.1:tắt luôn bay tới vị trí vật phẩm
     MV.SetFly(false)
     MV.SetCarpet(false)
     MV.SetNoclip(false)
     MV.SetInfJump(false)
-    MV.SetHighJump(false)    -- v4.38: tắt 🦘 nhảy cao
+    MV.SetHighJump(false) -- v4.38:tắt 🦘 nhảy cao
     MV.SetSpeed(false)
-    MV.SetSprint(false)      -- v4.37: tắt 💨 tốc độ theo camera
-    MV.SetRunMode(false)     -- v4.12: thoát cả chế độ chạy trên thảm (trả menu + ẩn HUD)
+    MV.SetSprint(false) -- v4.37:tắt 💨tốc độ camera
+    MV.SetRunMode(false) -- v4.12: thoát chế độ chạy trên thảm (trả lời menu + ẩn HUD)
     MV._Watchdog()
     MV.SyncHud()
     pcall(function() if MV.Safe and MV.Safe.SyncHud then MV.Safe.SyncHud() end end)
-end
+kết thúc
 S.MoveActionState = {
-    fly     = function() return S.Move.fly     end,
-    noclip  = function() return S.Move.noclip  end,
+    fly = function() return S.Move.fly end,
+    noclip = function() return S.Move.noclip end,
     infjump = function() return S.Move.infJump end,
     highjump= function() return S.Move.highJump end,
-    speed   = function() return S.Move.speed   end,
-    camspeed= function() return S.Move.sprint  end,
-    carpet  = function() return S.Move.carpet  end,
+    tốc độ = hàm() trả về S.Move.speed kết thúc,
+    camspeed= function() return S.Move.sprint end,
+    carpet = function() return S.Move.carpet end,
     runmode = function() return S.Move.runMode end,
-    loc_all  = function() return S.Loc and S.Loc.on   end,
+    loc_all = function() return S.Loc and S.Loc.on end,
     loc_solo = function() return S.Loc and S.Loc.solo end,
-    spec_on  = function() return S.Spec and S.Spec.on   end,
-    glow     = function() return S.Glow and S.Glow.on   end,
-    freecam  = function() return S.Free and S.Free.on end,
-    safefly  = function() return S.Move.Safe and S.Move.Safe.on end,
-    objtrack = function() return S.ObjTrack and S.ObjTrack.on end,   -- v5.1: 🌳 định vị vật theo tên
+    spec_on = function() return S.Spec and S.Spec.on end,
+    glow = function() return S.Glow and S.Glow.on end,
+    freecam = function() return S.Free and S.Free.on end,
+    safefly = function() return S.Move.Safe and S.Move.Safe.on end,
+    objtrack = function() return S.ObjTrack và S.ObjTrack.on end, -- v5.1: 🌳 định vị vật theo tên
 }
 
-function MV.Refresh()
-    MV._NcForgetLost()      -- v4.22: chỉ quên part đã mất (giữ giá trị gốc của part đang bật 🧱)
-    if MV.speed then MV.ApplyChar() end -- không ép tốc độ mặc định nếu chỉ đang bay
+hàm MV.Refresh()
+    MV._NcForgetLost() -- v4.22: chỉ quên phần đã mất (giữ giá trị gốc của phần đang bật 🧱)
+    if MV.speed thì MV.ApplyChar() kết thúc -- không ép mặc định tốc độ mặc dù đang bay chỉ
     if MV.noclip then MV._NcStep() end
-    if MV.fly then
+    nếu MV.fly thì
         MV._EnsureFly()
         MV._BindFly()
-    end
-    if MV.sprint then
+    kết thúc
+    nếu MV.sprint thì
         MV._EnsureSpeed()
         MV._BindSpeed()
-    end
-    if MV.highJump then
+    kết thúc
+    nếu MV.highJump thì
         pcall(MV._HighJumpApplyPower)
         pcall(MV._HighJumpBind)
-    end
-    if MV.Safe and MV.Safe.on then pcall(MV.Safe.Step, 0.05) end     -- v4.23: 🛡 tự chữa lành sau respawn
-    if MV._glassFlyActive then pcall(MV._EnsureGlassFlyBV) end       -- giữ mục tiêu qua respawn
+    kết thúc
+    if MV.Safe and MV.Safe.on then pcall(MV.Safe.Step, 0.05) end -- v4.23: 🛡 tự chữa lành sau khi hồi sinh
+    if MV._glassFlyActive then pcall(MV._EnsureGlassFlyBV) end -- giữ mục tiêu qua respawn
     if MV.autoGlass and not MV._autoGlassBound then pcall(MV.SetAutoGlass, true) end
     MV.SyncHud()
     pcall(function() if MV.Safe and MV.Safe.SyncHud then MV.Safe.SyncHud() end end)
-end
-function MV.Status()
-    local t = {}
+kết thúc
+hàm MV.Status()
+    cục bộ t = {}
     if MV.fly then t[#t + 1] = string.format("🚀 bay %d", MV.flySpeed) end
-    if MV.noclip then t[#t + 1] = "🧱 xuyên tường" end
-    if MV.infJump then t[#t + 1] = "🦘 nhảy vô hạn" end
+    if MV.noclip thì t[#t + 1] = "🧱Tường tường" end
+    nếu MV.infJump thì t[#t + 1] = "🦘 nhảy vô hạn" end
     if MV.highJump then t[#t + 1] = string.format("🦘 nhảy cao %d", MV.highJumpSpeed) end
     if MV.sprint then t[#t + 1] = string.format("💨 tốc độ %d", MV.sprintSpeed) end
-    if MV.speed then
-        if MV.speedMode == "x" then
+    nếu MV.speed thì
+        nếu MV.speedMode == "x" thì
             t[#t + 1] = string.format("👟 chạy ×%g (game %g)", MV.speedMul, MV._baseWS or 16)
-        else
+        khác
             t[#t + 1] = string.format("👟 chạy %g", MV.walkSpeed)
-        end
-    end
-    if MV._playerFlyActive then
+        kết thúc
+    kết thúc
+    nếu MV._playerFlyActive thì
         local pn = MV._playerFlyTarget and tostring(MV._playerFlyTarget.Name) or "?"
-        local sp = MV.GetPlayerFlySpeed and MV.GetPlayerFlySpeed() or (MV.playerFlySpeed or 0)
-        if (tonumber(MV.playerFlySpeed) or 0) == 0 then
+        local sp = MV.GetPlayerFlySpeed ​​and MV.GetPlayerFlySpeed() or (MV.playerFlySpeed ​​or 0)
+        nếu (tonumber(MV.playerFlySpeed) hoặc 0) == 0 thì
             t[#t + 1] = string.format("🚀 bay tới người %s (auto %g)", pn, sp)
-        else
+        khác
             t[#t + 1] = string.format("🚀 bay tới người %s %g", pn, sp)
-        end
-    end
+        kết thúc
+    kết thúc
     local glassCount = 0
     pcall(function() glassCount = #MV.GetPlacedGlasses() end)
     if glassCount > 0 then t[#t + 1] = "🧱 kính " .. tostring(glassCount) .. " tấm" end
-    if MV._glassFlyActive then
+    nếu MV._glassFlyActive thì
         local targetId = MV._glassFlyTarget and MV._glassFlyTarget.id or "?"
         t[#t + 1] = "🚀 bay tới kính #" .. tostring(targetId)
-    end
-    if #t == 0 then return "🚶 di chuyển: đang TẮT hết" end
+    kết thúc
+    if #t == 0 thì return "🚶 di chuyển: đang TẮT" end
     return "🚶 đang BẬT: " .. table.concat(t, " · ")
-end
+kết thúc
 trackConn(player.CharacterAdded:Connect(function()
     task.spawn(function()
         task.wait(0.3)
         pcall(MV.Refresh)
-    end)
-end))
+    kết thúc)
+kết thúc))
 
--- ---------- v4.6.3: NHÓM TÍNH NĂNG 🌐 SERVER (Reset · Hop · Lấy mã · Vào theo mã) ----------
-function S.GetJobId()
-    local id = game.JobId
+--------- v4.6.3: NHÓM TÍNH NĂNG 🌐 MÁY CHỦ (Đặt lại · Hop · Lấy mã · Vào theo mã) ----------
+hàm S.GetJobId()
+    ID cục bộ = game.JobId
     if id == nil then return nil end
     id = tostring(id)
     if id == "" then return nil end
-    return id
-end
+    trả về id
+kết thúc
 
-function S.CopyToClipboard(text)
-    local did = false
+hàm S.CopyToClipboard(text)
+    cục bộ đã làm = sai
     pcall(function()
-        if setclipboard then setclipboard(text) did = true
+        nếu setclipboard thì setclipboard(text) đã thực hiện = true
         elseif toclipboard then toclipboard(text) did = true
         elseif set_clipboard then set_clipboard(text) did = true end
-    end)
-    return did
-end
+    kết thúc)
+    trả lại
+kết thúc
 
-function S.FetchServers(cursor)
-    local url = "https://games.roblox.com/v1/games/" .. tostring(game.PlaceId)
+hàm S.FetchServers(cursor)
+    URL cục bộ = "https://games.roblox.com/v1/games/" .. tostring(game.PlaceId)
              .. "/servers/Public?sortOrder=Asc&limit=100"
     if cursor and cursor ~= "" then url = url .. "&cursor=" .. tostring(cursor) end
     local raw = game:HttpGet(url)
-    local data = HttpService:JSONDecode(raw)
+    dữ liệu cục bộ = HttpService:JSONDecode(raw)
     if type(data) ~= "table" then return {}, nil end
     return (type(data.data) == "table" and data.data or {}), data.nextPageCursor
-end
+kết thúc
 
-function S.ResetServer()
+hàm S.ResetServer()
     local me = S.GetJobId()
-    if me then
+    nếu là tôi thì
         TeleportService:TeleportToPlaceInstance(game.PlaceId, me, player)
-        return "🔄 Đang vào lại ĐÚNG server này: " .. me .. " (giữ nguyên người chơi cùng server)..."
-    end
-    TeleportService:Teleport(game.PlaceId, player)
-    return "🔄 Không đọc được mã server (Studio/server đơn) → đang nạp lại game..."
-end
+        return "🔄 Đang vào lại máy chủ ĐÚNG này: " .. me .. " (giữ nguyên người chơi cùng máy chủ)..."
+    kết thúc
+    Dịch vụ dịch chuyển tức thời:Dịch chuyển tức thời(game.PlaceId, player)
+    return "🔄 Không thể đọc máy chủ mã hóa (Studio/server menu) → đang tải lại trò chơi..."
+kết thúc
 
-function S.JoinServer(jobId)
+hàm S.JoinServer(jobId)
     TeleportService:TeleportToPlaceInstance(game.PlaceId, tostring(jobId), player)
-end
+kết thúc
 
-function S.HopServer()
+hàm S.HopServer()
     local me = tostring(S.GetJobId() or "")
-    local cand, cursor = {}, ""
+    cục bộ cand, con trỏ = {}, ""
     for _ = 1, 3 do
-        local list, nextCursor = S.FetchServers(cursor)
+        danh sách cục bộ, nextCursor = S.FetchServers(cursor)
         for _, sv in ipairs(list) do
             local sid = (sv and sv.id) and tostring(sv.id) or nil
             local playing = tonumber(sv and sv.playing) or 0
             local maxp = tonumber(sv and sv.maxPlayers) or 0
-            if sid and sid ~= me and (maxp <= 0 or playing < maxp) then
+            nếu sid và sid ~= me và (maxp <= 0 hoặc đang chơi < maxp) thì
                 cand[#cand + 1] = {id = sid, playing = playing, maxPlayers = maxp}
-            end
-        end
-        if #cand > 0 then break end                        -- có ứng viên rồi thì khỏi lật trang
+            kết thúc
+        kết thúc
+        if #cand > 0 then break end -- có ứng viên rồi thì khỏi cô trang
         if not nextCursor or nextCursor == "" then break end
-        cursor = nextCursor
-    end
-    if #cand == 0 then
-        return "⚠️ Không tìm thấy server nào còn chỗ trống (hoặc game này không cho xem danh sách server)"
-    end
+        con trỏ = con trỏ tiếp theo
+    kết thúc
+    nếu #cand == 0 thì
+        return "⚠️ Không tìm thấy máy chủ nào còn chỗ trống (hoặc trò chơi này không hiển thị máy chủ danh sách)"
+    kết thúc
     local pick = cand[math.random(1, #cand)]
     S.JoinServer(pick.id)
     return "🔀 Đang nhảy sang server " .. pick.id .. " (" .. pick.playing .. "/" .. pick.maxPlayers
-        .. " người) · tìm được " .. #cand .. " server khác để chọn, đã bỏ qua server hiện tại"
-end
+        .. " người) · tìm được " .. #cand .. " server khác để chọn, bỏ qua server hiện tại"
+kết thúc
 
 
-function S.HopLowServer()
+hàm S.HopLowServer()
     local me = tostring(S.GetJobId() or "")
-    local cand, cursor = {}, ""
-    local pages = 0
+    cục bộ cand, con trỏ = {}, ""
+    trang cục bộ = 0
     local maxPages = 8 -- quét 800 server để tìm server vắng nhất
     for _ = 1, maxPages do
-        pages = pages + 1
+        trang = trang + 1
         local ok, list, nextCursor = pcall(function() return S.FetchServers(cursor) end)
-        if not ok then
-            -- nếu lỗi http, thử lại 1 lần
+        nếu không ổn thì
+            -- nếu http bị lỗi, hãy thử lại 1 lần
             task.wait(0.3)
             ok, list, nextCursor = pcall(function() return S.FetchServers(cursor) end)
-        end
-        if not ok or type(list) ~= "table" then break end
+        kết thúc
+        nếu không hợp lệ hoặc kiểu (danh sách) ~= "bảng" thì thoát.
         for _, sv in ipairs(list) do
             local sid = (sv and sv.id) and tostring(sv.id) or nil
             local playing = tonumber(sv and sv.playing) or 0
             local maxp = tonumber(sv and sv.maxPlayers) or 0
-            if sid and sid ~= me and (maxp <= 0 or playing < maxp) then
-                -- chỉ lấy server còn chỗ và không phải server hiện tại
+            nếu sid và sid ~= me và (maxp <= 0 hoặc đang chơi < maxp) thì
+                -- chỉ lấy chỗ trống của máy chủ và không có máy chủ hiện tại
                 cand[#cand + 1] = {id = sid, playing = playing, maxPlayers = maxp}
-            end
-        end
+            kết thúc
+        kết thúc
         if not nextCursor or nextCursor == "" then break end
-        cursor = nextCursor
-        task.wait(0.15) -- tránh spam api
-    end
-    if #cand == 0 then
-        return "⚠️ Không tìm thấy server nào còn chỗ trống (đã quét "..pages.." trang)"
-    end
+        con trỏ = con trỏ tiếp theo
+        task.wait(0.15) -- tránh api spam
+    kết thúc
+    nếu #cand == 0 thì
+        return "⚠️ Không tìm thấy máy chủ nào còn chỗ trống (đã quét "..pages.." trang)"
+    kết thúc
     -- sắp xếp theo số người chơi tăng dần (ít người nhất lên đầu)
     table.sort(cand, function(a,b) return (a.playing or 0) < (b.playing or 0) end)
     local minPlay = cand[1].playing
-    -- lấy tất cả server có số người = minPlay (hoặc chênh lệch 1) để random cho đỡ trùng
-    local best = {}
+    -- get toàn bộ server có số người = minPlay (hoặc chênh lệch 1) để hỗ trợ trùng lặp ngẫu nhiên
+    tốt nhất cục bộ = {}
     for _, sv in ipairs(cand) do
-        if sv.playing <= minPlay + 1 then
-            best[#best+1] = sv
-        else
-            break
-        end
-    end
+        nếu sv.playing <= minPlay + 1 thì
+            tốt nhất[#tốt nhất+1] = sv
+        khác
+            phá vỡ
+        kết thúc
+    kết thúc
     local pick = best[math.random(1, #best)]
     S.JoinServer(pick.id)
     return "🔀 [ÍT NGƯỜI] Đang nhảy sang server " .. pick.id .. " (" .. pick.playing .. "/" .. pick.maxPlayers .. " người) · đã quét " .. #cand .. " server qua " .. pages .. " trang, vắng nhất " .. minPlay .. " người"
-end
+kết thúc
 
-function S.HopEmptyServer()
+hàm S.HopEmptyServer()
     local me = tostring(S.GetJobId() or "")
-    local cand, cursor = {}, ""
-    local pages = 0
+    cục bộ cand, con trỏ = {}, ""
+    trang cục bộ = 0
     local maxPages = 10
     for _ = 1, maxPages do
-        pages = pages + 1
+        trang = trang + 1
         local ok, list, nextCursor = pcall(function() return S.FetchServers(cursor) end)
-        if not ok then
+        nếu không ổn thì
             task.wait(0.3)
             ok, list, nextCursor = pcall(function() return S.FetchServers(cursor) end)
-        end
-        if not ok or type(list) ~= "table" then break end
+        kết thúc
+        nếu không hợp lệ hoặc kiểu (danh sách) ~= "bảng" thì thoát.
         for _, sv in ipairs(list) do
             local sid = (sv and sv.id) and tostring(sv.id) or nil
             local playing = tonumber(sv and sv.playing) or 0
             local maxp = tonumber(sv and sv.maxPlayers) or 0
-            if sid and sid ~= me and (maxp <= 0 or playing < maxp) and playing <= 3 then
+            nếu sid và sid ~= me và (maxp <= 0 hoặc playing < maxp) và playing <= 3 thì
                 cand[#cand + 1] = {id = sid, playing = playing, maxPlayers = maxp}
-            end
-        end
-        if #cand >= 5 then break end -- đủ 5 server vắng thì dừng sớm
+            kết thúc
+        kết thúc
+        if #cand >= 5 thì break end -- đủ 5 server vắng thì dừng sớm
         if not nextCursor or nextCursor == "" then break end
-        cursor = nextCursor
+        con trỏ = con trỏ tiếp theo
         task.wait(0.15)
-    end
-    if #cand == 0 then
-        -- fallback sang HopLowServer nếu không có server siêu vắng
-        return S.HopLowServer()
-    end
+    kết thúc
+    nếu #cand == 0 thì
+        -- dự phòng sang HopLowServer nếu không có máy chủ siêu vắng
+        trả về S.HopLowServer()
+    kết thúc
     table.sort(cand, function(a,b) return (a.playing or 0) < (b.playing or 0) end)
     local pick = cand[math.random(1, #cand)]
     S.JoinServer(pick.id)
     return "🔀 [SIÊU VẮNG ≤3] Đang nhảy sang server " .. pick.id .. " (" .. pick.playing .. "/" .. pick.maxPlayers .. " người) · tìm thấy " .. #cand .. " server vắng qua " .. pages .. " trang"
-end
+kết thúc
 
 
--- ---------- 🔐 ANTI BAN (v4.43) ----------
-S.AntiBan = S.AntiBan or {
-    on = (_G.BananaCatHub_AntiBan == true),
-    busy = false, lastHop = 0, cooldown = 10, hops = 0,
+--------- 🔐 CHỐNG BAN (v4.43) ----------
+S.AntiBan = S.AntiBan hoặc {
+    bật = (_G.BananaCatHub_AntiBan == true),
+    bận = false, lastHop = 0, cooldown = 10, hops = 0,
     lastReason = "", armed = false, snaps = 0, snapAt = 0,
     conns = {}, _unhookKick = nil,
 }
 
-function S.AntiBanIsMsg(msg)
+hàm S.AntiBanIsMsg(msg)
     local s = string.lower(tostring(msg or ""))
-    if s == "" then return false end
-    local keys = {
-        "you have been banned", "you have been kicked", "you've been banned", "you've been kicked",
-        "banned from this", "kicked from this", "exploit detected", "cheat detected",
-        "cheats detected", "anti-cheat", "anticheat", "kicked by", "banned by",
-        "you are banned", "account banned", "game banned", "server banned", "client kicked",
+    nếu s == "" thì trả về false
+    khóa cục bộ = {
+        "Bạn đã bị cấm", "Bạn đã bị đuổi khỏi trò chơi", "Bạn đã bị cấm", "Bạn đã bị đuổi khỏi trò chơi",
+        "Bị cấm tham gia", "Bị đuổi khỏi trò chơi", "Phát hiện lỗi khai thác", "Phát hiện gian lận",
+        "phát hiện gian lận", "chống gian lận", "chống gian lận", "bị đuổi bởi", "bị cấm bởi",
+        "Bạn bị cấm", "Tài khoản bị cấm", "Trò chơi bị cấm", "Máy chủ bị cấm", "Người chơi bị đá ra khỏi trò chơi",
     }
     for i = 1, #keys do
         if string.find(s, keys[i], 1, true) then return true end
-    end
-    return false
-end
+    kết thúc
+    trả về false
+kết thúc
 
-function S.AntiBanStatus()
-    local a = S.AntiBan
-    if not a.on then return "🔐 Anti Ban: TẮT" end
+hàm S.AntiBanStatus()
+    cục bộ a = S.AntiBan
+    nếu không phải a.on thì trả về "🔐 Chống cấm: TẮT" kết thúc
     local extra = (a.lastReason ~= "" and (" · lần cuối: " .. a.lastReason)) or ""
-    return "🔐 Anti Ban: BẬT · đã hop " .. tostring(a.hops) .. " lần · chờ " .. tostring(a.cooldown) .. "s" .. extra
-end
+    return "🔐 Anti Ban: BẬT · đã nhảy " .. tostring(a.hops) .. " lần · chờ " .. tostring(a.cooldown) .. "s" .. extra
+kết thúc
 
-function S.AntiBanHop(reason)
-    local a = S.AntiBan
+hàm S.AntiBanHop(lý do)
+    cục bộ a = S.AntiBan
     if not a or not a.on then return false, "off" end
     if a.busy then return false, "busy" end
-    local now = 0
+    cục bộ hiện tại = 0
     pcall(function() now = tick() end)
     local cd = tonumber(a.cooldown) or 10
-    if now > 0 and a.lastHop > 0 and (now - a.lastHop) < cd then return false, "cooldown" end
-    a.busy = true
-    a.lastHop = now
+    Nếu now > 0 và a.lastHop > 0 và (now - a.lastHop) < cd thì trả về false, "cooldown" end
+    a.bận rộn = đúng
+    a.lastHop = bây giờ
     a.lastReason = tostring(reason or "suspect")
     a.hops = (tonumber(a.hops) or 0) + 1
     pcall(function() _G.BananaCatHub_AntiBan = true end)
-    local msg = "⚠️ chưa hop"
-    local ok = pcall(function() msg = S.HopServer() end)
-    if not ok then
+    tin nhắn cục bộ = "⚠️ chưa nhảy"
+    local ok = pcall(function() msg ​​= S.HopServer() end)
+    nếu không ổn thì
         pcall(function() TeleportService:Teleport(game.PlaceId, player) end)
-        msg = "🔐 không lấy danh sách được → rời PlaceId (không reset đúng server cũ)"
-    end
-    a.busy = false
+        msg = "🔐 không lấy được danh sách → rời PlaceId (không đặt lại máy chủ cũ)"
+    kết thúc
+    a.bận = sai
     pcall(function() if S.SyncAntiBanPanel then S.SyncAntiBanPanel() end end)
     pcall(function() if D.Say then D.Say("🔐 " .. tostring(msg), C.ACCENT) end end)
-    return true, msg
-end
+    trả về true, msg
+kết thúc
 
-function S.AntiBanDisarm()
-    local a = S.AntiBan
-    if not a then return end
-    if a._unhookKick then
+hàm S.AntiBanDisarm()
+    cục bộ a = S.AntiBan
+    nếu không phải là a thì trả về end
+    nếu a._unhookKick thì
         pcall(a._unhookKick)
-        if _G.BananaCatHub_AntiBanUnhook == a._unhookKick then
-            _G.BananaCatHub_AntiBanUnhook = nil
-        end
+        nếu _G.BananaCatHub_AntiBanUnhook == a._unhookKick thì
+            _G.BananaCatHub_AntiBanUnhook = không
+        kết thúc
         a._unhookKick = nil
-    end
+    kết thúc
     for i = #(a.conns or {}), 1, -1 do
-        local c = a.conns[i]
+        cục bộ c = a.conns[i]
         pcall(function() if c then c:Disconnect() end end)
         a.conns[i] = nil
-    end
+    kết thúc
     a.armed = false
-end
+kết thúc
 
-function S.AntiBanSet(on)
-    S.AntiBan.on = on and true or false
+hàm S.AntiBanSet(on)
+    S.AntiBan.on = bật và đúng hoặc sai
     pcall(function() _G.BananaCatHub_AntiBan = S.AntiBan.on end)
-    if S.AntiBan.on then
+    nếu S.AntiBan.on thì
         S.AntiBanArm()
-    else
+    khác
         S.AntiBanDisarm()
-    end
+    kết thúc
     if S.SyncAntiBanPanel then pcall(S.SyncAntiBanPanel) end
-    return S.AntiBan.on
-end
+    trả về S.AntiBan.on
+kết thúc
 
-function S.AntiBanArm()
-    local a = S.AntiBan
-    if a.armed then return end
+hàm S.AntiBanArm()
+    cục bộ a = S.AntiBan
+    nếu a.armed thì trả về end
     a.armed = true
-    a.conns = a.conns or {}
-    local function antiConnect(signal, fn)
-        local c = signal:Connect(fn)
+    a.conns = a.conns hoặc {}
+    hàm cục bộ antiConnect(signal, fn)
+        cục bộ c = tín hiệu:Kết nối(fn)
         a.conns[#a.conns + 1] = c
         trackConn(c)
-        return c
-    end
+        trả về c
+    kết thúc
     pcall(function()
-        if type(hookfunction) == "function" then
-            local old
-            old = hookfunction(player.Kick, function(...)
+        nếu kiểu của hookfunction là "function" thì
+            người địa phương cũ
+            cũ = hàm móc (người chơi.Kick, hàm (...)
                 if a.on then S.AntiBanHop("kick") return end
-                if old then return old(...) end
-            end)
-            if old then
-                local removed = false
-                local function unhookKick()
-                    if removed then return end
-                    removed = true
+                nếu cũ thì trả về cũ(...) kết thúc
+            kết thúc)
+            nếu cũ thì
+                cục bộ đã bị xóa = false
+                hàm cục bộ unhookKick()
+                    nếu bị xóa thì trả về kết thúc
+                    đã xóa = đúng
                     pcall(function() hookfunction(player.Kick, old) end)
-                end
+                kết thúc
                 a._unhookKick = unhookKick
                 _G.BananaCatHub_AntiBanUnhook = unhookKick
-            end
-        end
-    end)
+            kết thúc
+        kết thúc
+    kết thúc)
     pcall(function()
         antiConnect(Players.PlayerRemoving, function(p)
             if p == player and a.on then S.AntiBanHop("player_removing") end
-        end)
-    end)
+        kết thúc)
+    kết thúc)
     pcall(function()
         local gs = game:GetService("GuiService")
         antiConnect(gs.ErrorMessageChanged, function()
-            if not a.on then return end
-            local msg = ""
-            pcall(function() msg = tostring(gs.ErrorMessage or "") end)
-            if msg == "" then pcall(function() msg = tostring(gs:GetErrorMessage()) end) end
+            nếu không phải a.on thì trả về end
+            thông báo cục bộ = ""
+            pcall(function() msg ​​= tostring(gs.ErrorMessage or "") end)
+            if msg == "" then pcall(function() msg ​​= tostring(gs:GetErrorMessage()) end) end
             if S.AntiBanIsMsg(msg) then S.AntiBanHop("gui_error") end
-        end)
-    end)
+        kết thúc)
+    kết thúc)
     pcall(function()
         antiConnect(TeleportService.TeleportInitFailed, function()
-            if not a.on then return end
+            nếu không phải a.on thì trả về end
             task.delay(1.2, function()
                 S.AntiBan.busy = false
                 S.AntiBanHop("teleport_fail")
-            end)
-        end)
-    end)
+            kết thúc)
+        kết thúc)
+    kết thúc)
     pcall(function()
         antiConnect(game:GetService("LogService").MessageOut, function(msg)
             if a.on and S.AntiBanIsMsg(msg) then S.AntiBanHop("log") end
-        end)
-    end)
-    local function watchHum(hum)
-        if not hum then return end
+        kết thúc)
+    kết thúc)
+    hàm cục bộ watchHum(hum)
+        nếu không có tiếng vo ve thì trả về đầu cuối
         pcall(function()
             antiConnect(hum:GetPropertyChangedSignal("WalkSpeed"), function()
-                if not a.on then return end
-                local m = S.Move
+                nếu không phải a.on thì trả về end
+                cục bộ m = S.Move
                 local hot = m and (m.fly or m.noclip or m.sprint or m.infJump or m.highJump or (m.Safe and m.Safe.on))
-                if not hot then return end
-                local now = tick()
-                if now - (S.AntiBan.snapAt or 0) > 4 then S.AntiBan.snaps = 0 end
-                S.AntiBan.snapAt = now
-                S.AntiBan.snaps = (S.AntiBan.snaps or 0) + 1
-                if S.AntiBan.snaps >= 3 then
+                nếu không nóng thì trả lại đầu
+                cục bộ hiện tại = tick()
+                nếu bây giờ - (S.AntiBan.snapAt hoặc 0) > 4 thì S.AntiBan.snaps = 0
+                S.AntiBan.snapAt = bây giờ
+                S.AntiBan.snaps = (S.AntiBan.snaps hoặc 0) + 1
+                nếu S.AntiBan.snaps >= 3 thì
                     S.AntiBan.snaps = 0
                     S.AntiBanHop("speed_reset")
-                end
-            end)
-        end)
-    end
+                kết thúc
+            kết thúc)
+        kết thúc)
+    kết thúc
     pcall(function()
         if player.Character then watchHum(player.Character:FindFirstChildOfClass("Humanoid")) end
         antiConnect(player.CharacterAdded, function(ch)
             task.wait(0.25)
             watchHum(ch:FindFirstChildOfClass("Humanoid"))
-        end)
-    end)
-end
+        kết thúc)
+    kết thúc)
+kết thúc
 if S.AntiBan.on then pcall(S.AntiBanArm) end
--- ---------- HẾT 🔐 ANTI BAN ----------
+--------- HẾT 🔐 CHỐNG BAN ----------
 
 S.ScriptHubList = {
     {icon="🛡", name="Infinite Yield", cat="Admin", ord=1,
-     desc="Admin commands: kill, speed, jump, noclip, teleport, bring, prefix tùy chỉnh...",
+     desc="Các lệnh quản trị: kill, speed, jump, noclip, teleport, bring, prefix tùy chỉnh...",
      code=[[loadstring(game:HttpGet("https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source"))()]],
      noPark=true},
     {icon="🧰", name="Dex Explorer", cat="Explorer", ord=2,
-     desc="Duyệt toàn bộ instance trong game, xem/sửa property, tìm object theo đường dẫn.",
+     desc="Duyệt toàn bộ instance trong game, xem/sửa thuộc tính, tìm đối tượng theo đường dẫn.",
      code=[[loadstring(game:HttpGet("https://raw.githubusercontent.com/infyiff/backup/main/dex.lua"))()]],
      noPark=true},
     {icon="📡", name="SimpleSpy v3", cat="Spy", ord=3,
-     desc="Theo dõi RemoteEvent/RemoteFunction: tên, tham số, copy code để gọi lại y hệt.",
+     desc="Theo dõi RemoteEvent/RemoteFunction: tên, tham số, sao chép mã để gọi lại sức khỏe.",
      code=[[loadstring(game:HttpGet("https://raw.githubusercontent.com/ex-serum/SimpleSpy/main/SimpleSpy.lua"))()]],
      noPark=true},
     {icon="🎯", name="Niêm tâm (Crosshair)", cat="Tiện ích", ord=4, action="crosshair",
-     desc="Bật/tắt vòng tròn niêm tâm + 4 nét ngắn ở GIỮA màn hình game (ngoài menu)."},
+     desc="Bật/tắt vòng tròn niêm tâm + 4 bắn ngắn ở GIỮA màn hình game (menu bên ngoài)."},
     {icon="🧩", name="Trả GUI về màn hình", cat="Tiện ích", ord=5, action="unpark",
-     desc="Hoàn tác MỌI GUI hub đang mượn vào menu: tab tính năng + tab 🧩 GUI Ngoài."},
-    {icon="🖱", name="Sửa kẹt chuột", cat="Tiện ích", ord=6, action="fixmouse",
-     desc="Nhả focus ô nhập, trả GUI về game, đặt lại MouseBehavior — hết cảnh không quay chuột/không bắn."},
-    {icon="🔄", name="Nạp lại hub từ đĩa", cat="Tiện ích", ord=7, action="reload",
-     desc="Đọc lại file lưu: script đã lưu, waypoint, tab tính năng, cài đặt 🧩 / 🕵 / 🪟."},
-    {icon="🧹", name="Dọn host nhúng rác", cat="Tiện ích", ord=8, action="prune",
-     desc="Xóa các khung Embedded_ mồ côi/rỗng còn sót trong tab (script tự Destroy GUI để lại)."},
-    {icon="🔄", name="Reset Server", cat="Server", ord=9, action="resetserver",
-     desc="Vào lại ĐÚNG server đang chơi (giữ nguyên bạn bè/người chơi cùng server). Studio thì nạp lại game."},
-    {icon="🔀", name="Hop Server", cat="Server", ord=10, action="hopserver",
-     desc="Tự đi lấy mã server: đọc danh sách server công khai, bỏ server hiện tại + server đầy, nhảy sang 1 server khác."},
+     desc="Hoàn tác MỌI GUI hub mượn vào menu: tab tính năng + tab 🧩 GUI Ngoài."},
+    {icon="🖱", name="Sửa kẹp chuột", cat="Tiện ích", ord=6, action="fixmouse",
+     desc="Nhả focus ô nhập, trả GUI về trò chơi, đặt lại MouseBehavior — hết cảnh không quay chuột/không bắn."},
+    {icon="🔄", name="Tải lại hub từ đĩa", cat="Tiện ích", ord=7, action="reload",
+     desc="Đọc lại file save: script đã lưu, waypoint, tab tính năng, cài đặt 🧩 / 🕵 / 🪟."},
+    {icon="🧹", name="Dọn hosting nhúng rác", cat="Tiện ích", ord=8, action="prune",
+     desc="Xóa các khung Embedded_ mồ hôi côi/rỗng còn sót lại trong tab (script tự hủy GUI để quay lại)."},
+    {icon="🔄", name="Đặt lại máy chủ", cat="Máy chủ", ord=9, action="đặt lại máy chủ",
+     desc="Vào lại ĐÚNG server đang chơi (giữ nguyên bạn bè/người chơi cùng server). Studio thì tải lại game."},
+    {icon="🔀", name="Máy chủ Hop", cat="Máy chủ", ord=10, action="máy chủ hop",
+     desc="Tự động lấy mã máy chủ: đọc danh sách máy chủ công khai, bỏ hiện tại máy chủ + đầy máy chủ, nhảy sang 1 máy chủ khác."},
     {icon="👥", name="Hop Server Ít Người", cat="Server", ord=10.1, action="hoplow",
      desc="Quét 800 server (8 trang) tìm server VẮNG NHẤT (ít người nhất), ưu tiên server chỉ 1-2 người, rồi nhảy sang. Dùng khi muốn farm yên tĩnh."},
     {icon="🌙", name="Hop Server Siêu Vắng (≤3)", cat="Server", ord=10.2, action="hopempty",
-     desc="Chỉ tìm server có ≤3 người đang chơi (siêu vắng). Nếu không có, tự động fallback sang tìm server ít người nhất. Quét tối đa 10 trang."},
-    {icon="🔐", name="Anti Ban", cat="Server", ord=10.5, action="antiban",
-     desc="Tự hop SANG SERVER KHÁC (cùng game) khi bị kick/ban hoặc server nghi hành động (bay/xuyên/tốc độ bị reset). Đánh lạc hướng chủ server. Bấm lại để TẮT."},
-    {icon="🌐", name="Lấy mã server (JobId)", cat="Server", ord=11, action="getjobid",
-     desc="Đọc mã server hiện tại, copy ra clipboard và điền sẵn vào ô 🎟 để gửi cho bạn bè vào cùng."},
+     desc="Chỉ tìm máy chủ có ≤3 người đang chơi (siêu vắng). Nếu không có, động dự phòng tự động tìm máy chủ ít người nhất. Quét tối đa 10 trang."},
+    {icon="🔐", name="Chống cấm", cat="Máy chủ", ord=10.5, action="chống cấm",
+     desc="Tự nhảy SANG SERVER KHÁC (cùng trò chơi) khi bị kick/cấm hoặc máy chủ nghi hành động (bay/xuyên/tốc độ được đặt lại). Đánh lạc hướng máy chủ chủ. Bấm lại để TẮT."},
+    {icon="🌐", name="Lấy mã máy chủ (JobId)", cat="Máy chủ", ord=11, action="getjobid",
+     desc="Đọc mã máy chủ hiện tại, sao chép ra clipboard và điền sẵn vào ô 🎟 để gửi cho bạn bè vào cùng."},
     {icon="🚀", name="Bay theo camera", cat="Di chuyển", ord=12, action="fly",
-     desc="Bay ĐIỀU KHIỂN TAY theo camera (khác 🛡 Bay An Toàn). Nhìn xuống 60° + tiến tới = xuống 60°. WASD/joystick; thả phím đứng lơ lửng. Space lên · Shift/Ctrl xuống. 🧱 xuyên tường bật/tắt riêng ở khung 🚀."},
+     desc="Bay điều KHIỂN TAY theo camera (khác 🛡 Bay An Toàn). Nhìn xuống 60° + tiến tới = xuống 60°. WASD/joystick; thả phím đứng lơ. Space lên · Shift/Ctrl xuống. 🧱 Thường xuyên bật/tắt riêng khung ở 🚀."},
     {icon="💨", name="Tốc độ theo camera", cat="Di chuyển", ord=12.2, action="camspeed",
-     desc="Chạy trên mặt đất 100% kiểu 🚀: WASD/joystick theo hướng camera. KHÔNG xuyên tường, nhảy bình thường, rơi theo trọng lực game, không nút ảo. Chỉnh tốc độ ở khung 💨."},
+     desc="Chạy trên mặt đất 100% kiểu 🚀: WASD/cần điều khiển theo hướng camera. KHÔNG xuyên tường, nhảy bình thường, rơi theo sức mạnh game, không nút ảo. Chỉnh tốc độ ở khung 💨."},
     {icon="🪩", name="Thảm kính bám chân", cat="Di chuyển", ord=12.6, action="carpet",
-     desc="Bật/tắt một thảm kính trong suốt bám dưới chân; tương thích chế độ thảm cũ, không ảnh hưởng các tấm kính cố định."},
+     desc="Bật/tắt một thảm kính trong suốt bám dưới chân; tương thích chế độ thảm cũ, không ảnh hưởng đến các tấm kính cố định."},
     {icon="🧱", name="Đặt tấm kính cố định", cat="Di chuyển", ord=12.7, action="placeglass",
-     desc="Đặt thêm một tấm kính dưới chân tại vị trí hiện tại. Mỗi lần bấm tạo một tấm mới, không ghi đè tấm trước."},
-    {icon="📋", name="Quản lý kính đã đặt", cat="Di chuyển", ord=12.8, action="openglasspanel",
+     desc=" Đặt thêm một tấm kính dưới chân tại vị trí hiện tại. Mỗi lần ấn tạo một tấm mới, không ghi đè trước."},
+    {icon="📋", name="Đã đặt quản lý kính", cat="Di chuyển", ord=12.8, action="openglasspanel",
      desc="Mở tab 👥 Người Chơi để xem số lượng/danh sách, bay tới hoặc xóa riêng từng tấm kính."},
     {icon="🔄", name="Tự đặt kính theo đường đi", cat="Di chuyển", ord=12.9, action="autoglass",
-     desc="Tự thêm kính cố định khi di chuyển đủ xa; bấm lại để dừng. Danh sách và số lượng cập nhật trong menu."},
+     desc="Tự động thêm cố định kính khi chuyển đủ xa; ấn lại để dừng. Danh sách và cập nhật số lượng trong menu."},
     {icon="🧹", name="Xóa toàn bộ kính", cat="Di chuyển", ord=12.95, action="clearglass",
-     desc="Xóa tất cả tấm kính cố định đã đặt, không tắt thảm kính bám chân."},
+     desc="Xóa tất cả các tấm kính cố định đã đặt, không tắt thảm kính bám chân."},
     {icon="🚀", name="Bay tới kính gần nhất", cat="Di chuyển", ord=12.96, action="flyglass",
-     desc="Bay xuyên vật cản tới tâm tấm kính cố định gần nhất; tốc độ chỉnh trong tab 👥 Người Chơi."},
+     desc="Bay vật cản tới tâm điểm kính cố định gần nhất; tốc độ điều chỉnh trong tab 👥 Người Chơi."},
     {icon="⏹", name="Dừng bay tới kính", cat="Di chuyển", ord=12.97, action="stopglassfly",
-     desc="Dừng ngay lực bay tới tấm kính và khôi phục trạng thái nhân vật trước khi bay."},
+     desc="Dừng ngay lực bay tới tấm kính và khôi phục trạng thái nhân vật trước bay."},
     {icon="🧱", name="Xuyên Tường", cat="Di chuyển", ord=13, action="noclip",
-     desc="Đi xuyên mọi vật cản. Tắt đi trả lại ĐÚNG CanCollide gốc của từng part (không gán cứng như bản cũ)."},
-    {icon="🦘", name="Nhảy Vô Hạn", cat="Di chuyển", ord=14, action="infjump",
-     desc="Nhảy mãi không chạm đất. Tự thử 3 cách nhảy (ChangeState · lệnh Jump · đẩy vận tốc) nên cả game cấm nhảy, để JumpPower=0 hay ăn mất phím Space vẫn nhảy được."},
+     desc="Đi xuyên mọi vật cản. Tắt đi trả lại ĐÚNG CanCollide gốc của từng phần (không phân cứng như bản cũ)."},
+    {icon="🦘", name="Nhảy Vô Hạnh", cat="Di chuyển", ord=14, action="infjump",
+     desc="Nhảy mãi không đất. Tự thử 3 cách nhảy (ChangeState · lệnh Jump · Đẩy vận tốc) nên cả game cấm nhảy, để JumpPower=0 hay ăn mất phím Space vẫn nhảy được."},
     {icon="🦘", name="Nhảy Cao", cat="Di chuyển", ord=14.2, action="highjump",
-     desc="Công tắc độc lập kiểu 👤 Né người (🛡): BẬT/TẮT + chỉnh tốc độ nhảy. Space là nhảy cao, rơi theo trọng lực game. Không xuyên tường, không nút ảo. Không thay 🦘 Nhảy vô hạn."},
+     desc="Công tắc độc lập kiểu 👤 Né người (🛡): BẬT/TẮT +chỉnh tốc độ nhảy. Space là nhảy cao, rơi theo trọng lực game. Không thường xuyên, không nút ảo. Không thay 🦘 Bỏ vô hạn."},
             {icon="🎥", name="Khán giả", cat="Tiện ích", ord=21.5, action="freecam",
-     desc="Camera BAY khắp nơi giống 🚀 (WASD · Space/Shift · nhìn chuột). Nhân vật MÌNH đứng yên tại chỗ. Tắt thì trả camera. Không FireServer. Không cướp 🚀💨🦘🛡✨🔐."},
+     desc="Camera BAY Khắp nơi tương tự 🚀 (WASD · Space/Shift · nhìn chuột). Nhân vật MÌNH đứng yên tại chỗ. Tắt thì trả camera. Không FireServer. Không cướp 🚀💨🦘🛡✨🔐."},
     {icon="✨", name="Phát Sáng", cat="Tiện ích", ord=22, action="glow",
-     desc="CHÍNH BẠN phát sáng: nhuộm sáng cả nhân vật + đèn toả sáng thật quanh người. Chỉnh CHIỀU RỘNG + ĐỘ SÁNG + MÀU ở khung ✨ ngay đầu danh sách. 👁 xuyên tường (sáng xuyên vật cản) · 💡 đèn không bị vật cản chặn · bị game xoá hay respawn thì tự gắn lại."},
+     desc="CHÍNH Bạn phát sáng: trinh sáng cả nhân vật + đèn toả sáng thật xung quanh người. Chỉnh CHIỀU RỘNG + ĐỘ SÁNG + MÀU ở khung ✨ ngay đầu danh sách. 👁 xuyên (sáng xuyên vật cản) · 💡 đèn không bị cản trở · bị xóa hay hồi sinh thì tự gắn lại."},
     {icon="🛡", name="Bay An Toàn", cat="Di chuyển", ord=23, action="safefly",
-     desc="Bật là TỰ BAY + TỰ NÉ NGƯỜI CHƠI và mọi vật có dấu hiệu chuyển động (kể cả vật bị script/tween kéo đi) trong bán kính bạn chỉnh: càng gần đẩy càng mạnh, quá gần thì vọt lên trên. 🔲 Có BỨC TƯỜNG TRONG SUỐT HÌNH VUÔNG bao quanh cho thấy vùng né · 🧱 tự bật Xuyên Tường để đẩy bạn QUA vật cản. Chỉnh 💨 tốc độ · 📏 khoảng cách né · 🌀 né gắt ở khung 🛡 ngay đầu danh sách."},
-    {icon="📍", name="Định Vị Người Chơi", cat="Định vị", ord=17, action="loc_all",
-     desc="Xuyên tường thấy TẤT CẢ người chơi. Bấm lại để TẮT. Chọn từng người / khoảng cách: tab 👥 Người Chơi."},
+     desc="Bật là TỰ BAY + TỰ NÉ NGƯỜI CHƠI và mọi vật có dấu hiệu chuyển động (được cả vật bị script/tween kéo đi) trong bán kính bạn chỉnh: càng gần thúc mạnh, quá gần thì đuổi lên trên. 🔲 Có BỨC TƯỜNG TRỌNG HÌNH VUÔNG bao quanh cho thấy vùng né · 🧱 tự bật Xuyên Tường để cung cấp cho bạn QUA cản. 💨 tốc độ · 📏 khoảng cách né · 🌀 né tránh ở khung 🛡 ngay đầu danh sách."},
+    {icon="📍", name="Định Vị Người Chơi", cat="Định Vị", ord=17, action="loc_all",
+     desc="Xuyên tường thấy TẤT CẢ người chơi. Bấm lại để TẮT. Chọn từng người / khoảng cách: tab 👥 Chơi Người."},
     {icon="🌳", name="Định Vị Vật Theo Tên", cat="Định vị", ord=18.5, action="objfind",
-     desc="Nhập tên vật (VD: cây) để định vị MỌI vật khớp trong server, bám theo vật khi nó di chuyển. Bấm để mở ô nhập ở tab 👥 Người Chơi."},
+     desc="Nhập tên vật thể (VD: cây) để định vị MỌI vật thể phù hợp trong máy chủ, bám theo vật thể khi nó di chuyển. Bấm để mở ô nhập ở tab 👥 Người chơi."},
     {icon="🚀", name="Bay Tới Vật Đang Định Vị", cat="Định vị", ord=18.6, action="objfly",
      desc="Bay xuyên vật cản tới vật gần nhất trong danh sách 🌳 đang định vị; vật di chuyển thì bay theo, vật biến mất thì tự dừng."},
     {icon="🧹", name="Tắt Định Vị Vật", cat="Định vị", ord=18.7, action="objclear",
-     desc="Xoá toàn bộ định vị vật theo tên (không ảnh hưởng 📍 định vị người chơi và 👣 xem người chơi)."},
+     desc="Xoá toàn bộ bộ định vị theo tên (không ảnh hưởng 📍 định vị người chơi và 👣 xem người chơi)."},
     {icon="👣", name="Xem Người Chơi", cat="Định vị", ord=19, action="spec_on",
-     desc="Bám camera theo người gần nhất. Bấm lại để TRẢ CAMERA. Danh sách chọn người: tab 👥."},
+     desc="Bám camera theo người gần nhất. Bấm lại để TRẢ CAMERA. Danh sách người chọn: tab 👥."},
 }
-S.hubFavs   = S.hubFavs or {}
-S.hubCat    = "Tất cả"
+S.hubFavs = S.hubFavs hoặc {}
+S.hubCat = "Tất cả"
 S.hubSearch = ""
 
-function S.RunHubAction(id)
-    if id == "crosshair" then
+hàm S.RunHubAction(id)
+    nếu id == "crosshair" thì
         local okC = pcall(function() S.ToggleCrosshair() end)
-        if not okC then return "⚠️ chưa bật được niêm tâm" end
-        S.Rebuild()                                        -- cập nhật nhãn nút
-        return "🎯 Niêm tâm: " .. (S.crosshairOn and "BẬT (giữa màn hình game)" or "TẮT")
-    elseif id == "unpark" then
-        local n = 0
+        nếu không okC thì return "⚠️ chưa bật được niêm tâm" end
+        S.Rebuild() -- cập nhật nút nhãn
+        return "🎯 Niêm tâm: " .. (S.crosshairOn và "BẬT (giữa màn hình game)" hoặc "TẮT")
+    nếu id == "unpark" thì
+        cục bộ n = 0
         pcall(function() n = n + (S.RemoveAllParked() or 0) end)
         for _, ft in ipairs(featureTabs) do
-            local host = ft.frame and ft.frame:FindFirstChild("ScriptHost")
-            if host then pcall(function() n = n + S.ClearEmbedsUnder(host) end) end
-        end
+            máy chủ cục bộ = ft.frame và ft.frame:FindFirstChild("ScriptHost")
+            nếu máy chủ thì pcall(function() n = n + S.ClearEmbedsUnder(host) end) end
+        kết thúc
         pcall(S.PruneEmbeds)
         pcall(function() if S.SyncEmbedToggles then S.SyncEmbedToggles() end end)
         return "🧩 đã trả " .. n .. " GUI về màn hình game (GUI gốc giữ nguyên, không Destroy)"
-    elseif id == "fixmouse" then
-        if type(S.DoFixMouse) == "function" then
-            local msg = nil
-            pcall(function() msg = S.DoFixMouse() end)
-            return "🖱 " .. tostring(msg or "đã trả input cho game")
-        end
+    nếu id == "fixmouse" thì
+        nếu kiểu (S.DoFixMouse) == "function" thì
+            thông báo cục bộ = nil
+            pcall(function() msg ​​= S.DoFixMouse() end)
+            return "🖱 " .. tostring(tin nhắn hoặc "đã trả đầu vào cho trò chơi")
+        kết thúc
         pcall(ReleaseHubFocus)
         pcall(function() UserInputService.MouseBehavior = Enum.MouseBehavior.Default end)
-        return "🖱 đã nhả focus + đặt lại chuột"
-    elseif id == "reload" then
-        if type(S.DoReload) == "function" then
+        return "🖱 đã free focus + đặt lại chuột"
+    nếu id == "reload" thì
+        nếu kiểu(S.DoReload) == "function" thì
             task.spawn(function() pcall(S.DoReload) end)
-            return "🔄 đang nạp lại hub từ đĩa..."
-        end
-        return "⚠️ hub chưa sẵn sàng để nạp lại"
-    elseif id == "prune" then
+            return "🔄 đang tải lại hub từ đĩa..."
+        kết thúc
+        return "⚠️ hub chưa sẵn sàng để tải lại"
+    nếu id == "prune" thì
         pcall(S.PruneEmbeds)
-        return "🧹 đã dọn các host nhúng rác"
-    elseif id == "resetserver" then
-        local msg = "⚠️ chưa reset được"
-        local okRs = pcall(function() msg = S.ResetServer() end)
+        return "🧹 đã thu dọn các hosting chứa rác"
+    nếu id == "resetserver" thì
+        tin nhắn cục bộ = "⚠️ chưa được thiết lập lại"
+        local okRs = pcall(function() msg ​​= S.ResetServer() end)
         if not okRs then return "⚠️ Reset server thất bại: " .. tostring(msg) end
-        return tostring(msg)
-    elseif id == "hopserver" then
-        local msg = "⚠️ chưa hop được"
-        local okHp = pcall(function() msg = S.HopServer() end)
-        if not okHp then
-            return "⚠️ Hop server thất bại: " .. tostring(msg)
-                .. " — vẫn dùng được ô 🎟 dán mã server bên dưới để vào thủ công"
-        end
-        return tostring(msg)
-    elseif id == "hoplow" then
-        local msg = "⚠️ chưa hop được"
-        local okHp = pcall(function() msg = S.HopLowServer() end)
-        if not okHp then
+        trả về chuỗi(msg)
+    nếu id == "hopserver" thì
+        tin nhắn cục bộ = "⚠️ chưa được nhảy"
+        local okHp = pcall(function() msg ​​= S.HopServer() end)
+        nếu không phải okHp thì
+            return "⚠️ Máy chủ Hop bị lỗi: " .. tostring(msg)
+                .. " — vẫn được sử dụng ô 🎟 máy chủ mã hóa dán bên dưới để vào thủ công"
+        kết thúc
+        trả về chuỗi(msg)
+    nếu id == "hoplow" thì
+        tin nhắn cục bộ = "⚠️ chưa được nhảy"
+        local okHp = pcall(function() msg ​​= S.HopLowServer() end)
+        nếu không phải okHp thì
             return "⚠️ Hop ít người thất bại: " .. tostring(msg)
                 .. " — thử lại hoặc dùng ô 🎟 dán mã thủ công"
-        end
-        return tostring(msg)
-    elseif id == "hopempty" then
-        local msg = "⚠️ chưa hop được"
-        local okHp = pcall(function() msg = S.HopEmptyServer() end)
-        if not okHp then
-            return "⚠️ Hop siêu vắng thất bại: " .. tostring(msg)
+        kết thúc
+        trả về chuỗi(msg)
+    nếu id == "hopempty" thì
+        tin nhắn cục bộ = "⚠️ chưa được nhảy"
+        local okHp = pcall(function() msg ​​= S.HopEmptyServer() end)
+        nếu không phải okHp thì
+            return "⚠️ Hop siêu thất bại: " .. tostring(msg)
                 .. " — thử lại hoặc dùng ô 🎟"
-        end
-        return tostring(msg)
-    elseif id == "antiban" then
-        local wanted = not S.AntiBan.on
+        kết thúc
+        trả về chuỗi(msg)
+    nếu id == "antiban" thì
+        người địa phương bị truy nã = không phải S.AntiBan.on
         local okAb = pcall(function() S.AntiBanSet(wanted) end)
-        if not okAb then return "⚠️ chưa bật được Anti Ban" end
+        nếu không okAb thì return "⚠️ chưa được kích hoạt Anti Ban" end
         S.Rebuild()
-        return S.AntiBanStatus()
-    elseif id == "getjobid" then
+        trả về S.AntiBanStatus()
+    nếu id == "getjobid" thì
         local jid = S.GetJobId()
-        if not jid then return "⚠️ Không đọc được mã server (đang ở Studio / server đơn)" end
+        nếu không jid thì return "⚠️ Không thể đọc được máy chủ mã hóa (đang ở Studio / máy chủ đơn)" end
         local okCp = S.CopyToClipboard(jid)
         pcall(function() if D.hubJobIn then D.hubJobIn.Text = jid end end)
         pcall(function() if S.SyncServerPanel then S.SyncServerPanel() end end)
-        return (okCp and "🌐 Đã copy mã server: " or "🌐 Mã server (executor không cho copy, hãy chép tay): ") .. jid
+        return (okCp và "🌐 Đã sao chép máy chủ mã hóa: " hoặc "🌐 Máy chủ Mã (người thực thi không cho sao chép, sao chép tay):") .. jid
 
-    -- ---------- v4.12: BỘ DI CHUYỂN ----------
-    elseif id == "fly" then
+    --------- v4.12: BỘ DI CHUYỂN ----------
+    nếu id == "fly" thì
         local wanted = not S.Move.fly
         local okF, on, err = pcall(S.Move.SetFly, wanted)
         if not okF then return "⚠️ lỗi bay: " .. tostring(on) end
-        if wanted and not on then return "⚠️ " .. tostring(err) end
+        nếu muốn và không bật thì trả về "⚠️ " .. tostring(err) end
         S.Rebuild()
-        return S.Move.fly and ("🚀 Bay theo camera: BẬT — WASD/joystick · thả phím đứng lơ lửng · tốc độ " .. tostring(S.Move.flySpeed))
-                            or "🚀 Bay: TẮT — xuyên tường giữ nguyên theo công tắc 🧱"
-    elseif id == "camspeed" then
+        return S.Move.fly và ("🚀 Bay theo camera: BẬT — WASD/cần điều khiển · thả phím đứng lơ · tốc độ " .. tostring(S.Move.flySpeed))
+                            hoặc "🚀 Bay: TẮT — Thường xuyên giữ nguyên theo công tắc 🧱"
+    nếu id == "camspeed" thì
         local wanted = not S.Move.sprint
         local okS, on, err = pcall(S.Move.SetSprint, wanted)
         if not okS then return "⚠️ lỗi tốc độ: " .. tostring(on) end
-        if wanted and not on then return "⚠️ " .. tostring(err) end
+        nếu muốn và không bật thì trả về "⚠️ " .. tostring(err) end
         S.Rebuild()
-        return S.Move.sprint and ("💨 Tốc độ theo camera: BẬT — WASD/joystick mặt đất · nhảy bình thường · rơi theo game · tốc độ " .. tostring(S.Move.sprintSpeed))
-                               or "💨 Tốc độ theo camera: TẮT — trọng lực/nhảy trả về game"
-    elseif id == "noclip" then
-        if not S.Move.noclip and not S.Move.Root() then return "⚠️ chưa có nhân vật (đợi vào game xong hãy bấm)" end
+        return S.Move.sprint và ("💨 Tốc độ theo camera: BẬT — WASD/joystick mặt đất · nhảy bình thường · rơi theo game · tốc độ " .. tostring(S.Move.sprintSpeed))
+                               hoặc "💨 Tốc độ theo camera: TẮT — năng lượng/nhảy trả về trò chơi"
+    nếu id == "noclip" thì
+        nếu không phải S.Move.noclip cũng không phải S.Move.Root() thì return "⚠️ chưa có nhân vật (đợi vào game xong hãy nhấn)" end
         pcall(function() S.Move.SetNoclip(not S.Move.noclip) end)
         S.Rebuild()
-        return S.Move.noclip and "🧱 Xuyên tường: BẬT (đi xuyên mọi vật cản)"
-                              or "🧱 Xuyên tường: TẮT (CanCollide đã trả lại giá trị gốc)"
+        return S.Move.noclip và "🧱 Xuyên tường: BẬT (đi xuyên mọi vật cản)"
+                              hoặc "🧱 Xuyên tường thuật: TẮT (CanCollide đã trả lại giá trị gốc)"
     elseif id == "infjump" then
         pcall(function() S.Move.SetInfJump(not S.Move.infJump) end)
         S.Rebuild()
-        return S.Move.infJump and "🦘 Nhảy vô hạn: BẬT (Space/🐸 A — nhảy được cả game cấm nhảy/không bốc JumpRequest)"
-                               or "🦘 Nhảy vô hạn: TẮT (JumpPower/JumpHeight đã trả lại game)"
-    elseif id == "highjump" then
+        return S.Move.infJump và "🦘 Bỏ vô hạn: BẬT (Space/🐸 A — nhảy được cả game cấm nhảy/không Bốc JumpRequest)"
+                               hoặc "🦘 Skip vô hạn: TẮT (JumpPower/JumpHeight đã trả lại trò chơi)"
+    nếu id == "highjump" thì
         local wanted = not S.Move.highJump
         local okH, on = pcall(S.Move.SetHighJump, wanted)
         if not okH then return "⚠️ lỗi nhảy cao: " .. tostring(on) end
         S.Rebuild()
-        return S.Move.highJump and ("🦘 Nhảy cao: BẬT — tốc độ " .. tostring(S.Move.highJumpSpeed) .. " · Space nhảy cao · rơi theo game")
-                                or "🦘 Nhảy cao: TẮT — JumpPower trả về game"
-    elseif id == "speed" then
+        return S.Move.highJump và ("🦘 Skip cao: BẬT — tốc độ " .. tostring(S.Move.highJumpSpeed) .. " · Space nhảy cao · rơi theo game")
+                                hoặc "🦘 Skip cao: TẮT — JumpPower trả về trò chơi"
+    nếu id == "speed" thì
         pcall(function() S.Move.SetSpeed(not S.Move.speed) end)
         S.Rebuild()
-        return S.Move.speed and ("👟 Chạy độ: BẬT — " .. (S.Move.speedMode == "x"
-                                     and ("theo game ×" .. tostring(S.Move.speedMul)
+        trả về S.Move.speed và ("👟 Chạy tốc độ: BẬT — " .. (S.Move.speedMode == "x"
+                                     và ("theo game ×" .. tostring(S.Move.speedMul)
                                           .. " = " .. tostring(S.Move.WantSpeed()))
-                                     or  ("cố định " .. tostring(S.Move.walkSpeed)))
+                                     hoặc ("cố định " .. tostring(S.Move.walkSpeed)))
                                  .. " · JumpPower " .. tostring(S.Move.jumpPower))
-                            or ("👟 Chạy độ: TẮT — về tốc độ game (" .. tostring(S.Move._baseWS) .. ")")
-    elseif id == "carpet" then
+                            hoặc ("👟 Chạy tốc độ: TẮT — về tốc độ trò chơi (" .. tostring(S.Move._baseWS) .. ")")
+    nếu id == "carpet" thì
         local wanted = not S.Move.carpet
         local okC, on, errC = pcall(S.Move.SetCarpet, wanted)
         if not okC then return "⚠️ lỗi thảm kính: " .. tostring(on) end
-        if wanted and not on then return "⚠️ " .. tostring(errC) end
+        nếu muốn và không bật thì trả về "⚠️" .. tostring(errC) end
         S.Rebuild()
-        return S.Move.carpet and "🪩 Thảm kính bám chân: BẬT — thảm di chuyển cùng bạn"
-                              or "🪩 Thảm kính bám chân: TẮT"
-    elseif id == "placeglass" then
+        return S.Move.carpet và "🪩 thân kính bám chân: BẬT — thảm di chuyển cùng bạn"
+                              hoặc "🪩 thân kính bám chân: TẮT"
+    nếu id == "placeglass" thì
         local okP, part, rec = S.Move.PlaceGlass()
         if not okP then return "⚠️ " .. tostring(part) end
         pcall(function() if S.GlassRefreshList then S.GlassRefreshList() end end)
         S.Rebuild()
-        return "🧱 Đã đặt tấm kính cố định #" .. tostring(rec and rec.id or "?")
+        return "🧱 Đặt tấm kính cố định #" .. tostring(rec và rec.id hoặc "?")
             .. " · tổng " .. tostring(#(S.Move.GetPlacedGlasses() or {})) .. " tấm"
-    elseif id == "clearglass" then
+    nếu id == "clearglass" thì
         local n = S.Move.ClearPlacedGlasses()
         pcall(function() if S.GlassRefreshList then S.GlassRefreshList() end end)
         S.Rebuild()
         return "🧹 Đã xóa toàn bộ " .. tostring(n) .. " tấm kính cố định"
-    elseif id == "autoglass" then
+    nếu id == "autoglass" thì
         local on = S.Move.SetAutoGlass(not S.Move.autoGlass)
         pcall(function() if S.GlassRefreshList then S.GlassRefreshList() end end)
         S.Rebuild()
-        return on and "🔄 Tự đặt kính: BẬT — đi tới đâu tự đặt tấm cố định ở đó"
-                   or "🔄 Tự đặt kính: TẮT"
-    elseif id == "openglasspanel" then
+        return on và "🔄 Tự đặt kính: BẬT — đi tới địa điểm cố định tấm cố định ở đó"
+                   hoặc "🔄 Tự động đặt kính: TẮT"
+    nếu id == "openglasspanel" thì
         local okOpen = false
         pcall(function() okOpen = S.OpenGlassPanel and S.OpenGlassPanel() or S.OpenPlayerTab() end)
-        return okOpen and "📋 Đã mở 👥 Người Chơi → danh sách thảm kính"
-                      or "⚠️ chưa mở được bảng thảm kính"
-    elseif id == "flyglass" then
+        return okOpen và "📋 Đã mở 👥 Người Chơi → danh sách kính kính"
+                      hoặc "⚠️ chưa mở được kính mắt bảng"
+    nếu id == "flyglass" thì
         local idx = S.Move.NearestGlassIndex and S.Move.NearestGlassIndex()
-        if not idx then return "⚠️ chưa có tấm kính cố định để bay tới" end
+        nếu không phải idx thì return "⚠️ chưa có tấm kính cố định để bay tới" end
         local okF, rec = S.Move.FlyToGlass(idx)
         if not okF then return "⚠️ " .. tostring(rec) end
-        return "🚀 đang bay tới tấm kính #" .. tostring(rec and rec.id or idx)
+        return "🚀 đang bay tới tấm kính #" .. tostring(rec và rec.id hoặc idx)
             .. " · tốc độ " .. tostring(S.Move.glassFlySpeed) .. " — sẽ dừng khi tới nơi"
-    elseif id == "stopglassfly" then
+    nếu id == "stopglassfly" thì
         S.Move.StopGlassFly()
         return "⏹ đã dừng bay tới kính"
-    elseif id == "flyplayer" then
-        if not S.Move.Root() then return "⚠️ chưa có nhân vật để bay (đợi vào game xong hãy bấm)" end
-        local target = nil
+    nếu id == "flyplayer" thì
+        nếu không phải S.Move.Root() thì return "⚠️ chưa có nhân vật để bay (đợi vào game xong hãy nhấn)" end
+        mục tiêu cục bộ = nil
         if S.Loc and S.Loc.Nearest then target = S.Loc.Nearest() end
-        if not target then return "⚠️ không có người chơi nào để bay tới" end
+        nếu không đạt mục tiêu thì return "⚠️ không có người chơi nào để bay tới" end
         local ok, res = S.Move.FlyToPlayer(target)
         if S.Loc and S.Loc.RefreshList then pcall(S.Loc.RefreshList) end
         if S.SyncLocPanel then pcall(S.SyncLocPanel) end
         S.Rebuild()
-        return ok and string.format("🚀 đang bay tới người %s tốc độ %g (0=auto lấy tốc độ game) — bấm ⏹ Dừng bay tới người để dừng, theo dõi mục tiêu di chuyển, dừng khi <2 studs", tostring(target.Name), S.Move.GetPlayerFlySpeed and S.Move.GetPlayerFlySpeed() or S.Move.playerFlySpeed or 0)
-                    or ("⚠️ " .. tostring(res))
-    elseif id == "stopflyplayer" then
+        return ok and string.format("🚀 đang bay tới người %s tốc độ %g (0=tự động lấy tốc độ trò chơi) — ⏹ Dừng bay tới người để dừng, theo dõi mục tiêu chuyển hướng, dừng khi <2 đinh tán", tostring(target.Name), S.Move.GetPlayerFlySpeed ​​và S.Move.GetPlayerFlySpeed() hoặc S.Move.playerFlySpeed ​​hoặc 0)
+                    hoặc ("⚠️ " .. tostring(res))
+    nếu id == "stopflyplayer" thì
         S.Move.StopPlayerFly()
         if S.Loc and S.Loc.RefreshList then pcall(S.Loc.RefreshList) end
         if S.SyncLocPanel then pcall(S.SyncLocPanel) end
         S.Rebuild()
         return "⏹ đã dừng bay tới người chơi"
-    elseif id == "runmode" then
+    nếu id == "runmode" thì
         return "⚠️ Tính năng chạy trên thảm đã bị xóa"
-    elseif id == "loc_all" then
+    nếu id == "loc_all" thì
         pcall(function() S.Loc.Set(not S.Loc.on) end)
         S.Rebuild()
-        return (S.Loc.on and "📍 ĐỊNH VỊ: BẬT — " or "📍 ĐỊNH VỊ: TẮT — ") .. S.Loc.Status()
-    elseif id == "loc_solo" then
-        if S.Loc.solo then
+        return (S.Loc.on và "📍 ĐỊNH VỊ: BẬT — " hoặc "📍 Định VỊ: TẮT —") .. S.Loc.Status()
+    nếu id == "loc_solo" thì
+        nếu S.Loc.solo thì
             pcall(function() S.Loc.SetSolo(false) end)
-        else
+        khác
             pcall(function() S.Loc.SetTarget(S.Loc.target or S.Loc.Nearest()) end)
-        end
+        kết thúc
         S.Rebuild()
-        return (S.Loc.solo and "🎯 ĐỊNH VỊ LẺ: " .. tostring(S.Loc.target and S.Loc.target.Name or "?")
-                .. " — chỉ hiện người này (bấm tên khác trong khung 📍 để đổi)")
-               or "🎯 ĐỊNH VỊ LẺ: TẮT (trở lại bình thường)"
-    -- ---------- v4.17: 🛡 BAY AN TOÀN ----------
-    elseif id == "safefly" then
-        if not S.Move.Root() then return "⚠️ chưa có nhân vật để bay (đợi vào game xong hãy bấm)" end
-        if not S.Move.Safe.on then
+        return (S.Loc.solo và "🎯 Định VỊ LẺ: " .. tostring(S.Loc.target và S.Loc.target.Name hay "?")
+                .. " — chỉ ra người này (bấm tên khác trong khung 📍 để đổi)")
+               hoặc "🎯 ĐỊNH VỊ LẺ: TẮT (trở lại bình thường)"
+    --------- v4.17: 🛡 BAY AN TOÀN ----------
+    nếu id == "safefly" thì
+        nếu không phải S.Move.Root() thì return "⚠️ chưa có nhân vật để bay (đợi vào game xong hãy nhấn)" end
+        nếu không phải S.Move.Safe.on thì
             local okf = S.Move.SetFly(true)
-            if okf == false then return "⚠️ không bật được bay" end
-        end
+            nếu okf == false thì return "⚠️ không bật được" end
+        kết thúc
         pcall(function() S.Move.Safe.Set(not S.Move.Safe.on) end)
         pcall(function() if S.SyncSafePanel then S.SyncSafePanel() end end)
         S.Rebuild()
         return S.Move.Safe.Status()
-    elseif id == "safefly_off" then
+    nếu id == "safefly_off" thì
         pcall(function() S.Move.Safe.Stop() end)
         pcall(function() if S.SyncSafePanel then S.SyncSafePanel() end end)
         S.Rebuild()
-        return "🚫 " .. S.Move.Safe.Status()
+        trả về "🚫 " .. S.Move.Safe.Status()
 
-    -- ---------- v4.16: ✨ PHÁT SÁNG ----------
-    elseif id == "glow" then
+    --------- v4.16: ✨ PHÁT SÁNG ----------
+    nếu id == "glow" thì
         pcall(function() S.Glow.Set(not S.Glow.on) end)
         pcall(function() if S.SyncGlowPanel then S.SyncGlowPanel() end end)
         S.Rebuild()
-        return S.Glow.Status()
-    elseif id == "glow_off" then
+        trả về S.Glow.Status()
+    nếu id == "glow_off" thì
         pcall(function() S.Glow.Stop() end)
         pcall(function() if S.SyncGlowPanel then S.SyncGlowPanel() end end)
         S.Rebuild()
-        return "🚫 " .. S.Glow.Status()
+        trả về "🚫 " .. S.Glow.Status()
 
-    -- ---------- v4.64: 🎥 KHÁN GIẢ ----------
-    elseif id == "freecam" then
+    --------- v4.64: 🎥 KHÁN GIẢ ----------
+    nếu id == "freecam" thì
         pcall(function() S.Free.Set(not S.Free.on) end)
         pcall(function() if S.SyncFreePanel then S.SyncFreePanel() end end)
         S.Rebuild()
-        return S.Free.Status()
-    elseif id == "freecam_off" then
+        trả về S.Free.Status()
+    nếu id == "freecam_off" thì
         pcall(function() S.Free.Stop() end)
         pcall(function() if S.SyncFreePanel then S.SyncFreePanel() end end)
         S.Rebuild()
-        return "🚫 " .. S.Free.Status()
+        trả về "🚫 " .. S.Free.Status()
 
-    -- ---------- v4.14: 👣 XEM NGƯỜI CHƠI ----------
-    elseif id == "spec_on" then
-        if S.Spec and S.Spec.on then
+    --------- v4.14: 👣 XEM NGƯỜI CHƠI ----------
+    nếu id == "spec_on" thì
+        nếu S.Spec và S.Spec.on thì
             pcall(function() S.Spec.Stop() end)
             pcall(function() if S.Spec.RefreshList then S.Spec.RefreshList() end end)
             S.Rebuild()
-            return "🚫 " .. (S.Spec.Status and S.Spec.Status() or "đã dừng xem")
-        end
+            trả về "🚫 " .. (S.Spec.Status và S.Spec.Status() hoặc "đã nhảy xem")
+        kết thúc
         local p = S.Spec.target or S.Loc.target or S.Loc.Nearest()
-        if not p then return "⚠️ chưa có ai để xem (server chỉ có mình bạn)" end
+        nếu không p thì return "⚠️ chưa có ai để xem (server chỉ có mình bạn)" end
         pcall(function() S.Loc.SetTarget(p) end)
         pcall(function() S.Spec.Set(p) end)
         pcall(function() if S.Spec.RefreshList then S.Spec.RefreshList() end end)
         S.Rebuild()
         return "👣 " .. S.Spec.Status() .. " (bấm lại thẻ để dừng · chọn người ở tab 👥)"
-    elseif id == "spec_off" then
+    nếu id == "spec_off" thì
         pcall(function() S.Spec.Stop() end)
         pcall(function() if S.Spec.RefreshList then S.Spec.RefreshList() end end)
         S.Rebuild()
-        return "🚫 " .. S.Spec.Status()
-    elseif id == "loc_stop" then
+        trả về "🚫 " .. S.Spec.Status()
+    nếu id == "loc_stop" thì
         pcall(function() S.Loc.StopAll() end)
         S.Rebuild()
         return "🚫 đã tắt hết định vị: " .. S.Loc.Status()
-    elseif id == "movestop" then
+    nếu id == "movestop" thì
         pcall(function() S.Move.StopAll() end)
         S.Rebuild()
         return "🛑 đã tắt hết: " .. S.Move.Status()
-    -- ---------- v5.1: 🌳 ĐỊNH VỊ VẬT THEO TÊN ----------
-    elseif id == "objfind" then
+    --------- v5.1: 🌳 ĐỊNH VỊ VẬT THEO NAME ----------
+    nếu id == "objfind" thì
         pcall(function() if S.ObjTrack.Focus then S.ObjTrack.Focus() end end)
         S.Rebuild()
-        return "🌳 định vị vật: gõ tên vào ô 🔎 (VD: cây) · " .. S.ObjTrack.Status()
-    elseif id == "objfly" then
-        local target = select(1, S.ObjTrack.Nearest())
-        if not target then return "⚠️ chưa có vật nào đang định vị — mở 🌳 ở tab 👥 Người Chơi và nhập tên vật" end
+        return "🌳 định vị vật: nhập tên vào ô 🔎 (VD: cây) · " .. S.ObjTrack.Status()
+    nếu id == "objfly" thì
+        mục tiêu cục bộ = select(1, S.ObjTrack.Nearest())
+        nếu không nhắm mục tiêu thì trả về "⚠️ chưa có vật thể nào được định vị — mở 🌳 ở tab 👥 Người chơi và nhập tên vật phẩm" end
         local okFly, resFly = S.Move.FlyToObject(target)
         S.Rebuild()
         if not okFly then return "⚠️ " .. tostring(resFly) end
-        return "🚀 đang bay tới '" .. tostring(target.Name) .. "' (vật đi đâu bay theo đó · bấm ⏹ Dừng bay để dừng)"
-    elseif id == "objclear" then
-        local n = 0
+        return "🚀 đang bay tới '" .. tostring(target.Name) .. "' (vật đi đâu bay theo đó · press ⏹ Dừng bay để dừng)"
+    nếu id == "objclear" thì
+        cục bộ n = 0
         for _ in pairs(S.ObjTrack.items) do n = n + 1 end
         pcall(function() S.ObjTrack.Set(false) end)
         S.Rebuild()
-        return "🧹 đã xoá " .. tostring(n) .. " định vị vật theo tên"
-    end
+        return "🧹 đã xóa " .. tostring(n) .. " định vị trí theo tên"
+    kết thúc
     return "⚠️ không rõ thao tác: " .. tostring(id)
-end
+kết thúc
 
-function D.CardBtn(parent, text, posX, w, color)
-    local b = New("TextButton", {
-        Size = UDim2.new(0, w, 0, 24), Position = UDim2.new(1, posX, 0, 16),
-        Text = text, BackgroundColor3 = color or C.SURFACE3, BackgroundTransparency = 0.08,
+hàm D.CardBtn(parent, text, posX, w, color)
+    cục bộ b = New("TextButton", {
+        Kích thước = UDim2.new(0, w, 0, 24), Vị trí = UDim2.new(1, posX, 0, 16),
+        Văn bản = văn bản, Màu nền 3 = màu hoặc C.SURFACE3, Độ trong suốt nền = 0.08,
         TextColor3 = D.BestText(color or C.SURFACE3), Font = Enum.Font.GothamBold, TextSize = 9,
         BorderSizePixel = 0, ZIndex = 8,
-    }, parent)
-    Corner(b, UDim.new(0, 7))
+    }, cha)
+    Góc(b, UDim.new(0, 7))
     Stroke(b, D.Edge(color or C.SURFACE3), 1.1)
-    D.Shade(b, Color3.fromRGB(255,255,255), Color3.fromRGB(182,187,201), 90)   -- v4.9: bevel sâu hơn
-    D.Tactile(b, 0.08)
-    return b
-end
+    D.Shade(b, Color3.fromRGB(255,255,255), Color3.fromRGB(182,187,201), 90) -- v4.9: vát sâu hơn
+    D.Cảm giác xúc giác (b, 0,08)
+    trả lại b
+kết thúc
 
 D.hubTab = AddTab("Script Hub", "📚", 3)
 
 D.hubSearchBox = New("TextBox", {
-    Size = UDim2.new(1, -16, 0, 26), Position = UDim2.new(0, 8, 0, 8),
-    PlaceholderText = "🔍  Tìm script hoặc tiện ích...", Text = "", ClearTextOnFocus = false,
+    Kích thước = UDim2.new(1, -16, 0, 26), Vị trí = UDim2.new(0, 8, 0, 8),
+    PlaceholderText = "🔍 Tìm script hoặc tiện ích...", Text = "", ClearTextOnFocus = false,
     BackgroundColor3 = C.SURFACE, BackgroundTransparency = 0.08, TextColor3 = C.DARK,
     PlaceholderColor3 = C.GRAY, Font = Enum.Font.GothamMedium, TextSize = 10,
     TextXAlignment = Enum.TextXAlignment.Left, BorderSizePixel = 0, ZIndex = 6,
@@ -9329,47 +9698,47 @@ Stroke(D.hubSearchBox, C.BORDER, 1)
 New("UIPadding", {PaddingLeft = UDim.new(0, 9)}, D.hubSearchBox)
 
 D.hubChips = New("Frame", {
-    Size = UDim2.new(1, -16, 0, 22), Position = UDim2.new(0, 8, 0, 38),
+    Kích thước = UDim2.new(1, -16, 0, 22), Vị trí = UDim2.new(0, 8, 0, 38),
     BackgroundTransparency = 1, BorderSizePixel = 0, ZIndex = 6,
 }, D.hubTab)
-New("UIListLayout", {
+Mới("UIListLayout", {
     FillDirection = Enum.FillDirection.Horizontal, Padding = UDim.new(0, 5),
     SortOrder = Enum.SortOrder.LayoutOrder, VerticalAlignment = Enum.VerticalAlignment.Center,
 }, D.hubChips)
 
 D.hubList = New("ScrollingFrame", {
-    Size = UDim2.new(1, -16, 1, -146), Position = UDim2.new(0, 8, 0, 64),   -- v4.6.3: bớt 54px cho khung 🌐 Server
+    Kích thước = UDim2.new(1, -16, 1, -146), Vị trí = UDim2.new(0, 8, 0, 64), -- v4.6.3: thêm 54px cho khung 🌐 Server
     BackgroundTransparency = 1, BorderSizePixel = 0, CanvasSize = UDim2.new(0, 0, 0, 0),
     ScrollBarThickness = 3, ClipsDescendants = true, ZIndex = 6,
-    AutomaticCanvasSize = Enum.AutomaticSize.Y,
+    Kích thước Canvas Tự động = Enum.Kích thước Tự động.Y,
 }, D.hubTab)
 New("UIListLayout", {Padding = UDim.new(0, 6), SortOrder = Enum.SortOrder.LayoutOrder}, D.hubList)
 
 D.hubStatus = New("TextLabel", {
-    Size = UDim2.new(1, -16, 0, 22), Position = UDim2.new(0, 8, 1, -24),
-    Text = "📚 Bấm ▶ để chạy script, ⚡ để thực hiện tiện ích · ⭐ để ghim lên đầu",
+    Kích thước = UDim2.new(1, -16, 0, 22), Vị trí = UDim2.new(0, 8, 1, -24),
+    Text = "📚 Nhấn vào để chạy tập lệnh, ⚡ để thực hiện tiện ích · ⭐ để ghi lên đầu",
     BackgroundTransparency = 1, TextColor3 = C.MUTED, Font = Enum.Font.GothamMedium, TextSize = 9,
     TextWrapped = true, TextXAlignment = Enum.TextXAlignment.Left,
     TextYAlignment = Enum.TextYAlignment.Top, ZIndex = 6,
 }, D.hubTab)
 
--- ---------- v4.6.3: KHUNG 🌐 SERVER nằm ngay dưới danh sách thẻ ----------
+--------- v4.6.3: KHUNG 🌐 MÁY CHỦ nằm ngay dưới danh sách thẻ ----------
 D.hubSrvPanel = New("Frame", {
-    Name = "HubServerPanel", Size = UDim2.new(1, -16, 0, 80), Position = UDim2.new(0, 8, 1, -80),
+    Tên = "HubServerPanel", Kích thước = UDim2.new(1, -16, 0, 80), Vị trí = UDim2.new(0, 8, 1, -80),
     BackgroundColor3 = C.SURFACE, BackgroundTransparency = 0.25, BorderSizePixel = 0, ZIndex = 6,
 }, D.hubTab)
 Corner(D.hubSrvPanel, UDim.new(0, 10))
 Stroke(D.hubSrvPanel, C.BORDER, 1)
 
 D.hubJobLbl = New("TextLabel", {
-    Size = UDim2.new(1, -44, 0, 14), Position = UDim2.new(0, 8, 0, 5),
-    Text = "🌐 Mã server: đang đọc...", BackgroundTransparency = 1, TextColor3 = C.MUTED,
-    Font = Enum.Font.GothamMedium, TextSize = 9,
+    Kích thước = UDim2.new(1, -44, 0, 14), Vị trí = UDim2.new(0, 8, 0, 5),
+    Text = "🌐 Máy chủ Mã: đang đọc...", BackgroundTransparency = 1, TextColor3 = C.MUTED,
+    Phông chữ = Enum.Font.GothamMedium, Kích thước chữ = 9,
     TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 7,
 }, D.hubSrvPanel)
 
 D.hubJobCopy = New("TextButton", {
-    Size = UDim2.new(0, 26, 0, 16), Position = UDim2.new(1, -32, 0, 4), Text = "📋",
+    Kích thước = UDim2.new(0, 26, 0, 16), Vị trí = UDim2.new(1, -32, 0, 4), Văn bản = "📋",
     BackgroundColor3 = C.BLUE, BackgroundTransparency = 0.1, TextColor3 = C.INK,
     Font = Enum.Font.GothamBold, TextSize = 9, BorderSizePixel = 0, AutoButtonColor = false, ZIndex = 7,
 }, D.hubSrvPanel)
@@ -9377,8 +9746,8 @@ Corner(D.hubJobCopy, UDim.new(0, 6))
 D.Tactile(D.hubJobCopy, 0.1)
 
 D.hubJobIn = New("TextBox", {
-    Size = UDim2.new(1, -124, 0, 24), Position = UDim2.new(0, 8, 0, 24),
-    PlaceholderText = "🎟 Dán mã server (JobId) vào đây...", Text = "", ClearTextOnFocus = false,
+    Kích thước = UDim2.new(1, -124, 0, 24), Vị trí = UDim2.new(0, 8, 0, 24),
+    PlaceholderText = "🎟 Dán máy chủ mã hóa (JobId) vào đây...", Text = "", ClearTextOnFocus = false,
     BackgroundColor3 = C.SURFACE2, BackgroundTransparency = 0.1, TextColor3 = C.DARK,
     PlaceholderColor3 = C.GRAY, Font = Enum.Font.GothamMedium, TextSize = 9,
     TextXAlignment = Enum.TextXAlignment.Left, BorderSizePixel = 0, ZIndex = 7,
@@ -9392,94 +9761,94 @@ D.hubJoinBtn.Position = UDim2.new(1, -110, 0, 24)
 D.hubHopBtn = D.CardBtn(D.hubSrvPanel, "🔀 Hop", -54, 50, C.PURPLE)
 D.hubHopBtn.Position = UDim2.new(1, -54, 0, 24)
 
--- Nút hop ít người
+-- nhảy ít người
 D.hubLowBtn = D.CardBtn(D.hubSrvPanel, "👥 Ít", -110, 40, C.BLUE)
 D.hubLowBtn.Position = UDim2.new(1, -110, 0, 52)
 D.hubEmptyBtn = D.CardBtn(D.hubSrvPanel, "🌙 Vắng", -62, 44, C.ORANGE)
 D.hubEmptyBtn.Position = UDim2.new(1, -62, 0, 52)
 
 
-function S.SyncServerPanel()
+hàm S.SyncServerPanel()
     pcall(function()
-        if not D.hubJobLbl then return end
+        nếu không phải D.hubJobLbl thì trả về end
         local jid = S.GetJobId()
-        if jid then
-            D.hubJobLbl.Text = "🌐 Mã server: " .. jid
+        nếu jid thì
+            D.hubJobLbl.Text = "🌐 Mã máy chủ: " .. jid
             D.hubJobLbl.TextColor3 = C.DARK
-        else
-            D.hubJobLbl.Text = "🌐 Không đọc được mã server (Studio/server đơn) — 🔄 Reset vẫn dùng được"
+        khác
+            D.hubJobLbl.Text = "🌐 Không thể đọc máy chủ mã hóa (Studio/server đơn) — 🔄 Reset vẫn được sử dụng"
             D.hubJobLbl.TextColor3 = C.MUTED
-        end
-    end)
-end
+        kết thúc
+    kết thúc)
+kết thúc
 
 D.hubJobCopy.Activated:Connect(function()
     local jid = S.GetJobId()
-    if not jid then
-        D.Say("⚠️ Không có mã server để copy (đang ở Studio / server đơn)")
-        return
-    end
+    nếu không phải jid thì
+        D.Say("⚠️ Không có máy chủ mã hóa để sao chép (đang ở đơn vị Studio / máy chủ)")
+        trở lại
+    kết thúc
     local okCp = S.CopyToClipboard(jid)
     pcall(function() D.hubJobIn.Text = jid end)
-    D.Say(okCp and ("📋 Đã copy mã server: " .. jid)
-              or ("⚠️ Executor không cho copy — mã server là: " .. jid), okCp and C.GREEN or C.YELLOW)
-end)
+    D.Say(okCp and ("📋 Đã sao chép máy chủ mã hóa: " .. jid)
+              hoặc ("⚠️ Executor không cho copy — máy chủ mã hóa là: " .. jid), okCp và C.GREEN hoặc C.YELLOW)
+kết thúc)
 
 D.hubJoinBtn.Activated:Connect(function()
-    local id = tostring(D.hubJobIn.Text or "")
+    ID cục bộ = tostring(D.hubJobIn.Text hoặc "")
     id = id:gsub("^%s+", ""):gsub("%s+$", "")
     id = id:gsub('^"', ""):gsub('"$', ""):gsub("^'", ""):gsub("'$", "")
-    if id == "" then
-        D.Say("⚠️ Hãy DÁN mã server (JobId) vào ô 🎟 trước khi bấm 🚀 Vào")
+    nếu id == "" thì
+        D.Say("⚠️ Please DÁN mã hóa máy chủ (JobId) vào ô 🎟 trước khi nhấn 🚀 Vào")
         ReleaseHubFocus()
-        return
-    end
-    D.Say("🚀 Đang vào server " .. id .. " ...", C.YELLOW)
-    ReleaseHubFocus()   -- nhả focus ô nhập, không thì game chặn input sau khi teleport
+        trở lại
+    kết thúc
+    D.Say("🚀 Đang vào máy chủ " .. id .. " ...", C.YELLOW)
+    ReleaseHubFocus() -- free focus ô nhập, không thì game chặn input sau khi teleport
     local okJ, errJ = pcall(function() S.JoinServer(id) end)
-    if not okJ then
-        D.Say("⚠️ Không vào được server này (mã sai/hết chỗ/game chặn): " .. tostring(errJ))
-    end
-end)
+    nếu không okJ thì
+        D.Say("⚠️ Không thể vào máy chủ này (mã sai/hết sức/game block): " .. tostring(errJ))
+    kết thúc
+kết thúc)
 
 D.hubHopBtn.Activated:Connect(function()
     ReleaseHubFocus()
-    D.Say("🔀 Đang đi lấy mã server...", C.YELLOW)
+    D.Say("🔀 Đang đi lấy máy chủ mã hóa...", C.YELLOW)
     D.hubStatus.Text = S.RunHubAction("hopserver")
-end)
+kết thúc)
 
 D.hubLowBtn.Activated:Connect(function()
     ReleaseHubFocus()
-    D.Say("👥 Đang quét 800 server tìm server ÍT NGƯỜI nhất...", C.YELLOW)
+    D.Say("👥Đang quét 800 server tìm server ÍT NGƯỜI nhất...", C.YELLOW)
     D.hubStatus.Text = S.RunHubAction("hoplow")
-end)
+kết thúc)
 
 D.hubEmptyBtn.Activated:Connect(function()
     ReleaseHubFocus()
-    D.Say("🌙 Đang tìm server SIÊU VẮNG ≤3 người...", C.YELLOW)
+    D.Say("🌙 Đang tìm máy chủ SIÊU VẮNG ≤3 người...", C.YELLOW)
     D.hubStatus.Text = S.RunHubAction("hopempty")
-end)
+kết thúc)
 
 
-function S.Rebuild()
+hàm S.Rebuild()
     pcall(function() if S.RebuildHubList then S.RebuildHubList() end end)
-end
+kết thúc
 
 S.HubPanelCat = {
-    HubTune_Panel = "Di chuyển",
+    HubTune_Panel = "Chuyển",
     HubFly_Panel = "Di chuyển",
-    HubSpeed_Panel = "Di chuyển",
+    HubSpeed_Panel = "Chuyển",
     HubHighJump_Panel = "Di chuyển",
-    HubMove_Panel = "Di chuyển",
-    HubSafe_Panel = "Di chuyển",
+    HubMove_Panel = "Chuyển",
+    HubSafe_Panel = "Chuyển",
     HubGlow_Panel = "Tiện ích",
     HubFree_Panel = "Tiện ích",
     HubAntiBan_Panel = "Server",
 }
-function S.SyncHubPanels()
-    local list = D.hubList
-    if not list or not list.Parent then return end
-    local cat = S.hubCat or "Tất cả"
+hàm S.SyncHubPanels()
+    danh sách cục bộ = D.hubList
+    nếu không phải danh sách hoặc không phải danh sách cha thì trả về kết thúc
+    local cat = S.hubCat hoặc "Tất cả"
     for _, c in ipairs(list:GetChildren()) do
         local want = S.HubPanelCat[c.Name]
         if want then
